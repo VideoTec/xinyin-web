@@ -1,0 +1,8 @@
+cp './demo.html' '../videotech/xinyin/demo/index.html'
+cp './demo.css' '../videotech/xinyin/demo/demo.css'
+cp './demo.js' '../videotech/xinyin/demo/demo.js'
+cp './xinyin_main.js' '../videotech/xinyin/demo/xinyin_main.js'
+cp './xinyin_types.js' '../videotech/xinyin/demo/xinyin_types.js'
+cp './xinyin_worker.js' '../videotech/xinyin/demo/xinyin_worker.js'
+cp './xinyin_wasm.js' '../videotech/xinyin/demo/xinyin_wasm.js'
+cp './xinyin_wasm_bg.wasm' '../videotech/xinyin/demo/xinyin_wasm_bg.wasm'
