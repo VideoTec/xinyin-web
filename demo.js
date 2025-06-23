@@ -150,6 +150,28 @@ document
     }
   });
 
+document
+  .getElementById("btnVerifySignature")
+  .addEventListener("click", async () => {
+    try {
+      const message = getInputValue("signRawMessage").trim();
+      const address = getInputValue("signAddress").trim();
+      const signature = document.getElementById("signResult").innerText.trim();
+      let verifyResult = await verifySignature(
+        address,
+        signature,
+        gTextEncoder.encode(message)
+      );
+      if (verifyResult) {
+        alert("签名验证成功！");
+      } else {
+        alert("签名验证失败！");
+      }
+    } catch (error) {
+      alert(`Error verifying signature: ${error.message}`);
+    }
+  });
+
 /**
  *
  * @param {HTMLElement} element
@@ -172,3 +194,29 @@ document
 document.getElementById("solanaAddress").addEventListener("click", function () {
   selectText(this);
 });
+
+/**
+ *
+ * @param {string} publicKey
+ * @param {string} signature
+ * @param {ArrayBuffer} message
+ * @returns
+ */
+async function verifySignature(publicKey, signature, message) {
+  const publicKeyUint8 = bs58.decode(publicKey);
+  const signatureUint8 = bs58.decode(signature);
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    publicKeyUint8,
+    { name: "Ed25519" },
+    false,
+    ["verify"]
+  );
+  return await crypto.subtle.verify(
+    { name: "Ed25519" },
+    cryptoKey,
+    signatureUint8,
+    message
+  );
+}
