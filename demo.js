@@ -1,12 +1,20 @@
-import { generateWords32, importWords32 } from "./xinyin_main.js";
+import {
+  generateWords32,
+  importWords32,
+  listSks,
+  clearSksCache,
+} from "./xinyin_main.js";
 
 /**
  * @param {string} id
- * @returns HTMLInputElement
+ * @returns HTMLInputElement | HTMLTextAreaElement
  */
 function getInputElement(id) {
   const inputElement = document.getElementById(id);
-  if (inputElement instanceof HTMLInputElement) {
+  if (
+    inputElement instanceof HTMLInputElement ||
+    inputElement instanceof HTMLTextAreaElement
+  ) {
     return inputElement;
   } else {
     throw new Error(`Input element with id "${id}" not found.`);
@@ -43,12 +51,7 @@ document
         startOf8105,
         countIn8105
       );
-      const outputElement = document.getElementById("outputWord32");
-      if (outputElement instanceof HTMLTextAreaElement) {
-        outputElement.value = words32;
-      } else {
-        throw new Error('Output element with id "outputWord32" not found.');
-      }
+      document.getElementById("generatedWords32").innerText = words32;
     } catch (error) {
       alert(`Error: ${error.message}`);
     }
@@ -83,8 +86,61 @@ document
         inputWords32
       );
 
-      getInputElement("inputSolanaAddress").value = address;
+      document.getElementById("solanaAddress").innerText = address;
     } catch (error) {
       alert(`Error: ${error.message}`);
     }
   });
+
+document.getElementById("btnListSks").addEventListener("click", () => {
+  listSks()
+    .then((sks) => {
+      const sksList = document.getElementById("sksList");
+      if (!sks || sks.length === 0) {
+        sksList.innerHTML = "<li>本地存储的密钥列表将显示在这里...</li>";
+      } else {
+        sksList.innerHTML = "";
+        sks.forEach((sk) => {
+          const li = document.createElement("li");
+          li.textContent = sk;
+          sksList.appendChild(li);
+        });
+      }
+    })
+    .catch((error) => {
+      alert(`Error listing SKs: ${error.message}`);
+    });
+});
+
+document.getElementById("btnClearSks").addEventListener("click", () => {
+  clearSksCache()
+    .then(() => {
+      document.getElementById("btnListSks").click(); // Clear the displayed list
+    })
+    .catch((error) => {
+      alert(`Error clearing SKs cache: ${error.message}`);
+    });
+});
+
+/**
+ *
+ * @param {HTMLElement} element
+ */
+function selectText(element) {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+document
+  .getElementById("generatedWords32")
+  .addEventListener("click", function () {
+    selectText(this);
+  });
+
+document.getElementById("solanaAddress").addEventListener("click", function () {
+  selectText(this);
+});
