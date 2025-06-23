@@ -33,20 +33,31 @@
       <label for="inputWords32">输入心印助记字:</label>
       <textarea id="inputWords32" rows="2" cols="16"></textarea>
       <label for="inputPassword">输入密码</label>
-      <p class="tip">注意：密码用于加密和解密导入的私钥</p>
+      <span class="warning">注意：密码用于加密和解密导入的私钥</span>
       <input type="text" id="inputPassword" />
       <button id="btnImportWords32">导入</button>
       <p class="result" id="solanaAddress">导入的Solana地址...</p>
     </div>
     <div class="card">
       <h2>本地存储的密钥列表</h2>
-      <button id="btnListSks">已经导入的密钥</button>
+      <button id="btnListSks">查看密钥列表</button>
       <ol class="result" id="sksList" style="padding-inline-start: 30px">
         <li>本地存储的密钥列表将显示在这里...</li>
       </ol>
       <button id="btnClearSks" class="small-button">清除密钥</button>
     </div>
   </body>
+  <div class="card">
+    <h2>签名</h2>
+    <label for="signRawMessage">输入消息:</label>
+    <input type="text" id="signRawMessage" value="Hello, Solana!" />
+    <label for="signAddress">输入地址:</label>
+    <input type="text" id="signAddress" placeholder="输入地址..." />
+    <lable for="signSkPsw">输入密码:</lable>
+    <input type="text" id="signSkPsw" placeholder="输入密码..." />
+    <button id="btnSignMessage">签名</button>
+    <p class="result" id="signResult">签名结果..</p>
+  </div>
   <footer>
     <p>&copy; 2025 Demo Page</p>
   </footer>

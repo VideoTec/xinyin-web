@@ -81,6 +81,7 @@ textarea {
     font-family: monospace;
     white-space: pre-wrap;
     overflow-x: auto;
+    word-break: break-all;
 }
 .tip {
     background-color: #d4edda;
@@ -91,4 +92,10 @@ textarea {
     border-radius: 5px;
     font-style: italic;
     font-size: smaller;
+}
+.warning {
+    color: #856404;
+    margin: 2px 0;
+    font-size: smaller;
+    font-size: 0.5em;
 }

@@ -3,7 +3,12 @@ import {
   importWords32,
   listSks,
   clearSksCache,
+  signMessage,
 } from "./xinyin_main.js";
+
+import bs58 from "https://cdn.jsdelivr.net/npm/bs58@6.0.0/+esm";
+
+const gTextEncoder = new TextEncoder();
 
 /**
  * @param {string} id
@@ -78,12 +83,14 @@ document
         throw new Error("Input words32 must be exactly 32 characters long.");
       }
 
+      let psw = getInputValue("inputPassword").trim();
+
       let address = await importWords32(
         inputWords32,
         txtInHeart,
         startOf8105,
         countIn8105,
-        inputWords32
+        psw
       );
 
       document.getElementById("solanaAddress").innerText = address;
@@ -121,6 +128,27 @@ document.getElementById("btnClearSks").addEventListener("click", () => {
       alert(`Error clearing SKs cache: ${error.message}`);
     });
 });
+
+document
+  .getElementById("btnSignMessage")
+  .addEventListener("click", async () => {
+    try {
+      const message = getInputValue("signRawMessage").trim();
+      const address = getInputValue("signAddress").trim();
+      const skPsw = getInputValue("signSkPsw").trim();
+      if (message.length === 0) {
+        alert("请输入要签名的消息。");
+        return;
+      }
+      const messageBuff = gTextEncoder.encode(message);
+      let signResult = await signMessage(address, messageBuff, skPsw);
+      document.getElementById("signResult").innerText = bs58.encode(
+        new Uint8Array(signResult)
+      );
+    } catch (error) {
+      alert(`Error sign message: ${error.message}`);
+    }
+  });
 
 /**
  *

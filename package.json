@@ -1,20 +1,5 @@
 {
-  "name": "xinyin-web-demo",
-  "version": "1.0.0",
-  "description": "xinyin web demo",
-  "homepage": "https://github.com/VideoTec/xinyin-web#readme",
-  "bugs": {
-    "url": "https://github.com/VideoTec/xinyin-web/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/VideoTec/xinyin-web.git"
-  },
-  "license": "ISC",
-  "author": "",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "dependencies": {
+    "bs58": "^6.0.0"
   }
 }
