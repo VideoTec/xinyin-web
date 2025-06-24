@@ -4,11 +4,22 @@ import {
   listSks,
   clearSksCache,
   signMessage,
+  waitWorkerReady,
 } from "./xinyin_main.js";
 
 import bs58 from "https://cdn.jsdelivr.net/npm/bs58@6.0.0/+esm";
 
 const gTextEncoder = new TextEncoder();
+
+waitWorkerReady()
+  .then(() => {
+    document.getElementById("loadingWidget").style.display = "none";
+  })
+  .catch((error) => {
+    document.getElementById(
+      "loadingWidget"
+    ).innerText = `Worker启动失败:\n${error.message}`;
+  });
 
 /**
  * @param {string} id

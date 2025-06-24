@@ -17,6 +17,8 @@ export const XinYinMessageCode = {
   /** 清理缓存 */
   ClearSksCache: "clear-sks-cache",
   ClearSksCacheResult: "sks-cache-cleared-result",
+  /** worker 准备就绪 */
+  WorkerReady: "worker-ready",
   /** 未知消息类型 */
   Unknown: "unknown",
 };
@@ -24,7 +26,9 @@ export const XinYinMessageCode = {
 /**
  * @typedef { Object } XinYinMessage
  * @property { XinYinMessageCode } code - The message code.
- * @property { number} requestId - The request ID for tracking.
+ * @property { number} requestId
+ *  - The request ID for tracking.
+ *  - if requestId is -1, wihtout requestId, because the message is sending from the worker.
  * @property { string } [txtInHeart] - 心印文本.
  * @property { number } [startOf8105] - The starting index for charset-8105.
  * @property { number } [countFrom8105] - The count of chars retrieved from charset-8105.

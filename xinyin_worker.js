@@ -8,10 +8,17 @@ import { XinYinMessageCode } from "./xinyin_types.js";
 
 xinyin_wasm()
   .then(() => {
-    console.log("xinyin_wasm initialized successfully");
+    postMessageToXinyinMain({
+      code: XinYinMessageCode.WorkerReady,
+      requestId: -1,
+    });
   })
   .catch((err) => {
-    console.error("error initializing xinyin_wasm:", err);
+    postMessageToXinyinMain({
+      code: XinYinMessageCode.WorkerReady,
+      requestId: -1,
+      errorMessage: `初始化 wasm 模块失败: ${err}`,
+    });
   });
 
 /**
@@ -21,6 +28,13 @@ xinyin_wasm()
 self.onmessage = async (/** @type {{data: XinYinMessage}} */ event) => {
   onXinYinMessage(event.data);
 };
+
+/** * 发送消息到心印主线程
+ * @param { XinYinMessage } message
+ */
+function postMessageToXinyinMain(message) {
+  self.postMessage(message);
+}
 
 /**
  * @param { XinYinMessage } message

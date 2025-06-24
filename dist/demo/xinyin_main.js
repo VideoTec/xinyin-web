@@ -4,12 +4,32 @@ import { XinYinMessageCode } from "./xinyin_types.js";
  * @typedef { import('./xinyin_types.js').XinYinMessage } XinYinMessage
  */
 
-export { generateWords32, importWords32, signMessage, clearSksCache, listSks };
+export {
+  generateWords32,
+  importWords32,
+  signMessage,
+  clearSksCache,
+  listSks,
+  waitWorkerReady,
+};
 
 const xinyin_worker = new Worker("./xinyin_worker.js", {
   type: "module",
   name: "xinyin-worker",
 });
+
+/**
+ * @returns {Promise<void>} Returns a promise that resolves when the worker is ready.
+ */
+function waitWorkerReady() {
+  return new Promise((resolve, reject) => {
+    gPendingRequests[-1] = {
+      resolve: resolve,
+      reject: reject,
+      reqMessageCode: XinYinMessageCode.WorkerReady,
+    };
+  });
+}
 
 xinyin_worker.onmessage = (/** @type {{data: XinYinMessage}} */ event) => {
   onXinyinMessage(event.data);
@@ -109,7 +129,7 @@ let gRequestId = 0;
  * @type { Record<number, {
  *  resolve: (value: any) => void,
  *  reject: (reason?: any) => void,
- *  code: XinYinMessageCode,
+ *  reqMessageCode: XinYinMessageCode,
  * }> } - pending requests
  */
 let gPendingRequests = {};
@@ -122,7 +142,11 @@ function postMessageToXinyinWorker(message) {
   message.requestId = gRequestId;
   xinyin_worker.postMessage(message);
   return new Promise((resolve, reject) => {
-    gPendingRequests[gRequestId] = { resolve, reject, code: message.code };
+    gPendingRequests[gRequestId] = {
+      resolve,
+      reject,
+      reqMessageCode: message.code,
+    };
   });
 }
 
@@ -146,7 +170,7 @@ function onXinyinMessage(message) {
 
   switch (message.code) {
     case XinYinMessageCode.GenerateWords32Result: {
-      if (request.code !== XinYinMessageCode.GenerateWords32) {
+      if (request.reqMessageCode !== XinYinMessageCode.GenerateWords32) {
         request.reject(
           new Error("Unexpected message code for GenerateWords32Result")
         );
@@ -156,7 +180,7 @@ function onXinyinMessage(message) {
       break;
     }
     case XinYinMessageCode.ImportWords32Result: {
-      if (request.code !== XinYinMessageCode.ImportWords32) {
+      if (request.reqMessageCode !== XinYinMessageCode.ImportWords32) {
         request.reject(
           new Error("Unexpected message code for ImportWords32Result")
         );
@@ -166,7 +190,7 @@ function onXinyinMessage(message) {
       break;
     }
     case XinYinMessageCode.SignMessageResult: {
-      if (request.code !== XinYinMessageCode.SignMessage) {
+      if (request.reqMessageCode !== XinYinMessageCode.SignMessage) {
         request.reject(
           new Error("Unexpected message code for SignMessageResult")
         );
@@ -176,7 +200,7 @@ function onXinyinMessage(message) {
       break;
     }
     case XinYinMessageCode.ClearSksCacheResult: {
-      if (request.code !== XinYinMessageCode.ClearSksCache) {
+      if (request.reqMessageCode !== XinYinMessageCode.ClearSksCache) {
         request.reject(
           new Error("Unexpected message code for ClearSksCacheResult")
         );
@@ -186,11 +210,15 @@ function onXinyinMessage(message) {
       break;
     }
     case XinYinMessageCode.ListSksResult: {
-      if (request.code !== XinYinMessageCode.ListSks) {
+      if (request.reqMessageCode !== XinYinMessageCode.ListSks) {
         request.reject(new Error("Unexpected message code for ListSksResult"));
         return;
       }
       request.resolve(message.sks);
+      break;
+    }
+    case XinYinMessageCode.WorkerReady: {
+      request.resolve();
       break;
     }
     default:
