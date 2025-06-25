@@ -1,44 +1,12 @@
 import js from "@eslint/js";
-import globals from "globals";
-// import tseslint from "typescript-eslint";
 import json from "@eslint/json";
-import css from "@eslint/css";
-import { defineConfig, globalIgnores } from "eslint/config";
+import tseslint from "typescript-eslint";
 
-export default defineConfig([
+export default [
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  json.configs.recommended,
   {
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
-    plugins: { js },
-    extends: ["js/recommended"],
+    ignores: ["dist", "node_modules", "xinyin_wasm.js"],
   },
-  {
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
-    languageOptions: { globals: globals.browser },
-  },
-  // tseslint.configs.recommended,
-  {
-    files: ["**/*.json"],
-    plugins: { json },
-    language: "json/json",
-    extends: ["json/recommended"],
-  },
-  {
-    files: ["**/*.jsonc"],
-    plugins: { json },
-    language: "json/jsonc",
-    extends: ["json/recommended"],
-  },
-  {
-    files: ["**/*.json5"],
-    plugins: { json },
-    language: "json/json5",
-    extends: ["json/recommended"],
-  },
-  {
-    files: ["**/*.css"],
-    plugins: { css },
-    language: "css/css",
-    extends: ["css/recommended"],
-  },
-  globalIgnores(["xinyin_wasm.js"]),
-]);
+];

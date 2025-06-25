@@ -5,7 +5,11 @@
     "lib": ["es2020", "dom", "WebWorker"],
     "module": "esnext",
     "moduleResolution": "bundler",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": false,
+    "strict": false,
+    "verbatimModuleSyntax": true
   },
-  "exclude": ["node_modules", "dist", "build"]
+  "exclude": ["node_modules", "dist"]
 }
