@@ -13,10 +13,42 @@ export {
   waitWorkerReady,
 };
 
-const xinyin_worker = new Worker("./xinyin_worker.js", {
-  type: "module",
-  name: "xinyin-worker",
-});
+/** @type { number } - xinyin request id */
+let gRequestId = 0;
+/**
+ * @type { Record<number, {
+ *  resolve: (value: any) => void,
+ *  reject: (reason?: any) => void,
+ *  reqMessageCode: XinYinMessageCode,
+ * }> } - pending requests
+ */
+let gPendingRequests = {};
+
+/** type { Work } */
+let xinyin_worker;
+try {
+  xinyin_worker = new Worker("./xinyin_worker.js", {
+    type: "module",
+    name: "xinyin-worker",
+  });
+} catch (error) {
+  console.error("Failed to create xinyin worker:", error);
+  throw new Error(
+    "Failed to create xinyin worker. Please check the worker script."
+  );
+}
+
+xinyin_worker.onerror = (error) => {
+  console.error("Xinyin Worker Error:", error);
+  // Reject all pending requests with the error
+  for (const requestId in gPendingRequests) {
+    const request = gPendingRequests[requestId];
+    if (request) {
+      request.reject(new Error(`Worker error: ${error.message}`));
+      delete gPendingRequests[requestId];
+    }
+  }
+};
 
 /**
  * @returns {Promise<void>} Returns a promise that resolves when the worker is ready.
@@ -122,17 +154,6 @@ function listSks() {
   };
   return postMessageToXinyinWorker(message);
 }
-
-/** @type { number } - xinyin request id */
-let gRequestId = 0;
-/**
- * @type { Record<number, {
- *  resolve: (value: any) => void,
- *  reject: (reason?: any) => void,
- *  reqMessageCode: XinYinMessageCode,
- * }> } - pending requests
- */
-let gPendingRequests = {};
 
 /**
  * @param { XinYinMessage } message

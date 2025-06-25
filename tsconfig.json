@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "checkJs": true,
-    "lib": ["es2020", "dom", "WebWorker"]
+    "lib": ["es2020", "dom", "WebWorker"],
+    "outDir": "./dist"
   },
   "exclude": ["node_modules", "dist", "build"]
 }
