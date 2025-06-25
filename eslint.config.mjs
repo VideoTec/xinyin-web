@@ -3,7 +3,7 @@ import globals from "globals";
 // import tseslint from "typescript-eslint";
 import json from "@eslint/json";
 import css from "@eslint/css";
-import { defineConfig } from "eslint/config";
+import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
   {
@@ -40,4 +40,5 @@ export default defineConfig([
     language: "css/css",
     extends: ["css/recommended"],
   },
+  globalIgnores(["xinyin_wasm.js"]),
 ]);
