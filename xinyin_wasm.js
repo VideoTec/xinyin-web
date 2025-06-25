@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { loadEncryptedSks, saveEncryptedSkBase64 } from './xinyin_worker.js';
 
 let wasm;
