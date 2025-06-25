@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
     "checkJs": true,
+    "target": "es2020",
     "lib": ["es2020", "dom", "WebWorker"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "outDir": "./dist"
   },
   "exclude": ["node_modules", "dist", "build"]
