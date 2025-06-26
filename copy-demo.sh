@@ -1,5 +1,5 @@
 # TARGET_DIR='../videotech/xinyin/demo'
-TARGET_DIR='./dist/demo'
+TARGET_DIR='./demo'
 
 mkdir -p "$TARGET_DIR"
 

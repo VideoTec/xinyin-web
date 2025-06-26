@@ -33,18 +33,18 @@ try {
   });
 } catch (error) {
   console.error("Failed to create xinyin worker:", error);
-  throw new Error(
-    "Failed to create xinyin worker. Please check the worker script."
-  );
 }
 
-xinyin_worker.onerror = (error) => {
-  console.error("Xinyin Worker Error:", error);
+/**
+ * @param {Event} errorEvent
+ */
+xinyin_worker.onerror = (errorEvent) => {
+  console.error("Xinyin Worker Error:", errorEvent);
   // Reject all pending requests with the error
   for (const requestId in gPendingRequests) {
     const request = gPendingRequests[requestId];
     if (request) {
-      request.reject(new Error(`Worker error: ${error.message}`));
+      request.reject(new Error(`Worker.onerror: ${errorEvent.type}`));
       delete gPendingRequests[requestId];
     }
   }

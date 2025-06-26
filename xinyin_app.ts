@@ -1,5 +1,12 @@
 import { html, LitElement, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { waitWorkerReady } from './xinyin_main.js';
+
+waitWorkerReady().then(() => {
+  console.log('Worker is ready');
+}).catch((error) => {
+  console.error('waitWorkerReady catch:', error);
+});
 
 @customElement('xinyin-app')
 export class XinyinApp extends LitElement {
