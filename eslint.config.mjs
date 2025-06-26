@@ -1,12 +1,20 @@
 import js from "@eslint/js";
-import json from "@eslint/json";
 import tseslint from "typescript-eslint";
+import globals from "globals";
+import { globalIgnores } from "eslint/config";
 
 export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  json.configs.recommended,
   {
-    ignores: ["dist", "node_modules", "xinyin_wasm.js"],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+    },
   },
+  globalIgnores(
+    ["dist", "xinyin_wasm.js"],
+    "ignore dist folder and wasm js file"
+  ),
 ];
