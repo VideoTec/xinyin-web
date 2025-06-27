@@ -1,4 +1,4 @@
-# TARGET_DIR='../videotech/xinyin/demo'
+# .github/workeflows/static.yml will call this script
 TARGET_DIR='./dist/demo'
 
 mkdir -p "$TARGET_DIR"

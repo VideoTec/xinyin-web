@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Prepare pages directory structure
+      - name: Copy demo files to dist/demo directory
         run: ./copy-demo.sh
       - name: Setup Pages
         uses: actions/configure-pages@v5
