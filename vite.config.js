@@ -1,6 +1,9 @@
 /** @type {import('vite').UserConfig} */
 export default {
   base: "./",
+  worker: {
+    format: "es",
+  },
   server: {
     port: 3000,
     strictPort: true,
@@ -14,5 +17,7 @@ export default {
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    target: "esnext",
+    sourcemap: true,
   },
 };

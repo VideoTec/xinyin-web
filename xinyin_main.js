@@ -27,24 +27,27 @@ let gPendingRequests = {};
 /** type { Work } */
 let xinyin_worker;
 try {
-  xinyin_worker = new Worker("./xinyin_worker.js", {
+  xinyin_worker = new Worker(new URL("./xinyin_worker.js", import.meta.url), {
     type: "module",
     name: "xinyin-worker",
   });
 } catch (error) {
-  console.error("Failed to create xinyin worker:", error);
+  console.error("new Worker() error:", error);
 }
 
 /**
- * @param {Event} errorEvent
+ * @param {Event | ErrorEvent} errorEvent
  */
 xinyin_worker.onerror = (errorEvent) => {
-  console.error("Xinyin Worker Error:", errorEvent);
+  let message = `xinyin_worker.onerror: ${errorEvent.timeStamp} - ${errorEvent.type}`;
+  if (errorEvent instanceof ErrorEvent) {
+    message += ` - ${errorEvent.message}`;
+  }
   // Reject all pending requests with the error
   for (const requestId in gPendingRequests) {
     const request = gPendingRequests[requestId];
     if (request) {
-      request.reject(new Error(`Worker.onerror: ${errorEvent.type}`));
+      request.reject(new Error(message));
       delete gPendingRequests[requestId];
     }
   }

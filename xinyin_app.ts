@@ -1,9 +1,14 @@
 import { html, LitElement, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { waitWorkerReady } from './xinyin_main.js';
+import { waitWorkerReady, generateWords32 } from './xinyin_main.js';
 
 waitWorkerReady().then(() => {
   console.log('Worker is ready');
+  generateWords32('example input', 6, 666).then((result) => {
+    console.log('Generated words:', result);
+  }).catch((error) => {
+    console.error('Error generating words:', error);
+  });
 }).catch((error) => {
   console.error('waitWorkerReady catch:', error);
 });

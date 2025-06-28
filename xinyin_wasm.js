@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { loadEncryptedSks, saveEncryptedSkBase64 } from './xinyin_worker.js';
+import { loadEncryptedSks, saveEncryptedSkBase64 } from './xinyin_opfs.js';
 
 let wasm;
 
@@ -251,14 +251,14 @@ function __wbg_get_imports() {
     imports.wbg.__wbg_getRandomValues_3c9c0d586e575a16 = function() { return handleError(function (arg0, arg1) {
         globalThis.crypto.getRandomValues(getArrayU8FromWasm0(arg0, arg1));
     }, arguments) };
-    imports.wbg.__wbg_loadEncryptedSks_b600863a20d04713 = function(arg0) {
+    imports.wbg.__wbg_loadEncryptedSks_1021053599cb67a2 = function(arg0) {
         const ret = loadEncryptedSks();
         const ptr1 = passArrayJsValueToWasm0(ret, wasm.__wbindgen_malloc);
         const len1 = WASM_VECTOR_LEN;
         getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
         getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
     };
-    imports.wbg.__wbg_saveEncryptedSkBase64_6f145dd929e0a63f = function(arg0, arg1) {
+    imports.wbg.__wbg_saveEncryptedSkBase64_c939fbbe17193bcf = function(arg0, arg1) {
         saveEncryptedSkBase64(getStringFromWasm0(arg0, arg1));
     };
     imports.wbg.__wbindgen_init_externref_table = function() {
