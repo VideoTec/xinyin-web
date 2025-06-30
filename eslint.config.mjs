@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
+import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 import { globalIgnores } from "eslint/config";
 
@@ -11,6 +12,13 @@ export default [
       globals: {
         ...globals.browser,
       },
+    },
+    plugins: {
+      reactHooks,
+    },
+    rules: {
+      "reactHooks/rules-of-hooks": "error",
+      "reactHooks/exhaustive-deps": "warn",
     },
   },
   globalIgnores(

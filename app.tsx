@@ -1,16 +1,58 @@
-import { useState } from 'react'
-import Button from '@mui/material/Button';
+import { useState } from "react";
+import XinYinInput from "./xinyin_input";
+import { waitWorkerReady } from "./xinyin_main";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+
+type WorkerStatus = "loading" | "success" | "error";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [workerStatus, setWorkerStatus] = useState<WorkerStatus>("loading");
+  const [workerError, setWorkerError] = useState<string | null>(null);
+
+  waitWorkerReady()
+    .then(() => {
+      setWorkerStatus("success");
+    })
+    .catch((error) => {
+      setWorkerStatus("error");
+      setWorkerError(error.message || "未知错误");
+    });
 
   return (
-    <div>
-      <h1>Hello React!</h1>
-      <p>你点击了 {count} 次。</p>
-      <Button variant="outlined" onClick={() => setCount(count + 1)}>点击我</Button>
-    </div>
-  )
+    <Stack>
+      {workerStatus === "loading" && (
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          minHeight="100vh"
+        >
+          <CircularProgress />
+          <Typography variant="h6" mt={2}>
+            正在初始化，请稍候...
+          </Typography>
+        </Box>
+      )}
+      {workerStatus === "error" && (
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          minHeight="100vh"
+        >
+          <Typography variant="h6" mt={2}>
+            初始化失败：{workerError}
+          </Typography>
+        </Box>
+      )}
+      <XinYinInput />
+    </Stack>
+  );
 }
 
-export default App
+export default App;
