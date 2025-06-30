@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Box, Stack, TextField, Button, Typography } from "@mui/material";
 import { generateWords32 } from "./xinyin_main";
 
@@ -9,10 +9,6 @@ export default function XinYinInput() {
   const [mnemonic, setMnemonic] = useState("");
 
   const handleGenerate = async () => {
-    // if (!heart || isNaN(start) || isNaN(count) || start === '' || count === '') {
-    //   setMnemonic('请填写完整且有效的数字和心印文本');
-    //   return;
-    // }
     const parsedStart = parseInt(start, 10);
     const parsedCount = parseInt(count, 10);
     if (
