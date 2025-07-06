@@ -5,17 +5,15 @@ import {
   initWallets,
   type WalletDispatchAction,
   walletsReducer,
-} from "./wallet_data";
+} from "./wallets_data";
 
-export const WalletListCtx = createContext<{
+export const WalletsCtx = createContext<{
   wallets: Wallet[];
   dispatch: Dispatch<WalletDispatchAction>;
 } | null>(null);
 
-export function WalletListProvider({ children }: { children: ReactNode }) {
+export function WalletsCtxProvider({ children }: { children: ReactNode }) {
   const [wallets, dispatch] = useImmerReducer(walletsReducer, initWallets());
 
-  return (
-    <WalletListCtx value={{ wallets, dispatch }}>{children}</WalletListCtx>
-  );
+  return <WalletsCtx value={{ wallets, dispatch }}>{children}</WalletsCtx>;
 }

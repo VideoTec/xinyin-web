@@ -1,43 +1,12 @@
-import Accordion from "@mui/material/Accordion";
-import AccordionSummary from "@mui/material/AccordionSummary";
+import { Wallet } from "./wallet";
 import Stack from "@mui/material/Stack";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import Typography from "@mui/material/Typography";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import AccordionActions from "@mui/material/AccordionActions";
 import { useContext } from "react";
-import { WalletListCtx } from "./wallet_list_ctx";
+import { WalletsCtx } from "./wallets_ctx";
 import Button from "@mui/material/Button";
 
-export function Wallet({ address, name }: { address: string; name: string }) {
-  const { dispatch } = useContext(WalletListCtx);
-  function handleDelete() {
-    if (window.confirm(`确定要删除钱包 ${name} 吗？`)) {
-      dispatch({ type: "delete", address });
-    }
-  }
-  return (
-    <Accordion key={address} sx={{ width: "400px", maxWidth: "90vw" }}>
-      <AccordionSummary
-        expandIcon={<ArrowDownwardIcon />}
-        aria-controls="panel1-content"
-        id="panel1-header"
-      >
-        <Typography component="span">{address}</Typography>
-      </AccordionSummary>
-      <AccordionDetails>
-        <Typography variant="h6">{name}</Typography>
-      </AccordionDetails>
-      <AccordionActions>
-        <Button onClick={handleDelete}>删除</Button>
-        <Button>修改</Button>
-      </AccordionActions>
-    </Accordion>
-  );
-}
-
 export function WalletList() {
-  const { wallets, dispatch } = useContext(WalletListCtx);
+  const { wallets, dispatch } = useContext(WalletsCtx);
 
   function handleAddWallet() {
     const newWallet = {

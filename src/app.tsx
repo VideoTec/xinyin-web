@@ -6,7 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import { useEffect } from "react";
 import { WalletList } from "./wallets";
-import { WalletListProvider } from "./wallet_list_ctx";
+import { WalletsCtxProvider } from "./wallets_ctx";
 
 type WorkerStatus = "loading" | "success" | "error";
 
@@ -14,7 +14,6 @@ function App() {
   const [workerStatus, setWorkerStatus] = useState<WorkerStatus>("loading");
   const [workerError, setWorkerError] = useState<string | null>(null);
 
-  // 使用 useEffect 避免每次渲染都调用 waitWorkerReady
   useEffect(() => {
     let isMounted = true;
     waitWorkerReady()
@@ -66,9 +65,9 @@ function App() {
   }
 
   return (
-    <WalletListProvider>
+    <WalletsCtxProvider>
       <WalletList />
-    </WalletListProvider>
+    </WalletsCtxProvider>
   );
 }
 
