@@ -14,3 +14,7 @@ cp './src/xinyin/xinyinOPFS.js' "$XINYIN_DIR/xinyinOPFS.js"
 cp './src/xinyin/xinyinWorker.js' "$XINYIN_DIR/xinyinWorker.js"
 cp './src/xinyin/xinyinWasm.js' "$XINYIN_DIR/xinyinWasm.js"
 # cp './src/xinyin/xinyinWasm.wasm' "$XINYIN_DIR/xinyinWasm.wasm"
+
+# 替换 xinyinWorker.js 中的 WASM 路径
+sed -i '' 's|xinyin_wasm("./xinyinWasm.wasm")|xinyin_wasm(new URL("../assets/xinyinWasm.wasm", self.location.href))|g' "$XINYIN_DIR/xinyinWorker.js"
+
