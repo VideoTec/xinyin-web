@@ -30,7 +30,7 @@ export default [
     },
   },
   globalIgnores(
-    ["dist", "xinyin_wasm.js"],
+    ["dist", "src/xinyin/xinyinWasm.js"],
     "ignore dist folder and wasm js file"
   ),
 ];

@@ -2,7 +2,7 @@ import { Wallet } from "./wallet";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useContext } from "react";
-import { WalletsCtx } from "./wallets_ctx";
+import { WalletsCtx } from "./walletsCtx";
 import Button from "@mui/material/Button";
 
 export function WalletList() {

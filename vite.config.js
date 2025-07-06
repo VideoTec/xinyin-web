@@ -2,7 +2,6 @@ import react from "@vitejs/plugin-react";
 
 /** @type {import('vite').UserConfig} */
 export default {
-  root: "src",
   base: "./",
   worker: {
     format: "es",
@@ -18,7 +17,7 @@ export default {
     },
   },
   build: {
-    outDir: "../dist",
+    outDir: "./dist",
     emptyOutDir: true,
     target: "esnext",
     sourcemap: true,

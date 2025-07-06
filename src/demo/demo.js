@@ -5,7 +5,7 @@ import {
   clearSksCache,
   signMessage,
   waitWorkerReady,
-} from "../xinyin/xinyin_main.js";
+} from "../xinyin/xinyinMain.js";
 
 import bs58 from "https://cdn.jsdelivr.net/npm/bs58@6.0.0/+esm";
 

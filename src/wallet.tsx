@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { WalletsCtx } from "./wallets_ctx";
+import { WalletsCtx } from "./walletsCtx";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import Typography from "@mui/material/Typography";

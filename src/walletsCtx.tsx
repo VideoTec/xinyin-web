@@ -5,7 +5,7 @@ import {
   initWallets,
   type WalletDispatchAction,
   walletsReducer,
-} from "./wallets_data";
+} from "./walletsData";
 
 export const WalletsCtx = createContext<{
   wallets: Wallet[];

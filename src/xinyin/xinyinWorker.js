@@ -2,12 +2,12 @@ import xinyin_wasm, {
   import_xinyin_words32,
   generate_xinyin_words32,
   sign_message,
-} from "./xinyin_wasm.js";
+} from "./xinyinWasm.js";
 
-import { XinYinMessageCode } from "./xinyin_types.js";
-import { loadEncryptedSks, clearSksCache } from "./xinyin_opfs.js";
+import { XinYinMessageCode } from "./xinyinTypes.js";
+import { loadEncryptedSks, clearSksCache } from "./xinyinOPFS.js";
 
-xinyin_wasm()
+xinyin_wasm("/xinyin/xinyinWasm.wasm")
   .then(() => {
     postMessageToXinyinMain({
       code: XinYinMessageCode.WorkerReady,
@@ -23,7 +23,7 @@ xinyin_wasm()
   });
 
 /**
- * @typedef { import('./xinyin_types.js').XinYinMessage } XinYinMessage
+ * @typedef { import('./xinyinTypes.js').XinYinMessage } XinYinMessage
  */
 
 self.onmessage = async (/** @type {{data: XinYinMessage}} */ event) => {

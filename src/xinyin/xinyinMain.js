@@ -1,7 +1,7 @@
-import { XinYinMessageCode } from "./xinyin_types.js";
+import { XinYinMessageCode } from "./xinyinTypes.js";
 
 /**
- * @typedef { import('./xinyin_types.js').XinYinMessage } XinYinMessage
+ * @typedef { import('./xinyinTypes.js').XinYinMessage } XinYinMessage
  */
 
 export {
@@ -27,7 +27,7 @@ let gPendingRequests = {};
 /** type { Work } */
 let xinyin_worker;
 try {
-  xinyin_worker = new Worker(new URL("./xinyin_worker.js", import.meta.url), {
+  xinyin_worker = new Worker(new URL("./xinyinWorker.js", import.meta.url), {
     type: "module",
     name: "xinyin-worker",
   });

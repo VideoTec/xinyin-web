@@ -1,12 +1,12 @@
 import { useState } from "react";
 // import XinYinInput from "./xinyin_input";
-import { waitWorkerReady } from "./xinyin/xinyin_main";
+import { waitWorkerReady } from "./xinyin/xinyinMain";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import { useEffect } from "react";
 import { WalletList } from "./wallets";
-import { WalletsCtxProvider } from "./wallets_ctx";
+import { WalletsCtxProvider } from "./walletsCtx";
 
 type WorkerStatus = "loading" | "success" | "error";
 
