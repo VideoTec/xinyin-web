@@ -16,5 +16,12 @@ cp './src/xinyin/xinyinWasm.js' "$XINYIN_DIR/xinyinWasm.js"
 # cp './src/xinyin/xinyinWasm.wasm' "$XINYIN_DIR/xinyinWasm.wasm"
 
 # 替换 xinyinWorker.js 中的 WASM 路径
-sed -i '' 's|xinyin_wasm("./xinyinWasm.wasm")|xinyin_wasm(new URL("../assets/xinyinWasm.wasm", self.location.href))|g' "$XINYIN_DIR/xinyinWorker.js"
+# 检测操作系统并使用相应的 sed 语法
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  # macOS
+  sed -i '' 's|xinyin_wasm("./xinyinWasm.wasm")|xinyin_wasm(new URL("../assets/xinyinWasm.wasm", self.location.href))|g' "$XINYIN_DIR/xinyinWorker.js"
+else
+  # Linux (GitHub Actions)
+  sed -i 's|xinyin_wasm("./xinyinWasm.wasm")|xinyin_wasm(new URL("../assets/xinyinWasm.wasm", self.location.href))|g' "$XINYIN_DIR/xinyinWorker.js"
+fi
 
