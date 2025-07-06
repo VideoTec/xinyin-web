@@ -1,14 +1,16 @@
 # .github/workeflows/static.yml will call this script
 TARGET_DIR='./dist/demo'
+XINYIN_DIR='./dist/xinyin'
 
 mkdir -p "$TARGET_DIR"
+mkdir -p "$XINYIN_DIR"
 
-cp './demo.html' "$TARGET_DIR/index.html"
-cp './demo.css' "$TARGET_DIR/demo.css"
-cp './demo.js' "$TARGET_DIR/demo.js"
-cp './xinyin_main.js' "$TARGET_DIR/xinyin_main.js"
-cp './xinyin_types.js' "$TARGET_DIR/xinyin_types.js"
-cp './xinyin_opfs.js' "$TARGET_DIR/xinyin_opfs.js"
-cp './xinyin_worker.js' "$TARGET_DIR/xinyin_worker.js"
-cp './xinyin_wasm.js' "$TARGET_DIR/xinyin_wasm.js"
-cp './xinyin_wasm_bg.wasm' "$TARGET_DIR/xinyin_wasm_bg.wasm"
+cp './src/demo/index.html' "$TARGET_DIR/index.html"
+cp './src/demo/demo.css' "$TARGET_DIR/demo.css"
+cp './src/demo/demo.js' "$TARGET_DIR/demo.js"
+cp './src/xinyin/xinyin_main.js' "$XINYIN_DIR/xinyin_main.js"
+cp './src/xinyin/xinyin_types.js' "$XINYIN_DIR/xinyin_types.js"
+cp './src/xinyin/xinyin_opfs.js' "$XINYIN_DIR/xinyin_opfs.js"
+cp './src/xinyin/xinyin_worker.js' "$XINYIN_DIR/xinyin_worker.js"
+cp './src/xinyin/xinyin_wasm.js' "$XINYIN_DIR/xinyin_wasm.js"
+cp './src/xinyin/xinyin_wasm_bg.wasm' "$XINYIN_DIR/xinyin_wasm_bg.wasm"

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, Stack, TextField, Button, Typography } from "@mui/material";
-import { generateWords32 } from "./xinyin_main";
+import { generateWords32 } from "./xinyin/xinyin_main";
 
 export default function XinYinInput() {
   const [start, setStart] = useState("");

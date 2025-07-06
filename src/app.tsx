@@ -1,11 +1,12 @@
 import { useState } from "react";
-import XinYinInput from "./xinyin_input";
-import { waitWorkerReady } from "./xinyin_main";
+// import XinYinInput from "./xinyin_input";
+import { waitWorkerReady } from "./xinyin/xinyin_main";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
 import { useEffect } from "react";
+import { WalletList } from "./wallets";
+import { WalletListProvider } from "./wallet_list_ctx";
 
 type WorkerStatus = "loading" | "success" | "error";
 
@@ -64,11 +65,10 @@ function App() {
     );
   }
 
-  // workerStatus === "success"
   return (
-    <Stack alignItems="center">
-      <XinYinInput />
-    </Stack>
+    <WalletListProvider>
+      <WalletList />
+    </WalletListProvider>
   );
 }
 

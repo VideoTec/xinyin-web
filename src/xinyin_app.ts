@@ -1,6 +1,6 @@
 import { html, LitElement, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { waitWorkerReady, generateWords32 } from './xinyin_main.js';
+import { waitWorkerReady, generateWords32 } from './xinyin/xinyin_main.js';
 
 waitWorkerReady().then(() => {
   console.log('Worker is ready');

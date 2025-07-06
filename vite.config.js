@@ -2,6 +2,7 @@ import react from "@vitejs/plugin-react";
 
 /** @type {import('vite').UserConfig} */
 export default {
+  root: "src",
   base: "./",
   worker: {
     format: "es",
@@ -9,7 +10,7 @@ export default {
   server: {
     port: 3000,
     strictPort: true,
-    open: "index.html",
+    open: true,
     middlewareMode: false,
     https: {
       key: "../../js/localhost.key",
@@ -17,7 +18,7 @@ export default {
     },
   },
   build: {
-    outDir: "dist",
+    outDir: "../dist",
     emptyOutDir: true,
     target: "esnext",
     sourcemap: true,
