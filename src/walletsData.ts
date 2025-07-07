@@ -48,6 +48,7 @@ export function walletsReducer(
       return draft.filter((wallet) => wallet.address !== action.address);
     }
     case "clear": {
+      localStorage.clear(); // 清空 localStorage 中的钱包数据
       draft.length = 0; // 清空钱包列表
       break;
     }
@@ -57,6 +58,7 @@ export function walletsReducer(
       );
       if (index !== -1) {
         draft[index] = action.wallet;
+        localStorage.setItem(action.wallet.address, action.wallet.name);
       }
       break;
     }

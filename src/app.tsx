@@ -1,12 +1,12 @@
 import { useState } from "react";
 // import XinYinInput from "./xinyin_input";
 import { waitWorkerReady } from "./xinyin/xinyinMain";
-import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import { useEffect } from "react";
 import { WalletList } from "./wallets";
 import { WalletsCtxProvider } from "./walletsCtx";
+import Stack from "@mui/material/Stack";
 
 type WorkerStatus = "loading" | "success" | "error";
 
@@ -31,43 +31,27 @@ function App() {
     };
   }, []);
 
-  if (workerStatus === "loading") {
-    return (
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="100vh"
-      >
-        <CircularProgress />
-        <Typography variant="h6" mt={2}>
-          正在初始化，请稍候...
-        </Typography>
-      </Box>
-    );
-  }
-
-  if (workerStatus === "error") {
-    return (
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="100vh"
-      >
+  return (
+    <Stack alignItems="center">
+      {workerStatus === "error" && (
         <Typography variant="h6" mt={2}>
           初始化失败：{workerError}
         </Typography>
-      </Box>
-    );
-  }
-
-  return (
-    <WalletsCtxProvider>
-      <WalletList />
-    </WalletsCtxProvider>
+      )}
+      {workerStatus === "loading" && (
+        <>
+          <CircularProgress />
+          <Typography variant="h6" mt={2}>
+            正在初始化，请稍候...
+          </Typography>
+        </>
+      )}
+      {workerStatus === "success" && (
+        <WalletsCtxProvider>
+          <WalletList />
+        </WalletsCtxProvider>
+      )}
+    </Stack>
   );
 }
 

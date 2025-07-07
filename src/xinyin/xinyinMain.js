@@ -244,7 +244,7 @@ function onXinyinMessage(message) {
     case XinYinMessageCode.WorkerReady: {
       // setTimeout(() => {
       request.resolve();
-      // }, 500);
+      // }, 5000);
       break;
     }
     default:

@@ -1,9 +1,9 @@
 import { Wallet } from "./wallet";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useContext } from "react";
 import { WalletsCtx } from "./walletsCtx";
 import Button from "@mui/material/Button";
+import { WalletDetail } from "./walletDetail";
 
 export function WalletList() {
   const { wallets, dispatch } = useContext(WalletsCtx);
@@ -23,17 +23,18 @@ export function WalletList() {
 
   if (!wallets || wallets.length === 0) {
     return (
-      <Stack alignItems="center" justifyContent="center" minHeight="100vh">
+      <>
         <Button variant="contained" onClick={handleAddWallet}>
           添加钱包
         </Button>
         <Typography variant="h6">没有可用的钱包</Typography>
-      </Stack>
+      </>
     );
   }
 
   return (
-    <Stack spacing={2} alignItems="center">
+    <>
+      <WalletDetail address="" walletName="" type="add" />
       <Button variant="contained" onClick={handleAddWallet}>
         添加钱包
       </Button>
@@ -44,6 +45,6 @@ export function WalletList() {
           key={wallet.address}
         />
       ))}
-    </Stack>
+    </>
   );
 }
