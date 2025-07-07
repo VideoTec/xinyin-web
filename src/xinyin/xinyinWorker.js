@@ -7,7 +7,7 @@ import xinyin_wasm, {
 import { XinYinMessageCode } from "./xinyinTypes.js";
 import { loadEncryptedSks, clearSksCache } from "./xinyinOPFS.js";
 
-xinyin_wasm("./xinyinWasm.wasm")
+xinyin_wasm("../xinyin/xinyinWasm.wasm")
   .then(() => {
     postMessageToXinyinMain({
       code: XinYinMessageCode.WorkerReady,

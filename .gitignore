@@ -1,4 +1,4 @@
 node_modules/
 .DS_Store
 /src/xinyin/xinyinWasm.wasm
-/public/assets/xinyinWasm.wasm
+/public/xinyin/xinyinWasm.wasm
