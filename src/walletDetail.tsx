@@ -1,53 +1,79 @@
-import { useContext, useState } from "react";
+import { cloneElement, useContext, useState, type ReactElement } from "react";
 import { WalletsCtx } from "./walletsCtx";
 import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
+import Button, { type ButtonProps } from "@mui/material/Button";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
 
-export function WalletDetail({
-  address,
-  walletName,
-  type,
+export function WalletDetailDialog({
+  initAddress = "",
+  initName = "",
+  type = "add",
+  openBtn,
 }: {
-  address: string;
-  walletName: string;
-  type: "add" | "modify";
+  initAddress?: string;
+  initName?: string;
+  type?: "add" | "modify";
+  openBtn: ReactElement<ButtonProps, typeof Button>;
 }) {
+  const [open, setOpen] = useState(false);
+  const [address, setAddress] = useState(initAddress);
+  const [walletName, setWalletName] = useState(initName);
   const { dispatch } = useContext(WalletsCtx);
-  const [addr, setAddr] = useState(address);
-  const [name, setName] = useState(walletName);
 
-  function handleSubmit() {
+  const title = type === "add" ? "添加钱包" : "修改钱包";
+
+  const OpenBtn = cloneElement(openBtn, {
+    onClick: () => {
+      setAddress(initAddress);
+      setWalletName(initName);
+      setOpen(true);
+    },
+  });
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     const wallet = {
-      address: addr,
-      name,
+      address,
+      name: walletName,
     };
     dispatch({ type, wallet });
+    setOpen(false);
   }
 
   return (
-    <Stack alignItems="center" spacing={2} component="form" autoComplete="off">
-      <TextField
-        fullWidth
-        size="small"
-        error={!addr.startsWith("0x") || addr.length !== 42}
-        variant="filled"
-        label="钱包地址"
-        helperText="钱包地址必须是以0x开头的20字节地址"
-        value={addr}
-        disabled={type === "modify"}
-        onChange={(e) => setAddr(e.target.value)}
-      />
-      <TextField
-        size="small"
-        label="钱包名称"
-        fullWidth
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <Button variant="contained" onClick={handleSubmit}>
-        保存
-      </Button>
-    </Stack>
+    <>
+      {OpenBtn}
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
+        <DialogContent sx={{ paddingBottom: 0 }}>
+          <form onSubmit={handleSubmit} style={{ paddingTop: 8 }}>
+            <TextField
+              sx={{ marginBottom: 2 }}
+              fullWidth
+              label="钱包地址"
+              helperText="钱包地址必须是以0x开头的20字节地址"
+              value={address}
+              disabled={type === "modify"}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+            <TextField
+              label="钱包名称"
+              fullWidth
+              value={walletName}
+              onChange={(e) => setWalletName(e.target.value)}
+            />
+            <DialogActions>
+              <Button onClick={() => setOpen(false)}>取消</Button>
+              <Button type="submit">确认</Button>
+            </DialogActions>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

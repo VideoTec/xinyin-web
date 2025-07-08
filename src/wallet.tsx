@@ -7,12 +7,19 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionActions from "@mui/material/AccordionActions";
 import Button from "@mui/material/Button";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import { useConfirm } from "material-ui-confirm";
+import { WalletDetailDialog } from "./walletDetail";
 
 export function Wallet({ address, name }: { address: string; name: string }) {
   const { dispatch } = useContext(WalletsCtx);
+  const confirm = useConfirm();
 
-  function handleDelete() {
-    if (window.confirm(`确定要删除钱包 ${name} 吗？`)) {
+  async function handleDelete() {
+    const { confirmed } = await confirm({
+      title: "删除钱包",
+      description: `确定要删除钱包 ${name} 吗？`,
+    });
+    if (confirmed) {
       dispatch({ type: "delete", address });
     }
   }
@@ -31,7 +38,12 @@ export function Wallet({ address, name }: { address: string; name: string }) {
       </AccordionDetails>
       <AccordionActions>
         <Button onClick={handleDelete}>删除</Button>
-        <Button>修改</Button>
+        <WalletDetailDialog
+          initAddress={address}
+          initName={name}
+          type="modify"
+          openBtn={<Button>修改</Button>}
+        />
       </AccordionActions>
     </Accordion>
   );
