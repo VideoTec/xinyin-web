@@ -8,6 +8,9 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import type { Wallet } from "./walletsData";
+import bs58 from "bs58";
 
 export function WalletDetailDialog({
   initAddress = "",
@@ -21,28 +24,51 @@ export function WalletDetailDialog({
   openBtn: ReactElement<ButtonProps, typeof Button>;
 }) {
   const [open, setOpen] = useState(false);
-  const [address, setAddress] = useState(initAddress);
-  const [walletName, setWalletName] = useState(initName);
   const { dispatch } = useContext(WalletsCtx);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<Wallet>({
+    defaultValues: {
+      address: initAddress,
+      name: initName,
+    },
+  });
 
   const title = type === "add" ? "添加钱包" : "修改钱包";
 
   const OpenBtn = cloneElement(openBtn, {
     onClick: () => {
-      setAddress(initAddress);
-      setWalletName(initName);
+      reset({
+        address: initAddress,
+        name: initName,
+      });
       setOpen(true);
     },
   });
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const onSubmit: SubmitHandler<Wallet> = (data) => {
+    console.log("提交数据", data);
     const wallet = {
-      address,
-      name: walletName,
+      address: data.address,
+      name: data.name,
     };
     dispatch({ type, wallet });
     setOpen(false);
+  };
+
+  function validateAddress(value: string) {
+    try {
+      const decoded = bs58.decode(value);
+      if (decoded.length !== 32) {
+        return "钱包地址必须是 32 字节的 Base58 编码字符串";
+      }
+    } catch (e) {
+      return "钱包地址格式不正确: " + e;
+    }
+    return true;
   }
 
   return (
@@ -51,21 +77,25 @@ export function WalletDetailDialog({
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
         <DialogContent sx={{ paddingBottom: 0 }}>
-          <form onSubmit={handleSubmit} style={{ paddingTop: 8 }}>
+          <form onSubmit={handleSubmit(onSubmit)} style={{ paddingTop: 8 }}>
             <TextField
               sx={{ marginBottom: 2 }}
               fullWidth
               label="钱包地址"
-              helperText="钱包地址必须是以0x开头的20字节地址"
-              value={address}
               disabled={type === "modify"}
-              onChange={(e) => setAddress(e.target.value)}
+              {...register("address", {
+                required: "必须填写钱包地址",
+                validate: validateAddress,
+              })}
+              error={!!errors.address}
+              helperText={errors.address && errors.address.message}
             />
             <TextField
               label="钱包名称"
               fullWidth
-              value={walletName}
-              onChange={(e) => setWalletName(e.target.value)}
+              {...register("name", { required: "必须填写钱包名称" })}
+              error={!!errors.name}
+              helperText={errors.name && errors.name.message}
             />
             <DialogActions>
               <Button onClick={() => setOpen(false)}>取消</Button>
