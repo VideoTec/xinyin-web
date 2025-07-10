@@ -25,16 +25,16 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   }
 
   return (
-    <Accordion key={address} sx={{ width: "400px", maxWidth: "90vw" }}>
+    <Accordion key={address} sx={{ width: "800px", maxWidth: "90vw" }}>
       <AccordionSummary
         expandIcon={<ArrowDownwardIcon />}
         aria-controls="panel1-content"
         id="panel1-header"
       >
-        <Typography component="span">{address}</Typography>
+        <Typography component="span">{name}</Typography>
       </AccordionSummary>
       <AccordionDetails>
-        <Typography variant="h6">{name}</Typography>
+        <p style={{ wordBreak: "break-all" }}>{address}</p>
       </AccordionDetails>
       <AccordionActions>
         <Button onClick={handleDelete}>删除</Button>
