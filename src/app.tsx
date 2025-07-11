@@ -1,14 +1,81 @@
 import { useState } from "react";
-// import XinYinInput from "./xinyin_input";
 import { waitWorkerReady } from "./xinyin/xinyinMain";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
-import { useEffect } from "react";
+import { useEffect, memo } from "react";
 import { WalletList } from "./wallets";
-import { WalletsCtxProvider } from "./walletsCtx";
+import { WalletsCtx } from "./walletsCtx";
 import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
+import { WalletDlg } from "./walletDlg";
+import { XinyinDlg } from "./xinyinDlg";
+import AddIcon from "@mui/icons-material/Add";
+import ImportExport from "@mui/icons-material/ImportExport";
+import Fab from "@mui/material/Fab";
+import { useImmerReducer } from "use-immer";
+import {
+  initWallets,
+  walletsReducer,
+  type Wallet,
+  type WalletDispatchAction,
+} from "./walletsData";
+import type { Dispatch } from "react";
 
 type WorkerStatus = "loading" | "success" | "error";
+
+const FixedButtons = memo(
+  ({ dispatch }: { dispatch: Dispatch<WalletDispatchAction> }) => {
+    return (
+      <WalletsCtx value={{ dispatch }}>
+        <Box sx={{ position: "fixed", right: 32, bottom: 32 }}>
+          <WalletDlg type="add">
+            {({ triggerOpen }) => (
+              <Fab color="primary" onClick={triggerOpen}>
+                <AddIcon />
+              </Fab>
+            )}
+          </WalletDlg>
+          <XinyinDlg>
+            {({ triggerOpen }) => (
+              <Fab color="primary" onClick={triggerOpen}>
+                <ImportExport />
+              </Fab>
+            )}
+          </XinyinDlg>
+        </Box>
+      </WalletsCtx>
+    );
+  }
+);
+FixedButtons.displayName = "FixedButtons";
+
+const WalletListWrapper = memo(
+  ({
+    wallets,
+    dispatch,
+  }: {
+    wallets: Wallet[];
+    dispatch: Dispatch<WalletDispatchAction>;
+  }) => {
+    return (
+      <WalletsCtx value={{ wallets, dispatch }}>
+        <WalletList />
+      </WalletsCtx>
+    );
+  }
+);
+WalletListWrapper.displayName = "WalletListWrapper";
+
+function WalletApp() {
+  const [wallets, dispatch] = useImmerReducer(walletsReducer, initWallets());
+
+  return (
+    <>
+      <FixedButtons dispatch={dispatch} />
+      <WalletListWrapper wallets={wallets} dispatch={dispatch} />
+    </>
+  );
+}
 
 function App() {
   const [workerStatus, setWorkerStatus] = useState<WorkerStatus>("loading");
@@ -46,11 +113,7 @@ function App() {
           </Typography>
         </>
       )}
-      {workerStatus === "success" && (
-        <WalletsCtxProvider>
-          <WalletList />
-        </WalletsCtxProvider>
-      )}
+      {workerStatus === "success" && <WalletApp />}
     </Stack>
   );
 }

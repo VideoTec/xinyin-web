@@ -1,7 +1,13 @@
-import { cloneElement, useContext, useState, type ReactElement } from "react";
+import {
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import { WalletsCtx } from "./walletsCtx";
 import TextField from "@mui/material/TextField";
-import Button, { type ButtonProps } from "@mui/material/Button";
+import Button from "@mui/material/Button";
 import {
   Dialog,
   DialogActions,
@@ -12,17 +18,27 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import type { Wallet } from "./walletsData";
 import bs58 from "bs58";
 
-export function WalletDetailDialog({
+export function WalletDlg({
   initAddress = "",
   initName = "",
   type = "add",
-  openBtn,
+  children,
 }: {
   initAddress?: string;
   initName?: string;
   type?: "add" | "modify";
-  openBtn: ReactElement<ButtonProps, typeof Button>;
+  children: (props: { triggerOpen: () => void }) => ReactElement;
 }) {
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+  const instanceId = useRef(Math.random().toString(36).slice(2));
+
+  useEffect(() => {
+    console.log(
+      `WalletDetailDialog(${instanceId.current}) 渲染次数:`,
+      renderCount.current
+    );
+  });
   const [open, setOpen] = useState(false);
   const { dispatch } = useContext(WalletsCtx);
   const {
@@ -39,15 +55,13 @@ export function WalletDetailDialog({
 
   const title = type === "add" ? "添加钱包" : "修改钱包";
 
-  const OpenBtn = cloneElement(openBtn, {
-    onClick: () => {
-      reset({
-        address: initAddress,
-        name: initName,
-      });
-      setOpen(true);
-    },
-  });
+  function handleOpen() {
+    reset({
+      address: initAddress,
+      name: initName,
+    });
+    setOpen(true);
+  }
 
   const onSubmit: SubmitHandler<Wallet> = (data) => {
     console.log("提交数据", data);
@@ -73,7 +87,7 @@ export function WalletDetailDialog({
 
   return (
     <>
-      {OpenBtn}
+      {children({ triggerOpen: handleOpen })}
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
         <DialogContent sx={{ paddingBottom: 0 }}>

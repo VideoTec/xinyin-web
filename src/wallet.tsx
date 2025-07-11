@@ -8,7 +8,7 @@ import AccordionActions from "@mui/material/AccordionActions";
 import Button from "@mui/material/Button";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { useConfirm } from "material-ui-confirm";
-import { WalletDetailDialog } from "./walletDetail";
+import { WalletDlg } from "./walletDlg";
 
 export function Wallet({ address, name }: { address: string; name: string }) {
   const { dispatch } = useContext(WalletsCtx);
@@ -38,12 +38,9 @@ export function Wallet({ address, name }: { address: string; name: string }) {
       </AccordionDetails>
       <AccordionActions>
         <Button onClick={handleDelete}>删除</Button>
-        <WalletDetailDialog
-          initAddress={address}
-          initName={name}
-          type="modify"
-          openBtn={<Button>修改</Button>}
-        />
+        <WalletDlg initAddress={address} initName={name} type="modify">
+          <Button>修改</Button>
+        </WalletDlg>
       </AccordionActions>
     </Accordion>
   );

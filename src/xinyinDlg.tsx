@@ -7,7 +7,7 @@ import {
   TextField,
 } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
-import { useState, useCallback, type ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
 
 const initialWordCount = 500; // 假设初始字数为500
@@ -22,7 +22,7 @@ interface XinyinTxt {
 export function XinyinDlg({
   children,
 }: {
-  children: (props: { onClick: () => void }) => ReactElement;
+  children: (props: { triggerOpen: () => void }) => ReactElement;
 }) {
   const [open, setOpen] = useState(false);
   const {
@@ -38,23 +38,19 @@ export function XinyinDlg({
     },
   });
 
-  const handleOpen = useCallback(() => {
+  function handleOpen() {
     setOpen(true);
     reset({
       startIndex: initialStartIndex,
       wordCount: initialWordCount,
       xinyinText: "",
     });
-  }, [reset]);
+  }
 
-  const handleClose = useCallback(() => {
-    setOpen(false);
-  }, []);
-
-  const handleFormSubmit = useCallback((data: XinyinTxt) => {
+  function handleFormSubmit(data: XinyinTxt) {
     console.log(data);
     setOpen(false);
-  }, []);
+  }
 
   function validateXinyinText(text: string): boolean | string {
     if (!text || text.trim() === "") {
@@ -92,8 +88,8 @@ export function XinyinDlg({
 
   return (
     <>
-      {children({ onClick: handleOpen })}
-      <Dialog open={open} onClose={handleClose}>
+      {children({ triggerOpen: handleOpen })}
+      <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>输入心印信息</DialogTitle>
         <DialogContent>
           <Stack
