@@ -12,6 +12,7 @@ import Dialog from "@mui/material/Dialog";
 import { useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
 import { generateWords32 } from "./xinyin/xinyinMain";
+import { useTheme } from "@mui/material/styles";
 
 const initialWordCount = 600; // 假设初始字数为600
 const initialStartIndex = 8; // 假设初始开始序号为8
@@ -35,6 +36,7 @@ export function XinyinDlg({
   type: "generate" | "import";
   children: (props: { triggerOpen: () => void }) => ReactElement;
 }) {
+  const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(Step.ChooseCharset);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -53,6 +55,8 @@ export function XinyinDlg({
       xinyinText: "",
     },
   });
+
+  const title = type === "generate" ? "生成心印助记字" : "导入心印助记字";
 
   function handleOpen() {
     setOpen(true);
@@ -132,7 +136,6 @@ export function XinyinDlg({
     }
     return true;
   }
-
   return (
     <>
       {children({ triggerOpen: handleOpen })}
@@ -142,7 +145,7 @@ export function XinyinDlg({
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>输入心印信息</DialogTitle>
+        <DialogTitle>{title}</DialogTitle>
         <DialogContent>
           <Stack
             component="form"
@@ -179,14 +182,38 @@ export function XinyinDlg({
               </>
             )}
             {step == Step.InputXinyinText && (
-              <TextField
-                label="心印文本"
-                fullWidth
-                autoComplete="off"
-                {...register("xinyinText", { validate: validateXinyinText })}
-                error={!!errors.xinyinText}
-                helperText={errors.xinyinText ? errors.xinyinText.message : ""}
-              />
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  请输入心印文本，只有自己知道的一句话，用于密钥派生和字表生成。建议为20字符以上，包含多种字符类型，避免使用常见语句或个人信息。例如：“星辰大海，心自无疆。”
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    marginBottom: 1,
+                  }}
+                >
+                  <span
+                    style={{
+                      color: theme.palette.error.main,
+                      fontWeight: theme.typography.fontWeightBold,
+                    }}
+                  >
+                    不要输入&nbsp;
+                  </span>
+                  正式使用的心印文本，这里只是演示使用。
+                </Typography>
+                <TextField
+                  label="心印文本"
+                  fullWidth
+                  autoComplete="off"
+                  {...register("xinyinText", { validate: validateXinyinText })}
+                  error={!!errors.xinyinText}
+                  helperText={
+                    errors.xinyinText ? errors.xinyinText.message : ""
+                  }
+                />
+              </>
             )}
             <DialogActions>
               {step == Step.ChooseCharset && (
@@ -201,15 +228,19 @@ export function XinyinDlg({
                 </>
               )}
             </DialogActions>
-            {type == "generate" &&
-              step == Step.InputXinyinText &&
-              (isGenerating ? (
-                <CircularProgress />
-              ) : (
-                <Typography variant="body2" sx={{ marginTop: 2 }}>
-                  生成的助记字是: {generatedWords32}
+            {type == "generate" && step == Step.InputXinyinText && (
+              <>
+                <Typography color="text.secondary" variant="body2">
+                  <p style={{ margin: 0 }}>生成的心印助记字：</p>
+                  <p style={{ margin: 0 }}>
+                    用于表示加密密钥的32个汉字，每个汉字唯一对应加密密钥中的一个字节
+                  </p>
                 </Typography>
-              ))}
+                <Typography color="success" variant="body2">
+                  {generatedWords32}
+                </Typography>
+              </>
+            )}
           </Stack>
         </DialogContent>
       </Dialog>
