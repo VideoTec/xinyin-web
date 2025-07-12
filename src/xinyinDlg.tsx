@@ -1,17 +1,19 @@
 import {
   Button,
+  CircularProgress,
   DialogActions,
   DialogContent,
   DialogTitle,
   Stack,
   TextField,
+  Typography,
 } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
 import { useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
 import { generateWords32 } from "./xinyin/xinyinMain";
 
-const initialWordCount = 500; // 假设初始字数为500
+const initialWordCount = 600; // 假设初始字数为600
 const initialStartIndex = 8; // 假设初始开始序号为8
 
 enum Step {
@@ -35,6 +37,8 @@ export function XinyinDlg({
 }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(Step.ChooseCharset);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedWords32, setGeneratedWords32] = useState<string>("");
   const {
     register,
     handleSubmit,
@@ -53,6 +57,8 @@ export function XinyinDlg({
   function handleOpen() {
     setOpen(true);
     setStep(Step.ChooseCharset);
+    setIsGenerating(false);
+    setGeneratedWords32("");
     reset({
       startIndex: initialStartIndex,
       wordCount: initialWordCount,
@@ -62,10 +68,11 @@ export function XinyinDlg({
 
   function handleFormSubmit(data: XinyinTxt) {
     if (type == "generate" && step == Step.InputXinyinText) {
-      console.log(data);
+      setIsGenerating(true);
       generateWords32(data.xinyinText, data.startIndex, data.wordCount).then(
         (w32) => {
-          console.log("生成的助记字是: ", w32);
+          setGeneratedWords32(w32);
+          setIsGenerating(false);
         }
       );
     } else if (type == "import" && step == Step.InputWords32) {
@@ -81,6 +88,7 @@ export function XinyinDlg({
         trigger(["startIndex", "wordCount"]).then((r) => {
           if (r) {
             setStep(Step.InputXinyinText);
+            setGeneratedWords32("");
           }
         });
       }
@@ -128,7 +136,12 @@ export function XinyinDlg({
   return (
     <>
       {children({ triggerOpen: handleOpen })}
-      <Dialog open={open} onClose={() => setOpen(false)}>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>输入心印信息</DialogTitle>
         <DialogContent>
           <Stack
@@ -188,6 +201,15 @@ export function XinyinDlg({
                 </>
               )}
             </DialogActions>
+            {type == "generate" &&
+              step == Step.InputXinyinText &&
+              (isGenerating ? (
+                <CircularProgress />
+              ) : (
+                <Typography variant="body2" sx={{ marginTop: 2 }}>
+                  生成的助记字是: {generatedWords32}
+                </Typography>
+              ))}
           </Stack>
         </DialogContent>
       </Dialog>
