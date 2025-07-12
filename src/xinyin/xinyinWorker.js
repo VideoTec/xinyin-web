@@ -26,7 +26,7 @@ xinyin_wasm({ module_or_path: "../xinyin/xinyinWasm.wasm" })
  * @typedef { import('./xinyinTypes.js').XinYinMessage } XinYinMessage
  */
 
-self.onmessage = async (/** @type {{data: XinYinMessage}} */ event) => {
+self.onmessage = (/** @type {{data: XinYinMessage}} */ event) => {
   onXinYinMessage(event.data);
 };
 

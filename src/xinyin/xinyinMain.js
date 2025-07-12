@@ -73,7 +73,7 @@ xinyin_worker.onmessage = (/** @type {{data: XinYinMessage}} */ event) => {
 /**
  *
  * @param {string} txtInHeart
- * @param {number} startOf8105
+ * @param {number} startOf8105 - 1-based index
  * @param {number} countFrom8105
  * @return {Promise<string>} Returns a promise that resolves to the generated words32.
  */

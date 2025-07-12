@@ -32,6 +32,68 @@ export type WalletDispatchAction =
       wallet: Wallet;
     };
 
+// 异步localStorage操作，避免阻塞主线程
+function setItemAsync(key: string, value: string) {
+  return new Promise<void>((resolve) => {
+    // 使用 requestIdleCallback 或 setTimeout 来避免阻塞
+    const callback = () => {
+      try {
+        localStorage.setItem(key, value);
+        resolve();
+      } catch (error) {
+        console.error('localStorage.setItem failed:', error);
+        resolve(); // 即使失败也要resolve，避免阻塞
+      }
+    };
+    
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(callback);
+    } else {
+      setTimeout(callback, 0);
+    }
+  });
+}
+
+function removeItemAsync(key: string) {
+  return new Promise<void>((resolve) => {
+    const callback = () => {
+      try {
+        localStorage.removeItem(key);
+        resolve();
+      } catch (error) {
+        console.error('localStorage.removeItem failed:', error);
+        resolve();
+      }
+    };
+    
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(callback);
+    } else {
+      setTimeout(callback, 0);
+    }
+  });
+}
+
+function clearAsync() {
+  return new Promise<void>((resolve) => {
+    const callback = () => {
+      try {
+        localStorage.clear();
+        resolve();
+      } catch (error) {
+        console.error('localStorage.clear failed:', error);
+        resolve();
+      }
+    };
+    
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(callback);
+    } else {
+      setTimeout(callback, 0);
+    }
+  });
+}
+
 export function walletsReducer(
   draft: Wallet[],
   action: WalletDispatchAction
@@ -40,16 +102,17 @@ export function walletsReducer(
     case "add": {
       const w = action.wallet;
       draft.push(w);
-      localStorage.setItem(w.address, w.name);
+      // 异步更新localStorage，不阻塞UI
+      setItemAsync(w.address, w.name).catch(console.error);
       break;
     }
     case "delete": {
-      localStorage.removeItem(action.address);
+      removeItemAsync(action.address).catch(console.error);
       return draft.filter((wallet) => wallet.address !== action.address);
     }
     case "clear": {
-      localStorage.clear(); // 清空 localStorage 中的钱包数据
-      draft.length = 0; // 清空钱包列表
+      clearAsync().catch(console.error);
+      draft.length = 0;
       break;
     }
     case "modify": {
@@ -58,7 +121,7 @@ export function walletsReducer(
       );
       if (index !== -1) {
         draft[index] = action.wallet;
-        localStorage.setItem(action.wallet.address, action.wallet.name);
+        setItemAsync(action.wallet.address, action.wallet.name).catch(console.error);
       }
       break;
     }

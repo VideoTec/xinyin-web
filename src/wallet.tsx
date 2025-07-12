@@ -39,7 +39,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
       <AccordionActions>
         <Button onClick={handleDelete}>删除</Button>
         <WalletDlg initAddress={address} initName={name} type="modify">
-          <Button>修改</Button>
+          {({ triggerOpen }) => <Button onClick={triggerOpen}>修改</Button>}
         </WalletDlg>
       </AccordionActions>
     </Accordion>
