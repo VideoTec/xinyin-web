@@ -35,7 +35,7 @@ const FixedButtons = memo(
               </Fab>
             )}
           </WalletDlg>
-          <XinyinDlg type="generate">
+          <XinyinDlg type="import">
             {({ triggerOpen }) => (
               <Fab color="primary" onClick={triggerOpen}>
                 <ImportExport />

@@ -1,9 +1,10 @@
 import {
   Button,
-  CircularProgress,
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
+  InputAdornment,
   Stack,
   TextField,
   Typography,
@@ -13,6 +14,8 @@ import { useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
 import { generateWords32 } from "./xinyin/xinyinMain";
 import { useTheme } from "@mui/material/styles";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 const initialWordCount = 600; // 假设初始字数为600
 const initialStartIndex = 8; // 假设初始开始序号为8
@@ -27,6 +30,10 @@ interface XinyinTxt {
   startIndex: number;
   wordCount: number;
   xinyinText: string;
+  words32: string;
+  password: string;
+  repeatPassword: string;
+  walletName: string;
 }
 
 export function XinyinDlg({
@@ -41,11 +48,13 @@ export function XinyinDlg({
   const [step, setStep] = useState(Step.ChooseCharset);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedWords32, setGeneratedWords32] = useState<string>("");
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    resetField,
     trigger,
     watch,
   } = useForm<XinyinTxt>({
@@ -53,6 +62,10 @@ export function XinyinDlg({
       startIndex: initialStartIndex,
       wordCount: initialWordCount,
       xinyinText: "",
+      words32: "",
+      password: "",
+      repeatPassword: "",
+      walletName: "",
     },
   });
 
@@ -63,10 +76,15 @@ export function XinyinDlg({
     setStep(Step.ChooseCharset);
     setIsGenerating(false);
     setGeneratedWords32("");
+    setShowPassword(false);
     reset({
       startIndex: initialStartIndex,
       wordCount: initialWordCount,
       xinyinText: "",
+      words32: "",
+      password: "",
+      repeatPassword: "",
+      walletName: "",
     });
   }
 
@@ -87,12 +105,21 @@ export function XinyinDlg({
   }
 
   function nextStep() {
-    if (type == "generate") {
-      if (step == Step.ChooseCharset) {
-        trigger(["startIndex", "wordCount"]).then((r) => {
+    if (step == Step.ChooseCharset) {
+      trigger(["startIndex", "wordCount"]).then((r) => {
+        if (r) {
+          setStep(Step.InputXinyinText);
+          setGeneratedWords32("");
+        }
+      });
+    }
+    if (type == "import") {
+      if (step == Step.InputXinyinText) {
+        trigger("xinyinText").then((r) => {
           if (r) {
-            setStep(Step.InputXinyinText);
-            setGeneratedWords32("");
+            setStep(Step.InputWords32);
+            resetField("password");
+            resetField("repeatPassword");
           }
         });
       }
@@ -215,6 +242,85 @@ export function XinyinDlg({
                 />
               </>
             )}
+            {step == Step.InputWords32 && (
+              <>
+                <TextField
+                  label="心印助记字"
+                  fullWidth
+                  autoComplete="off"
+                  {...register("words32", {
+                    required: "必须填写心印助记字",
+                  })}
+                  error={!!errors.words32}
+                  helperText={
+                    errors.words32
+                      ? errors.words32.message
+                      : "请输入心印助记字（32个汉字）"
+                  }
+                />
+                <TextField
+                  label="钱包名称"
+                  fullWidth
+                  autoComplete="off"
+                  {...register("walletName", {
+                    required: "必须填写钱包名称",
+                  })}
+                  error={!!errors.walletName}
+                  helperText={
+                    errors.walletName
+                      ? errors.walletName.message
+                      : "给导入的钱包起个名字"
+                  }
+                />
+                <TextField
+                  label="密码"
+                  type={showPassword ? "text" : "password"}
+                  fullWidth
+                  {...register("password", {
+                    required: "必须填写密码",
+                    minLength: {
+                      value: 8,
+                      message: "密码至少8个字符",
+                    },
+                  })}
+                  error={!!errors.password}
+                  helperText={
+                    errors.password
+                      ? errors.password.message
+                      : "请输入密码，用于加密导入的钱包"
+                  }
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowPassword((prev) => !prev)}
+                          >
+                            {showPassword ? <Visibility /> : <VisibilityOff />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
+                  }}
+                />
+                <TextField
+                  label="重复密码"
+                  type={showPassword ? "text" : "password"}
+                  fullWidth
+                  {...register("repeatPassword", {
+                    required: "必须重复输入密码",
+                    validate: (value) =>
+                      value === watch("password") || "两次输入的密码不一致",
+                  })}
+                  error={!!errors.repeatPassword}
+                  helperText={
+                    errors.repeatPassword
+                      ? errors.repeatPassword.message
+                      : "请重复输入密码"
+                  }
+                />
+              </>
+            )}
             <DialogActions>
               {step == Step.ChooseCharset && (
                 <Button onClick={nextStep}>下一步</Button>
@@ -224,7 +330,28 @@ export function XinyinDlg({
                   <Button onClick={() => setStep(Step.ChooseCharset)}>
                     上一步
                   </Button>
-                  <Button type="submit">生成</Button>
+                  {type == "generate" && (
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={isGenerating}
+                    >
+                      生成心印助记字
+                    </Button>
+                  )}
+                  {type == "import" && (
+                    <Button onClick={nextStep}>下一步</Button>
+                  )}
+                </>
+              )}
+              {step == Step.InputWords32 && (
+                <>
+                  <Button onClick={() => setStep(Step.InputXinyinText)}>
+                    上一步
+                  </Button>
+                  <Button type="submit" variant="contained">
+                    导入心印助记字
+                  </Button>
                 </>
               )}
             </DialogActions>
@@ -247,3 +374,5 @@ export function XinyinDlg({
     </>
   );
 }
+
+// 8,600 星辰大海，心自无疆。 延考饥生阳至岂丈纠吉氏犬叼合宇导弗八异士卉色血叮戏为凤麦孕凸平饥
