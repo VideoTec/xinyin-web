@@ -10,12 +10,13 @@ import {
   Typography,
 } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
-import { useState, type ReactElement } from "react";
+import { useContext, useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
-import { generateWords32 } from "./xinyin/xinyinMain";
+import { generateWords32, importWords32 } from "./xinyin/xinyinMain";
 import { useTheme } from "@mui/material/styles";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { WalletsCtx } from "./walletsCtx";
 
 const initialWordCount = 600; // 假设初始字数为600
 const initialStartIndex = 8; // 假设初始开始序号为8
@@ -49,6 +50,7 @@ export function XinyinDlg({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedWords32, setGeneratedWords32] = useState<string>("");
   const [showPassword, setShowPassword] = useState(false);
+  const { dispatch } = useContext(WalletsCtx);
   const {
     register,
     handleSubmit,
@@ -99,6 +101,22 @@ export function XinyinDlg({
       );
     } else if (type == "import" && step == Step.InputWords32) {
       console.log(data);
+      importWords32(
+        data.words32,
+        data.xinyinText,
+        data.startIndex,
+        data.wordCount,
+        data.password
+      ).then((solanaAddress) => {
+        dispatch({
+          type: "add",
+          wallet: {
+            address: solanaAddress,
+            name: data.walletName,
+          },
+        });
+        setOpen(false);
+      });
     } else {
       console.log("submit wrong time...");
     }
