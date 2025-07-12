@@ -50,6 +50,7 @@ export function XinyinDlg({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedWords32, setGeneratedWords32] = useState<string>("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const { dispatch } = useContext(WalletsCtx);
   const {
     register,
@@ -79,6 +80,7 @@ export function XinyinDlg({
     setIsGenerating(false);
     setGeneratedWords32("");
     setShowPassword(false);
+    setIsImporting(false);
     reset({
       startIndex: initialStartIndex,
       wordCount: initialWordCount,
@@ -100,23 +102,28 @@ export function XinyinDlg({
         }
       );
     } else if (type == "import" && step == Step.InputWords32) {
-      console.log(data);
+      setIsImporting(true);
       importWords32(
         data.words32,
         data.xinyinText,
         data.startIndex,
         data.wordCount,
         data.password
-      ).then((solanaAddress) => {
-        dispatch({
-          type: "add",
-          wallet: {
-            address: solanaAddress,
-            name: data.walletName,
-          },
+      )
+        .then((solanaAddress) => {
+          dispatch({
+            type: "add",
+            wallet: {
+              address: solanaAddress,
+              name: data.walletName,
+            },
+          });
+          setOpen(false);
+        })
+        .catch((error) => {
+          setIsImporting(false);
+          alert("导入心印助记字失败: " + (error.message || "未知错误"));
         });
-        setOpen(false);
-      });
     } else {
       console.log("submit wrong time...");
     }
@@ -367,7 +374,11 @@ export function XinyinDlg({
                   <Button onClick={() => setStep(Step.InputXinyinText)}>
                     上一步
                   </Button>
-                  <Button type="submit" variant="contained">
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={isImporting}
+                  >
                     导入心印助记字
                   </Button>
                 </>
