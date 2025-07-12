@@ -6,11 +6,9 @@ import { useEffect, memo } from "react";
 import { WalletList } from "./wallets";
 import { WalletsCtx } from "./walletsCtx";
 import Stack from "@mui/material/Stack";
-import Box from "@mui/material/Box";
 import { WalletDlg } from "./walletDlg";
 import { XinyinDlg } from "./xinyinDlg";
 import AddIcon from "@mui/icons-material/Add";
-import ImportExport from "@mui/icons-material/ImportExport";
 import Fab from "@mui/material/Fab";
 import { useImmerReducer } from "use-immer";
 import {
@@ -20,6 +18,8 @@ import {
   type WalletDispatchAction,
 } from "./walletsData";
 import type { Dispatch } from "react";
+import { ImportWords32Icon, GenerateWords32Icon } from "./icons";
+import { Box } from "@mui/material";
 
 type WorkerStatus = "loading" | "success" | "error";
 
@@ -27,7 +27,26 @@ const FixedButtons = memo(
   ({ dispatch }: { dispatch: Dispatch<WalletDispatchAction> }) => {
     return (
       <WalletsCtx value={{ dispatch }}>
-        <Box sx={{ position: "fixed", right: 32, bottom: 32 }}>
+        <Stack
+          sx={{ position: "fixed", right: 32, bottom: 18, left: 32 }}
+          direction={"row"}
+          spacing={2}
+        >
+          <XinyinDlg type="generate">
+            {({ triggerOpen }) => (
+              <Fab color="primary" onClick={triggerOpen}>
+                <GenerateWords32Icon color="action" />
+              </Fab>
+            )}
+          </XinyinDlg>
+          <XinyinDlg type="import">
+            {({ triggerOpen }) => (
+              <Fab color="primary" onClick={triggerOpen}>
+                <ImportWords32Icon />
+              </Fab>
+            )}
+          </XinyinDlg>
+          <div style={{ flex: 1 }} />
           <WalletDlg type="add">
             {({ triggerOpen }) => (
               <Fab color="primary" onClick={triggerOpen}>
@@ -35,14 +54,7 @@ const FixedButtons = memo(
               </Fab>
             )}
           </WalletDlg>
-          <XinyinDlg type="import">
-            {({ triggerOpen }) => (
-              <Fab color="primary" onClick={triggerOpen}>
-                <ImportExport />
-              </Fab>
-            )}
-          </XinyinDlg>
-        </Box>
+        </Stack>
       </WalletsCtx>
     );
   }
@@ -59,7 +71,15 @@ const WalletListWrapper = memo(
   }) => {
     return (
       <WalletsCtx value={{ wallets, dispatch }}>
-        <WalletList />
+        <Box
+          sx={{
+            maxHeight: "calc(100vh - 120px)",
+            overflowY: "auto",
+            width: "100%",
+          }}
+        >
+          <WalletList />
+        </Box>
       </WalletsCtx>
     );
   }

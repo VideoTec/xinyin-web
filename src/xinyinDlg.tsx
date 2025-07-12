@@ -158,6 +158,22 @@ export function XinyinDlg({
     return true;
   }
 
+  function validateWords32(words: string): boolean | string {
+    if (!words || words.trim() === "") {
+      return "心印助记字不能为空";
+    }
+    if (words.length !== 32) {
+      return "心印助记字必须是32个汉字";
+    }
+    if (!/^[\u4e00-\u9fa5]+$/.test(words)) {
+      return "心印助记字必须是汉字";
+    }
+    // if (new Set(words.split("")).size !== 32) {
+    //   return "心印助记字中的汉字必须唯一";
+    // }
+    return true;
+  }
+
   function validateStartIndex(value: number): boolean | string {
     if (isNaN(value)) {
       return "输入的开始序号必须是数字";
@@ -274,13 +290,13 @@ export function XinyinDlg({
                   fullWidth
                   autoComplete="off"
                   {...register("words32", {
-                    required: "必须填写心印助记字",
+                    validate: validateWords32,
                   })}
                   error={!!errors.words32}
                   helperText={
                     errors.words32
                       ? errors.words32.message
-                      : "请输入心印助记字（32个汉字）"
+                      : "心印助记字（32个汉字）"
                   }
                 />
                 <TextField
@@ -387,10 +403,9 @@ export function XinyinDlg({
             {type == "generate" && step == Step.InputXinyinText && (
               <>
                 <Typography color="text.secondary" variant="body2">
-                  <p style={{ margin: 0 }}>生成的心印助记字：</p>
-                  <p style={{ margin: 0 }}>
-                    用于表示加密密钥的32个汉字，每个汉字唯一对应加密密钥中的一个字节
-                  </p>
+                  生成的心印助记字：
+                  <br />
+                  用于表示加密密钥的32个汉字，每个汉字唯一对应加密密钥中的一个字节
                 </Typography>
                 <Typography color="success" variant="body2">
                   {generatedWords32}
