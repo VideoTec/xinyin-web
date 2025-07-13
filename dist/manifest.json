@@ -1,0 +1,12 @@
+{
+  "name": "心印数字钱包",
+  "start_url": "./",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "./wallet.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
