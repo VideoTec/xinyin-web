@@ -9,7 +9,9 @@ export function WalletList() {
   return (
     <>
       {(!wallets || wallets.length === 0) && (
-        <Typography variant="h6">没有可用的钱包</Typography>
+        <Typography variant="h6" sx={{ textAlign: "center" }}>
+          没有可用的钱包
+        </Typography>
       )}
       {wallets.length > 0 &&
         wallets.map((wallet) => (

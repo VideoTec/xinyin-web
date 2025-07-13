@@ -19,7 +19,6 @@ import {
 } from "./walletsData";
 import type { Dispatch } from "react";
 import { ImportWords32Icon, GenerateWords32Icon } from "./icons";
-import { Box } from "@mui/material";
 
 type WorkerStatus = "loading" | "success" | "error";
 
@@ -71,15 +70,7 @@ const WalletListWrapper = memo(
   }) => {
     return (
       <WalletsCtx value={{ wallets, dispatch }}>
-        <Box
-          sx={{
-            maxHeight: "calc(100vh - 120px)",
-            overflowY: "auto",
-            width: "100%",
-          }}
-        >
-          <WalletList />
-        </Box>
+        <WalletList />
       </WalletsCtx>
     );
   }
