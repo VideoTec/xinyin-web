@@ -38602,6 +38602,7 @@ function WalletApp() {
       Snackbar,
       {
         open: offlineReady,
+        anchorOrigin: { vertical: "top", horizontal: "center" },
         autoHideDuration: 6e3,
         onClose: () => setOfflineReady(false),
         message: "应用安装完成！现在可以离线使用了"
@@ -38644,4 +38645,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) })
 );
-//# sourceMappingURL=index-D426o3Lv.js.map
+//# sourceMappingURL=index-D8wp8pZZ.js.map

@@ -103,6 +103,7 @@ function WalletApp() {
       </Collapse>
       <Snackbar
         open={offlineReady}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
         autoHideDuration={6000}
         onClose={() => setOfflineReady(false)}
         message="应用安装完成！现在可以离线使用了"
