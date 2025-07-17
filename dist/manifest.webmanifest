@@ -4,8 +4,8 @@
   "description": "心印数字钱包 - 数字资产查看工具",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#f0fbff",
+  "theme_color": "#42b5f4",
   "lang": "en",
   "scope": "./",
   "icons": [

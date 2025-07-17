@@ -34,7 +34,7 @@ export default {
         name: "心印数字钱包",
         short_name: "心印钱包",
         description: "心印数字钱包 - 数字资产查看工具",
-        theme_color: "#ffffff",
+        theme_color: "#42b5f4",
         icons: [
           {
             src: "wallet.png",
@@ -44,7 +44,7 @@ export default {
         ],
         start_url: "./",
         display: "standalone",
-        background_color: "#ffffff",
+        background_color: "#f0fbff",
       },
       workbox: {
         cleanupOutdatedCaches: true,
