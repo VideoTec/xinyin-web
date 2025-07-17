@@ -10,7 +10,8 @@
     "emitDecoratorMetadata": false,
     "strict": false,
     "verbatimModuleSyntax": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["vite-plugin-pwa/react"]
   },
   "exclude": ["node_modules", "dist"]
 }

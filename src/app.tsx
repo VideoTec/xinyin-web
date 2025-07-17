@@ -19,6 +19,10 @@ import {
 } from "./walletsData";
 import type { Dispatch } from "react";
 import { ImportWords32Icon, GenerateWords32Icon } from "./icons";
+import { useRegisterSW } from "virtual:pwa-register/react";
+import Alert from "@mui/material/Alert";
+import Collapse from "@mui/material/Collapse";
+import { Button, Snackbar } from "@mui/material";
 
 type WorkerStatus = "loading" | "success" | "error";
 
@@ -79,9 +83,30 @@ WalletListWrapper.displayName = "WalletListWrapper";
 
 function WalletApp() {
   const [wallets, dispatch] = useImmerReducer(walletsReducer, initWallets());
+  const {
+    needRefresh: [needRefresh],
+    offlineReady: [offlineReady, setOfflineReady],
+    updateServiceWorker,
+  } = useRegisterSW({
+    immediate: false,
+  });
 
   return (
     <>
+      <Collapse in={needRefresh}>
+        <Alert
+          action={<Button onClick={() => updateServiceWorker()}>刷新</Button>}
+          sx={{ mb: 2 }}
+        >
+          有新版本可用
+        </Alert>
+      </Collapse>
+      <Snackbar
+        open={offlineReady}
+        autoHideDuration={6000}
+        onClose={() => setOfflineReady(false)}
+        message="应用安装完成！现在可以离线使用了"
+      />
       <WalletListWrapper wallets={wallets} dispatch={dispatch} />
       <FixedButtons dispatch={dispatch} />
     </>

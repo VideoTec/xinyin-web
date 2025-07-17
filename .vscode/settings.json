@@ -1,0 +1,20 @@
+{
+  "json.schemas": [
+    {
+      "fileMatch": ["node_modules/workbox-build/tsconfig.json"],
+      "schema": {}
+    }
+  ],
+  "files.exclude": {
+    "node_modules/workbox-build/tsconfig.json": true
+  },
+  "search.exclude": {
+    "node_modules/workbox-build/tsconfig.json": true
+  },
+  "files.watcherExclude": {
+    "node_modules/workbox-build/tsconfig.json": true
+  },
+  "files.associations": {
+    "node_modules/workbox-build/tsconfig.json": "plaintext"
+  }
+}

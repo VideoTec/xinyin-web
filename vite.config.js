@@ -1,4 +1,5 @@
 import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 
 /** @type {import('vite').UserConfig} */
 export default {
@@ -21,6 +22,34 @@ export default {
     emptyOutDir: true,
     target: "esnext",
     sourcemap: true,
+    minify: false,
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      mode: "production",
+      registerType: "prompt",
+      minify: false,
+      manifest: {
+        name: "心印数字钱包",
+        short_name: "心印钱包",
+        description: "心印数字钱包 - 数字资产查看工具",
+        theme_color: "#ffffff",
+        icons: [
+          {
+            src: "wallet.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+        ],
+        start_url: "./",
+        display: "standalone",
+        background_color: "#ffffff",
+      },
+      workbox: {
+        cleanupOutdatedCaches: true,
+        navigateFallback: null,
+      },
+    }),
+  ],
 };
