@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { WalletsCtx } from "./walletsCtx";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -9,10 +9,30 @@ import Button from "@mui/material/Button";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { useConfirm } from "material-ui-confirm";
 import { WalletDlg } from "./walletDlg";
+import { getAccountInfo, getBalance } from "./rpc/solanaRpc";
 
 export function Wallet({ address, name }: { address: string; name: string }) {
-  const { dispatch } = useContext(WalletsCtx);
+  const { dispatch } = useContext(WalletsCtx)!;
   const confirm = useConfirm();
+
+  useEffect(() => {
+    getAccountInfo(address, { encoding: "base64" }).then(
+      (data) => {
+        console.log("Fetched wallet data:", data);
+      },
+      (error) => {
+        console.error("Error fetching wallet data:", error);
+      }
+    );
+    getBalance(address).then(
+      (balance) => {
+        console.log("Fetched wallet balance:", balance);
+      },
+      (error) => {
+        console.error("Error fetching wallet balance:", error);
+      }
+    );
+  }, [address]);
 
   async function handleDelete() {
     const { confirmed } = await confirm({

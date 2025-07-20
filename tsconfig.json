@@ -8,7 +8,7 @@
     "outDir": "./dist",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": false,
-    "strict": false,
+    "strict": true,
     "verbatimModuleSyntax": true,
     "jsx": "react-jsx",
     "types": ["vite-plugin-pwa/react"]
