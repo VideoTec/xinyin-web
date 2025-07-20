@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { WalletsCtx } from "./walletsCtx";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -9,29 +9,36 @@ import Button from "@mui/material/Button";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { useConfirm } from "material-ui-confirm";
 import { WalletDlg } from "./walletDlg";
-import { getAccountInfo, getBalance } from "./rpc/solanaRpc";
+import { getAccountInfo } from "./rpc/solanaRpc";
 
 export function Wallet({ address, name }: { address: string; name: string }) {
   const { dispatch } = useContext(WalletsCtx)!;
   const confirm = useConfirm();
+  const [loading, setLoading] = useState(true);
+  const [owner, setOwner] = useState("");
+  const [balance, setBalance] = useState("");
+
+  const isNoneAccount = owner === "";
 
   useEffect(() => {
-    getAccountInfo(address, { encoding: "base64" }).then(
-      (data) => {
-        console.log("Fetched wallet data:", data);
-      },
-      (error) => {
-        console.error("Error fetching wallet data:", error);
-      }
-    );
-    getBalance(address).then(
-      (balance) => {
-        console.log("Fetched wallet balance:", balance);
-      },
-      (error) => {
-        console.error("Error fetching wallet balance:", error);
-      }
-    );
+    getAccountInfo(address, { encoding: "base64" })
+      .then(
+        (data) => {
+          if (data) {
+            setOwner(data.owner);
+            const sol = data.lamports / 1e9; // Convert lamports to SOL
+            setBalance(sol.toString());
+          } else {
+            console.warn("No account info found for address:", address);
+          }
+        },
+        (error) => {
+          console.error("Error fetching wallet data:", error);
+        }
+      )
+      .finally(() => {
+        setLoading(false);
+      });
   }, [address]);
 
   async function handleDelete() {
@@ -55,6 +62,16 @@ export function Wallet({ address, name }: { address: string; name: string }) {
       </AccordionSummary>
       <AccordionDetails>
         <p style={{ wordBreak: "break-all" }}>{address}</p>
+        {loading ? (
+          <p>加载中...</p>
+        ) : isNoneAccount ? (
+          <p style={{ color: "red" }}>未找到账户信息</p>
+        ) : (
+          <>
+            <p>余额: {balance}</p>
+            <p>所有者: {owner}</p>
+          </>
+        )}
       </AccordionDetails>
       <AccordionActions>
         <Button onClick={handleDelete}>删除</Button>
