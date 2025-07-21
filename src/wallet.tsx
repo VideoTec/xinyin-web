@@ -9,7 +9,8 @@ import Button from "@mui/material/Button";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { useConfirm } from "material-ui-confirm";
 import { WalletDlg } from "./walletDlg";
-import { getAccountInfo } from "./rpc/solanaRpc";
+import { getAccountInfo, getSignatureStatuses } from "./rpc/solanaRpc";
+import { transfer } from "./rpc/transfer";
 
 export function Wallet({ address, name }: { address: string; name: string }) {
   const { dispatch } = useContext(WalletsCtx)!;
@@ -70,6 +71,28 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           <>
             <p>余额: {balance}</p>
             <p>所有者: {owner}</p>
+            <Button
+              variant="outlined"
+              onClick={async () => {
+                transfer(
+                  address,
+                  "7tWEmKfxBwm517CQtbEVNNMGRQeZSN2gwuZWzmxkumTc",
+                  0.1 * 1e9, // 0.1 SOL in lamports
+                  "12345678"
+                ).then((signature) => {
+                  getSignatureStatuses([signature], {
+                    searchTransactionHistory: false,
+                  }).then((statuses) => {
+                    console.log(
+                      `Signature statuses for (${signature}):\n`,
+                      statuses
+                    );
+                  });
+                });
+              }}
+            >
+              转账
+            </Button>
           </>
         )}
       </AccordionDetails>

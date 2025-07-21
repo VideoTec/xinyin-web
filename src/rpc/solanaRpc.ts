@@ -1,10 +1,23 @@
 import { callSolanaRpc } from "./solanaRpcClient";
 
+type CommitmentType = "finalized" | "confirmed" | "processed";
+
 interface Configuration {
-  commitment?: "finalized" | "confirmed" | "processed";
+  commitment?: CommitmentType;
   encoding?: "jsonParsed" | "base64" | "base58" | "base64+zstd";
   minContextSlot?: number;
   dataSlice?: { offset: number; length: number };
+  skipPreflight?: boolean;
+  preflightCommitment?: CommitmentType;
+  maxRetries?: number;
+  /** limit return transactions count */
+  limit?: number;
+  /** return transactions before this signature */
+  before?: string;
+  /** return transactions until this signature */
+  until?: string;
+  /**  a Solana node will search its ledger cache for any signatures not found in the recent status cache */
+  searchTransactionHistory?: boolean;
 }
 
 export interface AccountInfo {
@@ -22,4 +35,49 @@ export function getAccountInfo(address: string, config: Configuration = {}) {
 
 export function getBalance(address: string, config: Configuration = {}) {
   return callSolanaRpc<number>("getBalance", [address, config]);
+}
+
+export function getLatestBlockhash(config: Configuration = {}) {
+  return callSolanaRpc<{ blockhash: string; lastValidBlockHeight: number }>(
+    "getLatestBlockhash",
+    [config]
+  );
+}
+
+export function sendTransaction(
+  transactionData: string,
+  config: Configuration = {}
+) {
+  return callSolanaRpc<string>("sendTransaction", [transactionData, config]);
+}
+
+export interface TransactionObject {
+  signature: string;
+  slot: number;
+  err?: { InstructionError: [number, string] } | null;
+  memo?: string;
+  blockTime: number | null;
+  confirmationStatus: CommitmentType | null;
+}
+
+export function getSignaturesForAddress(
+  address: string,
+  config: Configuration = {}
+) {
+  return callSolanaRpc<Array<TransactionObject>>("getSignaturesForAddress", [
+    address,
+    config,
+  ]);
+}
+
+export function getSignatureStatuses(
+  signatures: string[],
+  config: Configuration = {}
+) {
+  return callSolanaRpc<
+    Array<{
+      err?: { InstructionError: [number, string] } | null;
+      confirmationStatus: CommitmentType | null;
+    }>
+  >("getSignatureStatuses", [signatures, config]);
 }

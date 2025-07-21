@@ -11,13 +11,15 @@ interface SolanaRpcResult<T> {
 interface JsonRpcResponse<T> {
   jsonrpc: string;
   id: number;
-  result?: SolanaRpcResult<T>;
+  result?: SolanaRpcResult<T> | T;
   error?: {
     code: number;
     message: string;
     data?: unknown;
   };
 }
+
+import { objectHasKey } from "./utils";
 
 export async function callSolanaRpc<T>(
   method: string,
@@ -37,17 +39,32 @@ export async function callSolanaRpc<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    throw new Error(`${method} HTTP error! status: ${response.status}`);
   }
 
   const data = (await response.json()) as JsonRpcResponse<T>;
-  if (data.error) {
+  if (!data) {
+    throw new Error(`No data in JSON-RPC ${method} response`);
+  }
+
+  if (objectHasKey(data, "error")) {
     throw new Error(
-      `JSON-RPC error! code: ${data.error.code}, message: ${data.error.message}`
+      `JSON-RPC ${method} error! code: ${data.error!.code}, message: ${
+        data.error!.message
+      }`
     );
   }
-  if (!data.result) {
-    throw new Error("No result in JSON-RPC response");
+
+  if (!objectHasKey(data, "result")) {
+    throw new Error(`No result in JSON-RPC ${method} response`);
   }
-  return data.result.value;
+
+  const result = data.result!;
+
+  if (objectHasKey(result, "value")) {
+    return (result as SolanaRpcResult<T>).value;
+  }
+
+  //TODO handle non-value result
+  return result as T;
 }

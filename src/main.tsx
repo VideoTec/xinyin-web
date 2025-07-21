@@ -4,7 +4,7 @@ import App from "./app.js";
 import Container from "@mui/material/Container";
 import { ConfirmProvider } from "material-ui-confirm";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Container>
       <ConfirmProvider>
