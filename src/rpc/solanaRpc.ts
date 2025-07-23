@@ -1,6 +1,6 @@
 import { callSolanaRpc } from "./solanaRpcClient";
 
-type CommitmentType = "finalized" | "confirmed" | "processed";
+export type CommitmentType = "finalized" | "confirmed" | "processed";
 
 interface Configuration {
   commitment?: CommitmentType;
@@ -70,14 +70,26 @@ export function getSignaturesForAddress(
   ]);
 }
 
+export interface SignatureStatus {
+  err?: { InstructionError: [number, string] } | null;
+  confirmationStatus: CommitmentType | null;
+  confirmations: number | null;
+  slot: number | null;
+  status:
+    | {
+        Ok: null;
+      }
+    | {
+        Err: { InstructionError: [number, string] };
+      };
+}
+
 export function getSignatureStatuses(
   signatures: string[],
   config: Configuration = {}
 ) {
-  return callSolanaRpc<
-    Array<{
-      err?: { InstructionError: [number, string] } | null;
-      confirmationStatus: CommitmentType | null;
-    }>
-  >("getSignatureStatuses", [signatures, config]);
+  return callSolanaRpc<Array<SignatureStatus>>("getSignatureStatuses", [
+    signatures,
+    config,
+  ]);
 }

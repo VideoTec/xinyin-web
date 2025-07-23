@@ -1,7 +1,12 @@
 import bs58 from "bs58";
 import { signMessage } from "../xinyin/xinyinMain";
 import { txMessageData, byteArrayToBase64 } from "./utils";
-import { getLatestBlockhash, sendTransaction } from "./solanaRpc";
+import {
+  getLatestBlockhash,
+  sendTransaction,
+  getSignatureStatuses,
+  type SignatureStatus,
+} from "./solanaRpc";
 
 export async function transfer(
   from: string,
@@ -36,4 +41,49 @@ export async function transfer(
   return sendTransaction(txDataBase64, {
     encoding: "base64",
   });
+}
+
+//TODO : 设置超时机制
+export function loopGetTransferStatus(
+  transferID: string,
+  onProgress: (status: SignatureStatus) => void,
+  onStopped: (error?: string) => void,
+  interval: number = 1000
+) {
+  let stopped = false;
+
+  async function poll() {
+    if (stopped) {
+      onStopped();
+      return;
+    }
+    try {
+      const statuses = await getSignatureStatuses([transferID], {
+        searchTransactionHistory: false,
+      });
+
+      if (statuses[0]?.confirmationStatus === "finalized") {
+        onStopped();
+        stopped = true;
+      } else if (statuses[0]?.err) {
+        //TODO 解析 InstructionError 类型
+        onStopped(`Transfer failed: ${statuses[0].err}`);
+        stopped = true;
+      } else {
+        if (statuses[0]) {
+          onProgress(statuses[0]);
+        }
+        setTimeout(poll, interval);
+      }
+    } catch (error) {
+      console.error("Error fetching transfer status:", error);
+      setTimeout(poll, interval);
+    }
+  }
+
+  poll();
+
+  return () => {
+    stopped = true;
+  };
 }

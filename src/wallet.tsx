@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import { WalletsCtx } from "./walletsCtx";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -9,13 +9,8 @@ import Button from "@mui/material/Button";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { useConfirm } from "material-ui-confirm";
 import { WalletDlg } from "./walletDlg";
-import {
-  getAccountInfo,
-  getSignatureStatuses,
-  getBalance,
-  getSignaturesForAddress,
-} from "./rpc/solanaRpc";
-import { transfer } from "./rpc/transfer";
+import { getAccountInfo, getBalance } from "./rpc/solanaRpc";
+import { transfer, loopGetTransferStatus } from "./rpc/transfer";
 import { CircularProgress } from "@mui/material";
 import TransferDlg from "./transferDlg";
 
@@ -24,10 +19,20 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   const confirm = useConfirm();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [transferring, setTransferring] = useState(false);
+  const [transferID, setTransferID] = useState("");
   const [owner, setOwner] = useState("");
   const [balance, setBalance] = useState("");
 
   const isNoneAccount = owner === "";
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    const balance = await getBalance(address, { encoding: "base64" });
+    const sol = balance / 1e9; // Convert lamports to SOL
+    setBalance(sol.toString());
+    setRefreshing(false);
+  }, [address]);
 
   useEffect(() => {
     getAccountInfo(address, { encoding: "base64" })
@@ -50,6 +55,29 @@ export function Wallet({ address, name }: { address: string; name: string }) {
       });
   }, [address]);
 
+  useEffect(() => {
+    if (transferID) {
+      setTransferring(true);
+
+      return loopGetTransferStatus(
+        transferID,
+        (status) => {
+          console.log(`Signature (${transferID}):${status.confirmations}`);
+        },
+        (error) => {
+          setTransferring(false);
+          if (!error) {
+            handleRefresh();
+          } else {
+            console.error(
+              `Error fetching transfer status for ${transferID}:${error}`
+            );
+          }
+        }
+      );
+    }
+  }, [transferID, handleRefresh]);
+
   async function handleDelete() {
     const { confirmed } = await confirm({
       title: "删除钱包",
@@ -65,32 +93,15 @@ export function Wallet({ address, name }: { address: string; name: string }) {
     lamports: number,
     pwd: string
   ) {
-    transfer(address, toAddress, lamports, pwd).then((signature) => {
-      getSignatureStatuses([signature], {
-        searchTransactionHistory: false,
-      }).then((statuses) => {
-        console.log(`Signature statuses for (${signature}):\n`, statuses);
+    setTransferring(true);
+    transfer(address, toAddress, lamports, pwd)
+      .then((signature) => {
+        setTransferID(signature);
+      })
+      .catch((error) => {
+        setTransferring(false);
+        console.error("Transfer failed:", error);
       });
-    });
-  }
-
-  async function handleRefresh() {
-    setRefreshing(true);
-    const balance = await getBalance(address, { encoding: "base64" });
-    const signatures = await getSignaturesForAddress(address, {
-      encoding: "base64",
-      limit: 1,
-    });
-    if (signatures.length > 0) {
-      console.log(
-        `Latest signature for ${address}:`,
-        signatures[0].signature,
-        signatures[0].confirmationStatus
-      );
-    }
-    const sol = balance / 1e9; // Convert lamports to SOL
-    setBalance(sol.toString());
-    setRefreshing(false);
   }
 
   return (
@@ -124,7 +135,11 @@ export function Wallet({ address, name }: { address: string; name: string }) {
                   onClick={triggerOpen}
                   id="transfer-btn"
                 >
-                  转账
+                  {transferring ? (
+                    <CircularProgress size={24} sx={{ marginLeft: 2 }} />
+                  ) : (
+                    "转账"
+                  )}
                 </Button>
               )}
             />
