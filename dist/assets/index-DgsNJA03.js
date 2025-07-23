@@ -38541,14 +38541,11 @@ function getLatestBlockhash(config = {}) {
 function sendTransaction(transactionData, config = {}) {
   return callSolanaRpc("sendTransaction", [transactionData, config]);
 }
-function getSignaturesForAddress(address, config = {}) {
-  return callSolanaRpc("getSignaturesForAddress", [
-    address,
+function getSignatureStatuses(signatures, config = {}) {
+  return callSolanaRpc("getSignatureStatuses", [
+    signatures,
     config
   ]);
-}
-function getSignatureStatuses(signatures, config = {}) {
-  return callSolanaRpc("getSignatureStatuses", [signatures, config]);
 }
 
 // base-x encoding / decoding
@@ -38703,6 +38700,39 @@ async function transfer(from, to, transfer_lamports, psw) {
     encoding: "base64"
   });
 }
+function loopGetTransferStatus(transferID, onProgress, onStopped, interval = 1e3) {
+  let stopped = false;
+  async function poll() {
+    if (stopped) {
+      onStopped();
+      return;
+    }
+    try {
+      const statuses = await getSignatureStatuses([transferID], {
+        searchTransactionHistory: false
+      });
+      if (statuses[0]?.confirmationStatus === "finalized") {
+        onStopped();
+        stopped = true;
+      } else if (statuses[0]?.err) {
+        onStopped(`Transfer failed: ${statuses[0].err}`);
+        stopped = true;
+      } else {
+        if (statuses[0]) {
+          onProgress(statuses[0]);
+        }
+        setTimeout(poll, interval);
+      }
+    } catch (error) {
+      console.error("Error fetching transfer status:", error);
+      setTimeout(poll, interval);
+    }
+  }
+  poll();
+  return () => {
+    stopped = true;
+  };
+}
 
 function TransferDlg({
   fromAddress,
@@ -38836,9 +38866,21 @@ function Wallet({ address, name }) {
   const confirm = useConfirm();
   const [loading, setLoading] = reactExports.useState(true);
   const [refreshing, setRefreshing] = reactExports.useState(false);
+  const [transferring, setTransferring] = reactExports.useState(false);
+  const [transferID, setTransferID] = reactExports.useState("");
   const [owner, setOwner] = reactExports.useState("");
   const [balance, setBalance] = reactExports.useState("");
+  const [startTransferSuccess, setStartTransferSuccess] = reactExports.useState(false);
+  const [startTransferFailedMessage, setStartTransferFailedMessage] = reactExports.useState("");
+  const [transferSuccess, setTransferSuccess] = reactExports.useState(false);
   const isNoneAccount = owner === "";
+  const handleRefresh = reactExports.useCallback(async () => {
+    setRefreshing(true);
+    const balance2 = await getBalance(address, { encoding: "base64" });
+    const sol = balance2 / 1e9;
+    setBalance(sol.toString());
+    setRefreshing(false);
+  }, [address]);
   reactExports.useEffect(() => {
     getAccountInfo(address, { encoding: "base64" }).then(
       (data) => {
@@ -38857,6 +38899,28 @@ function Wallet({ address, name }) {
       setLoading(false);
     });
   }, [address]);
+  reactExports.useEffect(() => {
+    if (transferID) {
+      setTransferring(true);
+      return loopGetTransferStatus(
+        transferID,
+        (status) => {
+          console.log(`Signature (${transferID}):${status.confirmations}`);
+        },
+        (error) => {
+          setTransferring(false);
+          if (!error) {
+            handleRefresh();
+            setTransferSuccess(true);
+          } else {
+            console.error(
+              `Error fetching transfer status for ${transferID}:${error}`
+            );
+          }
+        }
+      );
+    }
+  }, [transferID, handleRefresh]);
   async function handleDelete() {
     const { confirmed } = await confirm({
       title: "删除钱包",
@@ -38867,32 +38931,19 @@ function Wallet({ address, name }) {
     }
   }
   async function handleTransfer(toAddress, lamports, pwd) {
+    setTransferring(true);
     transfer(address, toAddress, lamports, pwd).then((signature) => {
-      getSignatureStatuses([signature], {
-        searchTransactionHistory: false
-      }).then((statuses) => {
-        console.log(`Signature statuses for (${signature}):
-`, statuses);
-      });
+      setTransferID(signature);
+      setStartTransferSuccess(true);
+    }).catch((error) => {
+      setTransferring(false);
+      let msg = "发起转账失败\n";
+      if (error instanceof Error) {
+        msg += error.message;
+      }
+      setStartTransferFailedMessage(msg);
+      console.error("Transfer failed:", error);
     });
-  }
-  async function handleRefresh() {
-    setRefreshing(true);
-    const balance2 = await getBalance(address, { encoding: "base64" });
-    const signatures = await getSignaturesForAddress(address, {
-      encoding: "base64",
-      limit: 1
-    });
-    if (signatures.length > 0) {
-      console.log(
-        `Latest signature for ${address}:`,
-        signatures[0].signature,
-        signatures[0].confirmationStatus
-      );
-    }
-    const sol = balance2 / 1e9;
-    setBalance(sol.toString());
-    setRefreshing(false);
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Accordion, { sx: { width: "800px", maxWidth: "90vw" }, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -38929,7 +38980,7 @@ function Wallet({ address, name }) {
                 variant: "outlined",
                 onClick: triggerOpen,
                 id: "transfer-btn",
-                children: "转账"
+                children: transferring ? /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgress, { size: 24, sx: { marginLeft: 2 } }) : "转账"
               }
             )
           }
@@ -38940,7 +38991,24 @@ function Wallet({ address, name }) {
     /* @__PURE__ */ jsxRuntimeExports.jsxs(AccordionActions, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleDelete, children: "删除" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(WalletDlg, { initAddress: address, initName: name, type: "modify", children: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: triggerOpen, children: "修改" }) })
-    ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Collapse, { in: startTransferSuccess, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Alert,
+      {
+        severity: "success",
+        onClose: () => setStartTransferSuccess(false),
+        children: "成功发起转账"
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Collapse, { in: transferSuccess, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Alert, { severity: "success", onClose: () => setTransferSuccess(false), children: "转账成功" }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Collapse, { in: startTransferFailedMessage !== "", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Alert,
+      {
+        severity: "error",
+        onClose: () => setStartTransferFailedMessage(""),
+        children: startTransferFailedMessage
+      }
+    ) })
   ] }, address);
 }
 
@@ -39649,4 +39717,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) })
 );
-//# sourceMappingURL=index-Ca-WTG_f.js.map
+//# sourceMappingURL=index-DgsNJA03.js.map

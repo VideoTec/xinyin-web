@@ -11,8 +11,9 @@ import { useConfirm } from "material-ui-confirm";
 import { WalletDlg } from "./walletDlg";
 import { getAccountInfo, getBalance } from "./rpc/solanaRpc";
 import { transfer, loopGetTransferStatus } from "./rpc/transfer";
-import { CircularProgress } from "@mui/material";
+import { CircularProgress, Collapse } from "@mui/material";
 import TransferDlg from "./transferDlg";
+import Alert from "@mui/material/Alert";
 
 export function Wallet({ address, name }: { address: string; name: string }) {
   const { dispatch } = useContext(WalletsCtx)!;
@@ -23,6 +24,10 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   const [transferID, setTransferID] = useState("");
   const [owner, setOwner] = useState("");
   const [balance, setBalance] = useState("");
+  const [startTransferSuccess, setStartTransferSuccess] = useState(false);
+  const [startTransferFailedMessage, setStartTransferFailedMessage] =
+    useState("");
+  const [transferSuccess, setTransferSuccess] = useState(false);
 
   const isNoneAccount = owner === "";
 
@@ -68,6 +73,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           setTransferring(false);
           if (!error) {
             handleRefresh();
+            setTransferSuccess(true);
           } else {
             console.error(
               `Error fetching transfer status for ${transferID}:${error}`
@@ -97,9 +103,15 @@ export function Wallet({ address, name }: { address: string; name: string }) {
     transfer(address, toAddress, lamports, pwd)
       .then((signature) => {
         setTransferID(signature);
+        setStartTransferSuccess(true);
       })
       .catch((error) => {
         setTransferring(false);
+        let msg = "发起转账失败\n";
+        if (error instanceof Error) {
+          msg += error.message;
+        }
+        setStartTransferFailedMessage(msg);
         console.error("Transfer failed:", error);
       });
   }
@@ -155,6 +167,27 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           {({ triggerOpen }) => <Button onClick={triggerOpen}>修改</Button>}
         </WalletDlg>
       </AccordionActions>
+      <Collapse in={startTransferSuccess}>
+        <Alert
+          severity="success"
+          onClose={() => setStartTransferSuccess(false)}
+        >
+          成功发起转账
+        </Alert>
+      </Collapse>
+      <Collapse in={transferSuccess}>
+        <Alert severity="success" onClose={() => setTransferSuccess(false)}>
+          转账成功
+        </Alert>
+      </Collapse>
+      <Collapse in={startTransferFailedMessage !== ""}>
+        <Alert
+          severity="error"
+          onClose={() => setStartTransferFailedMessage("")}
+        >
+          {startTransferFailedMessage}
+        </Alert>
+      </Collapse>
     </Accordion>
   );
 }
