@@ -117,7 +117,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   }
 
   return (
-    <Accordion key={address} sx={{ width: "800px", maxWidth: "90vw" }}>
+    <Accordion key={address}>
       <AccordionSummary
         expandIcon={<ArrowDownwardIcon />}
         aria-controls="panel1-content"

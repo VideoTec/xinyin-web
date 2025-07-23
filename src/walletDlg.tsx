@@ -24,7 +24,7 @@ export function WalletDlg({
   children: (props: { triggerOpen: () => void }) => ReactElement;
 }) {
   const [open, setOpen] = useState(false);
-  const { dispatch } = useContext(WalletsCtx);
+  const { dispatch } = useContext(WalletsCtx)!;
   const [isPending, startTransition] = useTransition();
   const {
     register,
@@ -81,7 +81,12 @@ export function WalletDlg({
   return (
     <>
       {children({ triggerOpen: handleOpen })}
-      <Dialog open={open} onClose={() => setOpen(false)}>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        disableAutoFocus={false}
+        disableRestoreFocus={true}
+      >
         <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
         <DialogContent sx={{ paddingBottom: 0 }}>
           <form onSubmit={handleSubmit(onSubmit)} style={{ paddingTop: 8 }}>
