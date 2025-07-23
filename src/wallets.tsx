@@ -4,7 +4,7 @@ import { useContext } from "react";
 import { WalletsCtx } from "./walletsCtx";
 
 export function WalletList() {
-  const { wallets } = useContext(WalletsCtx);
+  const { wallets } = useContext(WalletsCtx)!;
 
   return (
     <>
@@ -13,7 +13,8 @@ export function WalletList() {
           没有可用的钱包
         </Typography>
       )}
-      {wallets.length > 0 &&
+      {wallets &&
+        wallets.length > 0 &&
         wallets.map((wallet) => (
           <Wallet
             address={wallet.address}

@@ -51,7 +51,7 @@ export function XinyinDlg({
   const [generatedWords32, setGeneratedWords32] = useState<string>("");
   const [showPassword, setShowPassword] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const { dispatch } = useContext(WalletsCtx);
+  const { dispatch } = useContext(WalletsCtx)!;
   const {
     register,
     handleSubmit,
@@ -212,6 +212,8 @@ export function XinyinDlg({
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
+        disableRestoreFocus={true}
+        disableAutoFocus={false}
       >
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>
@@ -302,7 +304,7 @@ export function XinyinDlg({
                 <TextField
                   label="钱包名称"
                   fullWidth
-                  autoComplete="off"
+                  autoComplete="username"
                   {...register("walletName", {
                     required: "必须填写钱包名称",
                   })}
@@ -315,6 +317,7 @@ export function XinyinDlg({
                 />
                 <TextField
                   label="密码"
+                  autoComplete="new-password"
                   type={showPassword ? "text" : "password"}
                   fullWidth
                   {...register("password", {
@@ -347,6 +350,7 @@ export function XinyinDlg({
                 <TextField
                   label="重复密码"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   fullWidth
                   {...register("repeatPassword", {
                     required: "必须重复输入密码",

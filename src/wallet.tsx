@@ -9,13 +9,21 @@ import Button from "@mui/material/Button";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { useConfirm } from "material-ui-confirm";
 import { WalletDlg } from "./walletDlg";
-import { getAccountInfo, getSignatureStatuses } from "./rpc/solanaRpc";
+import {
+  getAccountInfo,
+  getSignatureStatuses,
+  getBalance,
+  getSignaturesForAddress,
+} from "./rpc/solanaRpc";
 import { transfer } from "./rpc/transfer";
+import { CircularProgress } from "@mui/material";
+import TransferDlg from "./transferDlg";
 
 export function Wallet({ address, name }: { address: string; name: string }) {
   const { dispatch } = useContext(WalletsCtx)!;
   const confirm = useConfirm();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [owner, setOwner] = useState("");
   const [balance, setBalance] = useState("");
 
@@ -52,6 +60,39 @@ export function Wallet({ address, name }: { address: string; name: string }) {
     }
   }
 
+  async function handleTransfer(
+    toAddress: string,
+    lamports: number,
+    pwd: string
+  ) {
+    transfer(address, toAddress, lamports, pwd).then((signature) => {
+      getSignatureStatuses([signature], {
+        searchTransactionHistory: false,
+      }).then((statuses) => {
+        console.log(`Signature statuses for (${signature}):\n`, statuses);
+      });
+    });
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    const balance = await getBalance(address, { encoding: "base64" });
+    const signatures = await getSignaturesForAddress(address, {
+      encoding: "base64",
+      limit: 1,
+    });
+    if (signatures.length > 0) {
+      console.log(
+        `Latest signature for ${address}:`,
+        signatures[0].signature,
+        signatures[0].confirmationStatus
+      );
+    }
+    const sol = balance / 1e9; // Convert lamports to SOL
+    setBalance(sol.toString());
+    setRefreshing(false);
+  }
+
   return (
     <Accordion key={address} sx={{ width: "800px", maxWidth: "90vw" }}>
       <AccordionSummary
@@ -69,29 +110,26 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           <p style={{ color: "red" }}>未找到账户信息</p>
         ) : (
           <>
-            <p>余额: {balance}</p>
+            <p>
+              余额: {balance} {refreshing && <CircularProgress />}
+            </p>
             <p>所有者: {owner}</p>
-            <Button
-              variant="outlined"
-              onClick={async () => {
-                transfer(
-                  address,
-                  "7tWEmKfxBwm517CQtbEVNNMGRQeZSN2gwuZWzmxkumTc",
-                  0.1 * 1e9, // 0.1 SOL in lamports
-                  "12345678"
-                ).then((signature) => {
-                  getSignatureStatuses([signature], {
-                    searchTransactionHistory: false,
-                  }).then((statuses) => {
-                    console.log(
-                      `Signature statuses for (${signature}):\n`,
-                      statuses
-                    );
-                  });
-                });
-              }}
-            >
-              转账
+            <TransferDlg
+              fromAddress={address}
+              fromName={name}
+              onResult={handleTransfer}
+              renderOpenBtn={({ triggerOpen }) => (
+                <Button
+                  variant="outlined"
+                  onClick={triggerOpen}
+                  id="transfer-btn"
+                >
+                  转账
+                </Button>
+              )}
+            />
+            <Button variant="outlined" onClick={handleRefresh}>
+              刷新
             </Button>
           </>
         )}

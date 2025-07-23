@@ -47,19 +47,17 @@ export async function callSolanaRpc<T>(
     throw new Error(`No data in JSON-RPC ${method} response`);
   }
 
-  if (objectHasKey(data, "error")) {
+  if (data.error) {
     throw new Error(
-      `JSON-RPC ${method} error! code: ${data.error!.code}, message: ${
-        data.error!.message
-      }`
+      `JSON-RPC ${method} error! code: ${data.error.code}, message: ${data.error.message}`
     );
   }
 
-  if (!objectHasKey(data, "result")) {
+  if (!data.result) {
     throw new Error(`No result in JSON-RPC ${method} response`);
   }
 
-  const result = data.result!;
+  const result = data.result;
 
   if (objectHasKey(result, "value")) {
     return (result as SolanaRpcResult<T>).value;
