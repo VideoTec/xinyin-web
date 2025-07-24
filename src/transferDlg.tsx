@@ -1,18 +1,19 @@
 import { useForm, Controller } from "react-hook-form";
+import { useContext, useState, type ReactElement } from "react";
+import { WalletsCtx } from "./walletsCtx";
+import { shortSolanaAddress } from "./rpc/utils";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
-import { useContext, useState, type ReactElement } from "react";
 import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
-import { WalletsCtx } from "./walletsCtx";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import { FormControl, FormHelperText } from "@mui/material";
+import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
 import InputLabel from "@mui/material/InputLabel";
-import { shortSolanaAddress } from "./rpc/utils";
 
 interface TransferData {
   toAddress: string;

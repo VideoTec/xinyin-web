@@ -1,7 +1,7 @@
 import { Wallet } from "./wallet";
-import Typography from "@mui/material/Typography";
 import { useContext } from "react";
 import { WalletsCtx } from "./walletsCtx";
+import Typography from "@mui/material/Typography";
 import Gride from "@mui/material/Grid";
 
 export function WalletList() {

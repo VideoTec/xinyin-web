@@ -1,16 +1,14 @@
 import { useContext, useState, useTransition, type ReactElement } from "react";
 import { WalletsCtx } from "./walletsCtx";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-} from "@mui/material";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import type { Wallet } from "./walletsData";
 import { shortSolanaAddress, isValidSolanaAddress } from "./rpc/utils";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 
 export function WalletDlg({
   initAddress = "",

@@ -1,15 +1,10 @@
 import { useState } from "react";
 import { waitWorkerReady } from "./xinyin/xinyinMain";
-import CircularProgress from "@mui/material/CircularProgress";
-import Typography from "@mui/material/Typography";
 import { useEffect, memo } from "react";
 import { WalletList } from "./wallets";
 import { WalletsCtx } from "./walletsCtx";
-import Stack from "@mui/material/Stack";
 import { WalletDlg } from "./walletDlg";
 import { XinyinDlg } from "./xinyinDlg";
-import AddIcon from "@mui/icons-material/Add";
-import Fab from "@mui/material/Fab";
 import { useImmerReducer } from "use-immer";
 import {
   initWallets,
@@ -22,7 +17,13 @@ import { ImportWords32Icon, GenerateWords32Icon } from "./icons";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import Alert from "@mui/material/Alert";
 import Collapse from "@mui/material/Collapse";
-import { Button, Snackbar } from "@mui/material";
+import Button from "@mui/material/Button";
+import Snackbar from "@mui/material/Snackbar";
+import AddIcon from "@mui/icons-material/Add";
+import Fab from "@mui/material/Fab";
+import Stack from "@mui/material/Stack";
+import CircularProgress from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
 
 type WorkerStatus = "loading" | "success" | "error";
 

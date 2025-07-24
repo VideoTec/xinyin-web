@@ -1,22 +1,20 @@
-import {
-  Button,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import Button from "@mui/material/Button";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import Dialog from "@mui/material/Dialog";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { WalletsCtx } from "./walletsCtx";
 import { useContext, useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
 import { generateWords32, importWords32 } from "./xinyin/xinyinMain";
 import { useTheme } from "@mui/material/styles";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { WalletsCtx } from "./walletsCtx";
 
 const initialWordCount = 600; // 假设初始字数为600
 const initialStartIndex = 8; // 假设初始开始序号为8

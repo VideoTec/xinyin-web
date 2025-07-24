@@ -16975,7 +16975,791 @@ function onXinyinMessage(message) {
   }
 }
 
+var NOTHING = Symbol.for("immer-nothing");
+var DRAFTABLE = Symbol.for("immer-draftable");
+var DRAFT_STATE = Symbol.for("immer-state");
+function die(error, ...args) {
+  throw new Error(
+    `[Immer] minified error nr: ${error}. Full error at: https://bit.ly/3cXEKWf`
+  );
+}
+var getPrototypeOf = Object.getPrototypeOf;
+function isDraft(value) {
+  return !!value && !!value[DRAFT_STATE];
+}
+function isDraftable(value) {
+  if (!value)
+    return false;
+  return isPlainObject$2(value) || Array.isArray(value) || !!value[DRAFTABLE] || !!value.constructor?.[DRAFTABLE] || isMap(value) || isSet(value);
+}
+var objectCtorString = Object.prototype.constructor.toString();
+function isPlainObject$2(value) {
+  if (!value || typeof value !== "object")
+    return false;
+  const proto = getPrototypeOf(value);
+  if (proto === null) {
+    return true;
+  }
+  const Ctor = Object.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  if (Ctor === Object)
+    return true;
+  return typeof Ctor == "function" && Function.toString.call(Ctor) === objectCtorString;
+}
+function each(obj, iter) {
+  if (getArchtype(obj) === 0) {
+    Reflect.ownKeys(obj).forEach((key) => {
+      iter(key, obj[key], obj);
+    });
+  } else {
+    obj.forEach((entry, index) => iter(index, entry, obj));
+  }
+}
+function getArchtype(thing) {
+  const state = thing[DRAFT_STATE];
+  return state ? state.type_ : Array.isArray(thing) ? 1 : isMap(thing) ? 2 : isSet(thing) ? 3 : 0;
+}
+function has(thing, prop) {
+  return getArchtype(thing) === 2 ? thing.has(prop) : Object.prototype.hasOwnProperty.call(thing, prop);
+}
+function set$1(thing, propOrOldValue, value) {
+  const t = getArchtype(thing);
+  if (t === 2)
+    thing.set(propOrOldValue, value);
+  else if (t === 3) {
+    thing.add(value);
+  } else
+    thing[propOrOldValue] = value;
+}
+function is(x, y) {
+  if (x === y) {
+    return x !== 0 || 1 / x === 1 / y;
+  } else {
+    return x !== x && y !== y;
+  }
+}
+function isMap(target) {
+  return target instanceof Map;
+}
+function isSet(target) {
+  return target instanceof Set;
+}
+function latest(state) {
+  return state.copy_ || state.base_;
+}
+function shallowCopy(base, strict) {
+  if (isMap(base)) {
+    return new Map(base);
+  }
+  if (isSet(base)) {
+    return new Set(base);
+  }
+  if (Array.isArray(base))
+    return Array.prototype.slice.call(base);
+  const isPlain = isPlainObject$2(base);
+  if (strict === true || strict === "class_only" && !isPlain) {
+    const descriptors = Object.getOwnPropertyDescriptors(base);
+    delete descriptors[DRAFT_STATE];
+    let keys = Reflect.ownKeys(descriptors);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const desc = descriptors[key];
+      if (desc.writable === false) {
+        desc.writable = true;
+        desc.configurable = true;
+      }
+      if (desc.get || desc.set)
+        descriptors[key] = {
+          configurable: true,
+          writable: true,
+          // could live with !!desc.set as well here...
+          enumerable: desc.enumerable,
+          value: base[key]
+        };
+    }
+    return Object.create(getPrototypeOf(base), descriptors);
+  } else {
+    const proto = getPrototypeOf(base);
+    if (proto !== null && isPlain) {
+      return { ...base };
+    }
+    const obj = Object.create(proto);
+    return Object.assign(obj, base);
+  }
+}
+function freeze(obj, deep = false) {
+  if (isFrozen(obj) || isDraft(obj) || !isDraftable(obj))
+    return obj;
+  if (getArchtype(obj) > 1) {
+    obj.set = obj.add = obj.clear = obj.delete = dontMutateFrozenCollections;
+  }
+  Object.freeze(obj);
+  if (deep)
+    Object.entries(obj).forEach(([key, value]) => freeze(value, true));
+  return obj;
+}
+function dontMutateFrozenCollections() {
+  die(2);
+}
+function isFrozen(obj) {
+  return Object.isFrozen(obj);
+}
+var plugins = {};
+function getPlugin(pluginKey) {
+  const plugin = plugins[pluginKey];
+  if (!plugin) {
+    die(0, pluginKey);
+  }
+  return plugin;
+}
+var currentScope;
+function getCurrentScope() {
+  return currentScope;
+}
+function createScope(parent_, immer_) {
+  return {
+    drafts_: [],
+    parent_,
+    immer_,
+    // Whenever the modified draft contains a draft from another scope, we
+    // need to prevent auto-freezing so the unowned draft can be finalized.
+    canAutoFreeze_: true,
+    unfinalizedDrafts_: 0
+  };
+}
+function usePatchesInScope(scope, patchListener) {
+  if (patchListener) {
+    getPlugin("Patches");
+    scope.patches_ = [];
+    scope.inversePatches_ = [];
+    scope.patchListener_ = patchListener;
+  }
+}
+function revokeScope(scope) {
+  leaveScope(scope);
+  scope.drafts_.forEach(revokeDraft);
+  scope.drafts_ = null;
+}
+function leaveScope(scope) {
+  if (scope === currentScope) {
+    currentScope = scope.parent_;
+  }
+}
+function enterScope(immer2) {
+  return currentScope = createScope(currentScope, immer2);
+}
+function revokeDraft(draft) {
+  const state = draft[DRAFT_STATE];
+  if (state.type_ === 0 || state.type_ === 1)
+    state.revoke_();
+  else
+    state.revoked_ = true;
+}
+function processResult(result, scope) {
+  scope.unfinalizedDrafts_ = scope.drafts_.length;
+  const baseDraft = scope.drafts_[0];
+  const isReplaced = result !== void 0 && result !== baseDraft;
+  if (isReplaced) {
+    if (baseDraft[DRAFT_STATE].modified_) {
+      revokeScope(scope);
+      die(4);
+    }
+    if (isDraftable(result)) {
+      result = finalize(scope, result);
+      if (!scope.parent_)
+        maybeFreeze(scope, result);
+    }
+    if (scope.patches_) {
+      getPlugin("Patches").generateReplacementPatches_(
+        baseDraft[DRAFT_STATE].base_,
+        result,
+        scope.patches_,
+        scope.inversePatches_
+      );
+    }
+  } else {
+    result = finalize(scope, baseDraft, []);
+  }
+  revokeScope(scope);
+  if (scope.patches_) {
+    scope.patchListener_(scope.patches_, scope.inversePatches_);
+  }
+  return result !== NOTHING ? result : void 0;
+}
+function finalize(rootScope, value, path) {
+  if (isFrozen(value))
+    return value;
+  const state = value[DRAFT_STATE];
+  if (!state) {
+    each(
+      value,
+      (key, childValue) => finalizeProperty(rootScope, state, value, key, childValue, path)
+    );
+    return value;
+  }
+  if (state.scope_ !== rootScope)
+    return value;
+  if (!state.modified_) {
+    maybeFreeze(rootScope, state.base_, true);
+    return state.base_;
+  }
+  if (!state.finalized_) {
+    state.finalized_ = true;
+    state.scope_.unfinalizedDrafts_--;
+    const result = state.copy_;
+    let resultEach = result;
+    let isSet2 = false;
+    if (state.type_ === 3) {
+      resultEach = new Set(result);
+      result.clear();
+      isSet2 = true;
+    }
+    each(
+      resultEach,
+      (key, childValue) => finalizeProperty(rootScope, state, result, key, childValue, path, isSet2)
+    );
+    maybeFreeze(rootScope, result, false);
+    if (path && rootScope.patches_) {
+      getPlugin("Patches").generatePatches_(
+        state,
+        path,
+        rootScope.patches_,
+        rootScope.inversePatches_
+      );
+    }
+  }
+  return state.copy_;
+}
+function finalizeProperty(rootScope, parentState, targetObject, prop, childValue, rootPath, targetIsSet) {
+  if (isDraft(childValue)) {
+    const path = rootPath && parentState && parentState.type_ !== 3 && // Set objects are atomic since they have no keys.
+    !has(parentState.assigned_, prop) ? rootPath.concat(prop) : void 0;
+    const res = finalize(rootScope, childValue, path);
+    set$1(targetObject, prop, res);
+    if (isDraft(res)) {
+      rootScope.canAutoFreeze_ = false;
+    } else
+      return;
+  } else if (targetIsSet) {
+    targetObject.add(childValue);
+  }
+  if (isDraftable(childValue) && !isFrozen(childValue)) {
+    if (!rootScope.immer_.autoFreeze_ && rootScope.unfinalizedDrafts_ < 1) {
+      return;
+    }
+    finalize(rootScope, childValue);
+    if ((!parentState || !parentState.scope_.parent_) && typeof prop !== "symbol" && Object.prototype.propertyIsEnumerable.call(targetObject, prop))
+      maybeFreeze(rootScope, childValue);
+  }
+}
+function maybeFreeze(scope, value, deep = false) {
+  if (!scope.parent_ && scope.immer_.autoFreeze_ && scope.canAutoFreeze_) {
+    freeze(value, deep);
+  }
+}
+function createProxyProxy(base, parent) {
+  const isArray = Array.isArray(base);
+  const state = {
+    type_: isArray ? 1 : 0,
+    // Track which produce call this is associated with.
+    scope_: parent ? parent.scope_ : getCurrentScope(),
+    // True for both shallow and deep changes.
+    modified_: false,
+    // Used during finalization.
+    finalized_: false,
+    // Track which properties have been assigned (true) or deleted (false).
+    assigned_: {},
+    // The parent draft state.
+    parent_: parent,
+    // The base state.
+    base_: base,
+    // The base proxy.
+    draft_: null,
+    // set below
+    // The base copy with any updated values.
+    copy_: null,
+    // Called by the `produce` function.
+    revoke_: null,
+    isManual_: false
+  };
+  let target = state;
+  let traps = objectTraps;
+  if (isArray) {
+    target = [state];
+    traps = arrayTraps;
+  }
+  const { revoke, proxy } = Proxy.revocable(target, traps);
+  state.draft_ = proxy;
+  state.revoke_ = revoke;
+  return proxy;
+}
+var objectTraps = {
+  get(state, prop) {
+    if (prop === DRAFT_STATE)
+      return state;
+    const source = latest(state);
+    if (!has(source, prop)) {
+      return readPropFromProto(state, source, prop);
+    }
+    const value = source[prop];
+    if (state.finalized_ || !isDraftable(value)) {
+      return value;
+    }
+    if (value === peek$1(state.base_, prop)) {
+      prepareCopy(state);
+      return state.copy_[prop] = createProxy(value, state);
+    }
+    return value;
+  },
+  has(state, prop) {
+    return prop in latest(state);
+  },
+  ownKeys(state) {
+    return Reflect.ownKeys(latest(state));
+  },
+  set(state, prop, value) {
+    const desc = getDescriptorFromProto(latest(state), prop);
+    if (desc?.set) {
+      desc.set.call(state.draft_, value);
+      return true;
+    }
+    if (!state.modified_) {
+      const current2 = peek$1(latest(state), prop);
+      const currentState = current2?.[DRAFT_STATE];
+      if (currentState && currentState.base_ === value) {
+        state.copy_[prop] = value;
+        state.assigned_[prop] = false;
+        return true;
+      }
+      if (is(value, current2) && (value !== void 0 || has(state.base_, prop)))
+        return true;
+      prepareCopy(state);
+      markChanged(state);
+    }
+    if (state.copy_[prop] === value && // special case: handle new props with value 'undefined'
+    (value !== void 0 || prop in state.copy_) || // special case: NaN
+    Number.isNaN(value) && Number.isNaN(state.copy_[prop]))
+      return true;
+    state.copy_[prop] = value;
+    state.assigned_[prop] = true;
+    return true;
+  },
+  deleteProperty(state, prop) {
+    if (peek$1(state.base_, prop) !== void 0 || prop in state.base_) {
+      state.assigned_[prop] = false;
+      prepareCopy(state);
+      markChanged(state);
+    } else {
+      delete state.assigned_[prop];
+    }
+    if (state.copy_) {
+      delete state.copy_[prop];
+    }
+    return true;
+  },
+  // Note: We never coerce `desc.value` into an Immer draft, because we can't make
+  // the same guarantee in ES5 mode.
+  getOwnPropertyDescriptor(state, prop) {
+    const owner = latest(state);
+    const desc = Reflect.getOwnPropertyDescriptor(owner, prop);
+    if (!desc)
+      return desc;
+    return {
+      writable: true,
+      configurable: state.type_ !== 1 || prop !== "length",
+      enumerable: desc.enumerable,
+      value: owner[prop]
+    };
+  },
+  defineProperty() {
+    die(11);
+  },
+  getPrototypeOf(state) {
+    return getPrototypeOf(state.base_);
+  },
+  setPrototypeOf() {
+    die(12);
+  }
+};
+var arrayTraps = {};
+each(objectTraps, (key, fn) => {
+  arrayTraps[key] = function() {
+    arguments[0] = arguments[0][0];
+    return fn.apply(this, arguments);
+  };
+});
+arrayTraps.deleteProperty = function(state, prop) {
+  return arrayTraps.set.call(this, state, prop, void 0);
+};
+arrayTraps.set = function(state, prop, value) {
+  return objectTraps.set.call(this, state[0], prop, value, state[0]);
+};
+function peek$1(draft, prop) {
+  const state = draft[DRAFT_STATE];
+  const source = state ? latest(state) : draft;
+  return source[prop];
+}
+function readPropFromProto(state, source, prop) {
+  const desc = getDescriptorFromProto(source, prop);
+  return desc ? `value` in desc ? desc.value : (
+    // This is a very special case, if the prop is a getter defined by the
+    // prototype, we should invoke it with the draft as context!
+    desc.get?.call(state.draft_)
+  ) : void 0;
+}
+function getDescriptorFromProto(source, prop) {
+  if (!(prop in source))
+    return void 0;
+  let proto = getPrototypeOf(source);
+  while (proto) {
+    const desc = Object.getOwnPropertyDescriptor(proto, prop);
+    if (desc)
+      return desc;
+    proto = getPrototypeOf(proto);
+  }
+  return void 0;
+}
+function markChanged(state) {
+  if (!state.modified_) {
+    state.modified_ = true;
+    if (state.parent_) {
+      markChanged(state.parent_);
+    }
+  }
+}
+function prepareCopy(state) {
+  if (!state.copy_) {
+    state.copy_ = shallowCopy(
+      state.base_,
+      state.scope_.immer_.useStrictShallowCopy_
+    );
+  }
+}
+var Immer2 = class {
+  constructor(config) {
+    this.autoFreeze_ = true;
+    this.useStrictShallowCopy_ = false;
+    this.produce = (base, recipe, patchListener) => {
+      if (typeof base === "function" && typeof recipe !== "function") {
+        const defaultBase = recipe;
+        recipe = base;
+        const self = this;
+        return function curriedProduce(base2 = defaultBase, ...args) {
+          return self.produce(base2, (draft) => recipe.call(this, draft, ...args));
+        };
+      }
+      if (typeof recipe !== "function")
+        die(6);
+      if (patchListener !== void 0 && typeof patchListener !== "function")
+        die(7);
+      let result;
+      if (isDraftable(base)) {
+        const scope = enterScope(this);
+        const proxy = createProxy(base, void 0);
+        let hasError = true;
+        try {
+          result = recipe(proxy);
+          hasError = false;
+        } finally {
+          if (hasError)
+            revokeScope(scope);
+          else
+            leaveScope(scope);
+        }
+        usePatchesInScope(scope, patchListener);
+        return processResult(result, scope);
+      } else if (!base || typeof base !== "object") {
+        result = recipe(base);
+        if (result === void 0)
+          result = base;
+        if (result === NOTHING)
+          result = void 0;
+        if (this.autoFreeze_)
+          freeze(result, true);
+        if (patchListener) {
+          const p = [];
+          const ip = [];
+          getPlugin("Patches").generateReplacementPatches_(base, result, p, ip);
+          patchListener(p, ip);
+        }
+        return result;
+      } else
+        die(1, base);
+    };
+    this.produceWithPatches = (base, recipe) => {
+      if (typeof base === "function") {
+        return (state, ...args) => this.produceWithPatches(state, (draft) => base(draft, ...args));
+      }
+      let patches, inversePatches;
+      const result = this.produce(base, recipe, (p, ip) => {
+        patches = p;
+        inversePatches = ip;
+      });
+      return [result, patches, inversePatches];
+    };
+    if (typeof config?.autoFreeze === "boolean")
+      this.setAutoFreeze(config.autoFreeze);
+    if (typeof config?.useStrictShallowCopy === "boolean")
+      this.setUseStrictShallowCopy(config.useStrictShallowCopy);
+  }
+  createDraft(base) {
+    if (!isDraftable(base))
+      die(8);
+    if (isDraft(base))
+      base = current(base);
+    const scope = enterScope(this);
+    const proxy = createProxy(base, void 0);
+    proxy[DRAFT_STATE].isManual_ = true;
+    leaveScope(scope);
+    return proxy;
+  }
+  finishDraft(draft, patchListener) {
+    const state = draft && draft[DRAFT_STATE];
+    if (!state || !state.isManual_)
+      die(9);
+    const { scope_: scope } = state;
+    usePatchesInScope(scope, patchListener);
+    return processResult(void 0, scope);
+  }
+  /**
+   * Pass true to automatically freeze all copies created by Immer.
+   *
+   * By default, auto-freezing is enabled.
+   */
+  setAutoFreeze(value) {
+    this.autoFreeze_ = value;
+  }
+  /**
+   * Pass true to enable strict shallow copy.
+   *
+   * By default, immer does not copy the object descriptors such as getter, setter and non-enumrable properties.
+   */
+  setUseStrictShallowCopy(value) {
+    this.useStrictShallowCopy_ = value;
+  }
+  applyPatches(base, patches) {
+    let i;
+    for (i = patches.length - 1; i >= 0; i--) {
+      const patch = patches[i];
+      if (patch.path.length === 0 && patch.op === "replace") {
+        base = patch.value;
+        break;
+      }
+    }
+    if (i > -1) {
+      patches = patches.slice(i + 1);
+    }
+    const applyPatchesImpl = getPlugin("Patches").applyPatches_;
+    if (isDraft(base)) {
+      return applyPatchesImpl(base, patches);
+    }
+    return this.produce(
+      base,
+      (draft) => applyPatchesImpl(draft, patches)
+    );
+  }
+};
+function createProxy(value, parent) {
+  const draft = isMap(value) ? getPlugin("MapSet").proxyMap_(value, parent) : isSet(value) ? getPlugin("MapSet").proxySet_(value, parent) : createProxyProxy(value, parent);
+  const scope = parent ? parent.scope_ : getCurrentScope();
+  scope.drafts_.push(draft);
+  return draft;
+}
+function current(value) {
+  if (!isDraft(value))
+    die(10, value);
+  return currentImpl(value);
+}
+function currentImpl(value) {
+  if (!isDraftable(value) || isFrozen(value))
+    return value;
+  const state = value[DRAFT_STATE];
+  let copy;
+  if (state) {
+    if (!state.modified_)
+      return state.base_;
+    state.finalized_ = true;
+    copy = shallowCopy(value, state.scope_.immer_.useStrictShallowCopy_);
+  } else {
+    copy = shallowCopy(value, true);
+  }
+  each(copy, (key, childValue) => {
+    set$1(copy, key, currentImpl(childValue));
+  });
+  if (state) {
+    state.finalized_ = false;
+  }
+  return copy;
+}
+var immer = new Immer2();
+var produce = immer.produce;
+immer.produceWithPatches.bind(
+  immer
+);
+immer.setAutoFreeze.bind(immer);
+immer.setUseStrictShallowCopy.bind(immer);
+immer.applyPatches.bind(immer);
+immer.createDraft.bind(immer);
+immer.finishDraft.bind(immer);
+
+function e(n,t,o){var i=reactExports.useMemo(function(){return produce(n)},[n]);return reactExports.useReducer(i,t,o)}
+
+function initWallets() {
+  const wallets = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const address = localStorage.key(i);
+    if (address) {
+      const name = localStorage.getItem(address) || "";
+      wallets.push({ address, name });
+    }
+  }
+  return wallets;
+}
+function setItemAsync(key, value) {
+  return new Promise((resolve) => {
+    const callback = () => {
+      try {
+        localStorage.setItem(key, value);
+        resolve();
+      } catch (error) {
+        console.error("localStorage.setItem failed:", error);
+        resolve();
+      }
+    };
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(callback);
+    } else {
+      setTimeout(callback, 0);
+    }
+  });
+}
+function removeItemAsync(key) {
+  return new Promise((resolve) => {
+    const callback = () => {
+      try {
+        localStorage.removeItem(key);
+        resolve();
+      } catch (error) {
+        console.error("localStorage.removeItem failed:", error);
+        resolve();
+      }
+    };
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(callback);
+    } else {
+      setTimeout(callback, 0);
+    }
+  });
+}
+function clearAsync() {
+  return new Promise((resolve) => {
+    const callback = () => {
+      try {
+        localStorage.clear();
+        resolve();
+      } catch (error) {
+        console.error("localStorage.clear failed:", error);
+        resolve();
+      }
+    };
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(callback);
+    } else {
+      setTimeout(callback, 0);
+    }
+  });
+}
+function walletsReducer(draft, action) {
+  switch (action.type) {
+    case "add": {
+      const w = action.wallet;
+      draft.push(w);
+      setItemAsync(w.address, w.name).catch(console.error);
+      break;
+    }
+    case "delete": {
+      removeItemAsync(action.address).catch(console.error);
+      return draft.filter((wallet) => wallet.address !== action.address);
+    }
+    case "clear": {
+      clearAsync().catch(console.error);
+      draft.length = 0;
+      break;
+    }
+    case "modify": {
+      const index = draft.findIndex(
+        (wallet) => wallet.address === action.wallet.address
+      );
+      if (index !== -1) {
+        draft[index] = action.wallet;
+        setItemAsync(action.wallet.address, action.wallet.name).catch(
+          console.error
+        );
+      }
+      break;
+    }
+  }
+  return draft;
+}
+
+const WalletsCtx = reactExports.createContext(null);
+
+const rotate360deg = "rotate360deg 0.5s linear infinite";
+
 function r(e){var t,f,n="";if("string"==typeof e||"number"==typeof e)n+=e;else if("object"==typeof e)if(Array.isArray(e)){var o=e.length;for(t=0;t<o;t++)e[t]&&(f=r(e[t]))&&(n&&(n+=" "),n+=f);}else for(f in e)e[f]&&(n&&(n+=" "),n+=f);return n}function clsx(){for(var e,t,f=0,n="",o=arguments.length;f<o;f++)(e=arguments[f])&&(t=r(e))&&(n&&(n+=" "),n+=t);return n}
+
+/**
+ * Add keys, values of `defaultProps` that does not exist in `props`
+ * @param defaultProps
+ * @param props
+ * @param mergeClassNameAndStyle If `true`, merges `className` and `style` props instead of overriding them.
+ *   When `false` (default), props override defaultProps. When `true`, `className` values are concatenated
+ *   and `style` objects are merged with props taking precedence.
+ * @returns resolved props
+ */
+function resolveProps(defaultProps, props, mergeClassNameAndStyle = false) {
+  const output = {
+    ...props
+  };
+  for (const key in defaultProps) {
+    if (Object.prototype.hasOwnProperty.call(defaultProps, key)) {
+      const propName = key;
+      if (propName === 'components' || propName === 'slots') {
+        output[propName] = {
+          ...defaultProps[propName],
+          ...output[propName]
+        };
+      } else if (propName === 'componentsProps' || propName === 'slotProps') {
+        const defaultSlotProps = defaultProps[propName];
+        const slotProps = props[propName];
+        if (!slotProps) {
+          output[propName] = defaultSlotProps || {};
+        } else if (!defaultSlotProps) {
+          output[propName] = slotProps;
+        } else {
+          output[propName] = {
+            ...slotProps
+          };
+          for (const slotKey in defaultSlotProps) {
+            if (Object.prototype.hasOwnProperty.call(defaultSlotProps, slotKey)) {
+              const slotPropName = slotKey;
+              output[propName][slotPropName] = resolveProps(defaultSlotProps[slotPropName], slotProps[slotPropName], mergeClassNameAndStyle);
+            }
+          }
+        }
+      } else if (propName === 'className' && mergeClassNameAndStyle && props.className) {
+        output.className = clsx(defaultProps?.className, props?.className);
+      } else if (propName === 'style' && mergeClassNameAndStyle && props.style) {
+        output.style = {
+          ...defaultProps?.style,
+          ...props?.style
+        };
+      } else if (output[propName] === undefined) {
+        output[propName] = defaultProps[propName];
+      }
+    }
+  }
+  return output;
+}
 
 /* eslint no-restricted-syntax: 0, prefer-template: 0, guard-for-in: 0
    ---
@@ -17047,11 +17831,239 @@ function formatMuiErrorMessage(code, ...args) {
   return `Minified MUI error #${code}; visit ${url} for the full message.`;
 }
 
+function clamp(val, min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER) {
+  return Math.max(min, Math.min(val, max));
+}
+
+function clampWrapper(value, min = 0, max = 1) {
+  return clamp(value, min, max);
+}
+function hexToRgb(color) {
+  color = color.slice(1);
+  const re = new RegExp(`.{1,${color.length >= 6 ? 2 : 1}}`, "g");
+  let colors = color.match(re);
+  if (colors && colors[0].length === 1) {
+    colors = colors.map((n) => n + n);
+  }
+  return colors ? `rgb${colors.length === 4 ? "a" : ""}(${colors.map((n, index) => {
+    return index < 3 ? parseInt(n, 16) : Math.round(parseInt(n, 16) / 255 * 1e3) / 1e3;
+  }).join(", ")})` : "";
+}
+function decomposeColor(color) {
+  if (color.type) {
+    return color;
+  }
+  if (color.charAt(0) === "#") {
+    return decomposeColor(hexToRgb(color));
+  }
+  const marker = color.indexOf("(");
+  const type = color.substring(0, marker);
+  if (!["rgb", "rgba", "hsl", "hsla", "color"].includes(type)) {
+    throw new Error(formatMuiErrorMessage(9, color));
+  }
+  let values = color.substring(marker + 1, color.length - 1);
+  let colorSpace;
+  if (type === "color") {
+    values = values.split(" ");
+    colorSpace = values.shift();
+    if (values.length === 4 && values[3].charAt(0) === "/") {
+      values[3] = values[3].slice(1);
+    }
+    if (!["srgb", "display-p3", "a98-rgb", "prophoto-rgb", "rec-2020"].includes(colorSpace)) {
+      throw new Error(formatMuiErrorMessage(10, colorSpace));
+    }
+  } else {
+    values = values.split(",");
+  }
+  values = values.map((value) => parseFloat(value));
+  return {
+    type,
+    values,
+    colorSpace
+  };
+}
+const colorChannel = (color) => {
+  const decomposedColor = decomposeColor(color);
+  return decomposedColor.values.slice(0, 3).map((val, idx) => decomposedColor.type.includes("hsl") && idx !== 0 ? `${val}%` : val).join(" ");
+};
+const private_safeColorChannel = (color, warning) => {
+  try {
+    return colorChannel(color);
+  } catch (error) {
+    return color;
+  }
+};
+function recomposeColor(color) {
+  const {
+    type,
+    colorSpace
+  } = color;
+  let {
+    values
+  } = color;
+  if (type.includes("rgb")) {
+    values = values.map((n, i) => i < 3 ? parseInt(n, 10) : n);
+  } else if (type.includes("hsl")) {
+    values[1] = `${values[1]}%`;
+    values[2] = `${values[2]}%`;
+  }
+  if (type.includes("color")) {
+    values = `${colorSpace} ${values.join(" ")}`;
+  } else {
+    values = `${values.join(", ")}`;
+  }
+  return `${type}(${values})`;
+}
+function hslToRgb(color) {
+  color = decomposeColor(color);
+  const {
+    values
+  } = color;
+  const h = values[0];
+  const s = values[1] / 100;
+  const l = values[2] / 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n, k = (n + h / 30) % 12) => l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+  let type = "rgb";
+  const rgb = [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)];
+  if (color.type === "hsla") {
+    type += "a";
+    rgb.push(values[3]);
+  }
+  return recomposeColor({
+    type,
+    values: rgb
+  });
+}
+function getLuminance(color) {
+  color = decomposeColor(color);
+  let rgb = color.type === "hsl" || color.type === "hsla" ? decomposeColor(hslToRgb(color)).values : color.values;
+  rgb = rgb.map((val) => {
+    if (color.type !== "color") {
+      val /= 255;
+    }
+    return val <= 0.03928 ? val / 12.92 : ((val + 0.055) / 1.055) ** 2.4;
+  });
+  return Number((0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]).toFixed(3));
+}
+function getContrastRatio(foreground, background) {
+  const lumA = getLuminance(foreground);
+  const lumB = getLuminance(background);
+  return (Math.max(lumA, lumB) + 0.05) / (Math.min(lumA, lumB) + 0.05);
+}
+function alpha(color, value) {
+  color = decomposeColor(color);
+  value = clampWrapper(value);
+  if (color.type === "rgb" || color.type === "hsl") {
+    color.type += "a";
+  }
+  if (color.type === "color") {
+    color.values[3] = `/${value}`;
+  } else {
+    color.values[3] = value;
+  }
+  return recomposeColor(color);
+}
+function private_safeAlpha(color, value, warning) {
+  try {
+    return alpha(color, value);
+  } catch (error) {
+    return color;
+  }
+}
+function darken(color, coefficient) {
+  color = decomposeColor(color);
+  coefficient = clampWrapper(coefficient);
+  if (color.type.includes("hsl")) {
+    color.values[2] *= 1 - coefficient;
+  } else if (color.type.includes("rgb") || color.type.includes("color")) {
+    for (let i = 0; i < 3; i += 1) {
+      color.values[i] *= 1 - coefficient;
+    }
+  }
+  return recomposeColor(color);
+}
+function private_safeDarken(color, coefficient, warning) {
+  try {
+    return darken(color, coefficient);
+  } catch (error) {
+    return color;
+  }
+}
+function lighten(color, coefficient) {
+  color = decomposeColor(color);
+  coefficient = clampWrapper(coefficient);
+  if (color.type.includes("hsl")) {
+    color.values[2] += (100 - color.values[2]) * coefficient;
+  } else if (color.type.includes("rgb")) {
+    for (let i = 0; i < 3; i += 1) {
+      color.values[i] += (255 - color.values[i]) * coefficient;
+    }
+  } else if (color.type.includes("color")) {
+    for (let i = 0; i < 3; i += 1) {
+      color.values[i] += (1 - color.values[i]) * coefficient;
+    }
+  }
+  return recomposeColor(color);
+}
+function private_safeLighten(color, coefficient, warning) {
+  try {
+    return lighten(color, coefficient);
+  } catch (error) {
+    return color;
+  }
+}
+function emphasize(color, coefficient = 0.15) {
+  return getLuminance(color) > 0.5 ? darken(color, coefficient) : lighten(color, coefficient);
+}
+function private_safeEmphasize(color, coefficient, warning) {
+  try {
+    return emphasize(color, coefficient);
+  } catch (error) {
+    return color;
+  }
+}
+
+const defaultGenerator = componentName => componentName;
+const createClassNameGenerator = () => {
+  let generate = defaultGenerator;
+  return {
+    configure(generator) {
+      generate = generator;
+    },
+    generate(componentName) {
+      return generate(componentName);
+    },
+    reset() {
+      generate = defaultGenerator;
+    }
+  };
+};
+const ClassNameGenerator = createClassNameGenerator();
+
 function capitalize(string) {
   if (typeof string !== "string") {
     throw new Error(formatMuiErrorMessage(7));
   }
   return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+/**
+ * Safe chained function.
+ *
+ * Will only create a new function if needed,
+ * otherwise will pass back existing functions or null.
+ */
+function createChainedFunction(...funcs) {
+  return funcs.reduce((acc, func) => {
+    if (func == null) {
+      return acc;
+    }
+    return function chainedFunction(...args) {
+      acc.apply(this, args);
+      func.apply(this, args);
+    };
+  }, () => {});
 }
 
 var reactIs$1 = {exports: {}};
@@ -17208,7 +18220,7 @@ function requireReactIs$1 () {
 var reactIsExports = /*@__PURE__*/ requireReactIs$1();
 
 // https://github.com/sindresorhus/is-plain-obj/blob/main/index.js
-function isPlainObject$2(item) {
+function isPlainObject$1(item) {
   if (typeof item !== 'object' || item === null) {
     return false;
   }
@@ -17216,7 +18228,7 @@ function isPlainObject$2(item) {
   return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in item) && !(Symbol.iterator in item);
 }
 function deepClone(source) {
-  if (/*#__PURE__*/reactExports.isValidElement(source) || reactIsExports.isValidElementType(source) || !isPlainObject$2(source)) {
+  if (/*#__PURE__*/reactExports.isValidElement(source) || reactIsExports.isValidElementType(source) || !isPlainObject$1(source)) {
     return source;
   }
   const output = {};
@@ -17250,17 +18262,17 @@ function deepmerge(target, source, options = {
   const output = options.clone ? {
     ...target
   } : target;
-  if (isPlainObject$2(target) && isPlainObject$2(source)) {
+  if (isPlainObject$1(target) && isPlainObject$1(source)) {
     Object.keys(source).forEach(key => {
       if (/*#__PURE__*/reactExports.isValidElement(source[key]) || reactIsExports.isValidElementType(source[key])) {
         output[key] = source[key];
-      } else if (isPlainObject$2(source[key]) &&
+      } else if (isPlainObject$1(source[key]) &&
       // Avoid prototype pollution
-      Object.prototype.hasOwnProperty.call(target, key) && isPlainObject$2(target[key])) {
+      Object.prototype.hasOwnProperty.call(target, key) && isPlainObject$1(target[key])) {
         // Since `output` is a clone of `target` and we have narrowed `target` in this block we can cast to the same type.
         output[key] = deepmerge(target[key], source[key], options);
       } else if (options.clone) {
-        output[key] = isPlainObject$2(source[key]) ? deepClone(source[key]) : source[key];
+        output[key] = isPlainObject$1(source[key]) ? deepClone(source[key]) : source[key];
       } else {
         output[key] = source[key];
       }
@@ -18311,7 +19323,7 @@ function extendSxProp$1(props) {
   } else if (typeof inSx === 'function') {
     finalSx = (...args) => {
       const result = inSx(...args);
-      if (!isPlainObject$2(result)) {
+      if (!isPlainObject$1(result)) {
         return systemProps;
       }
       return {
@@ -18668,7 +19680,7 @@ function next () {
 /**
  * @return {number}
  */
-function peek$1 () {
+function peek () {
 	return charat(characters, position)
 }
 
@@ -18745,7 +19757,7 @@ function delimit (type) {
  * @return {string}
  */
 function whitespace (type) {
-	while (character = peek$1())
+	while (character = peek())
 		if (character < 33)
 			next();
 		else
@@ -18765,7 +19777,7 @@ function escaping (index, count) {
 		if (character < 48 || character > 102 || (character > 57 && character < 65) || (character > 70 && character < 97))
 			break
 
-	return slice(index, caret() + (count < 6 && peek$1() == 32 && next() == 32))
+	return slice(index, caret() + (count < 6 && peek() == 32 && next() == 32))
 }
 
 /**
@@ -18808,7 +19820,7 @@ function commenter (type, index) {
 		if (type + character === 47 + 10)
 			break
 		// /*
-		else if (type + character === 42 + 42 && peek$1() === 47)
+		else if (type + character === 42 + 42 && peek() === 47)
 			break
 
 	return '/*' + slice(index, position - 1) + '*' + from(type === 47 ? type : next())
@@ -18819,7 +19831,7 @@ function commenter (type, index) {
  * @return {string}
  */
 function identifier (index) {
-	while (!token(peek$1()))
+	while (!token(peek()))
 		next();
 
 	return slice(index, position)
@@ -18885,7 +19897,7 @@ function parse (value, root, parent, rule, rules, rulesets, pseudo, points, decl
 				continue
 			// /
 			case 47:
-				switch (peek$1()) {
+				switch (peek()) {
 					case 42: case 47:
 						append(comment(commenter(next(), caret()), root, parent), declarations);
 						break
@@ -18950,10 +19962,10 @@ function parse (value, root, parent, rule, rules, rulesets, pseudo, points, decl
 					// @
 					case 64:
 						// -
-						if (peek$1() === 45)
+						if (peek() === 45)
 							characters += delimit(next());
 
-						atrule = peek$1(), offset = length = strlen(type = characters += identifier(caret())), character++;
+						atrule = peek(), offset = length = strlen(type = characters += identifier(caret())), character++;
 						break
 					// -
 					case 45:
@@ -19090,7 +20102,7 @@ var identifierWithPointTracking = function identifierWithPointTracking(begin, po
 
   while (true) {
     previous = character;
-    character = peek$1(); // &\f
+    character = peek(); // &\f
 
     if (previous === 38 && character === 12) {
       points[index] = 1;
@@ -19115,7 +20127,7 @@ var toRules = function toRules(parsed, points) {
     switch (token(character)) {
       case 0:
         // &\f
-        if (character === 38 && peek$1() === 12) {
+        if (character === 38 && peek() === 12) {
           // this is not 100% correct, we don't account for literal sequences here - like for example quoted strings
           // stylis inserts \f after & to know when & where it should replace this sequence with the context selector
           // and when it should just concatenate the outer and inner selectors
@@ -19134,7 +20146,7 @@ var toRules = function toRules(parsed, points) {
         // comma
         if (character === 44) {
           // colon
-          parsed[++index] = peek$1() === 58 ? '&\f' : '';
+          parsed[++index] = peek() === 58 ? '&\f' : '';
           points[index] = parsed[index].length;
           break;
         }
@@ -20747,23 +21759,6 @@ function GlobalStyles$1({
   });
 }
 
-const defaultGenerator = componentName => componentName;
-const createClassNameGenerator = () => {
-  let generate = defaultGenerator;
-  return {
-    configure(generator) {
-      generate = generator;
-    },
-    generate(componentName) {
-      return generate(componentName);
-    },
-    reset() {
-      generate = defaultGenerator;
-    }
-  };
-};
-const ClassNameGenerator = createClassNameGenerator();
-
 const globalStateClasses = {
   active: 'active',
   checked: 'checked',
@@ -20942,7 +21937,7 @@ function createStyled(input = {}) {
           return processStyle(props, style, props.theme.modularCssLayers ? layerName : void 0);
         };
       }
-      if (isPlainObject$2(style)) {
+      if (isPlainObject$1(style)) {
         const serialized = preprocessStyles(style);
         return function styleObjectProcessor(props) {
           if (!serialized.variants) {
@@ -21035,60 +22030,6 @@ function lowercaseFirstLetter(string) {
 
 const styled$1 = createStyled();
 
-/**
- * Add keys, values of `defaultProps` that does not exist in `props`
- * @param defaultProps
- * @param props
- * @param mergeClassNameAndStyle If `true`, merges `className` and `style` props instead of overriding them.
- *   When `false` (default), props override defaultProps. When `true`, `className` values are concatenated
- *   and `style` objects are merged with props taking precedence.
- * @returns resolved props
- */
-function resolveProps(defaultProps, props, mergeClassNameAndStyle = false) {
-  const output = {
-    ...props
-  };
-  for (const key in defaultProps) {
-    if (Object.prototype.hasOwnProperty.call(defaultProps, key)) {
-      const propName = key;
-      if (propName === 'components' || propName === 'slots') {
-        output[propName] = {
-          ...defaultProps[propName],
-          ...output[propName]
-        };
-      } else if (propName === 'componentsProps' || propName === 'slotProps') {
-        const defaultSlotProps = defaultProps[propName];
-        const slotProps = props[propName];
-        if (!slotProps) {
-          output[propName] = defaultSlotProps || {};
-        } else if (!defaultSlotProps) {
-          output[propName] = slotProps;
-        } else {
-          output[propName] = {
-            ...slotProps
-          };
-          for (const slotKey in defaultSlotProps) {
-            if (Object.prototype.hasOwnProperty.call(defaultSlotProps, slotKey)) {
-              const slotPropName = slotKey;
-              output[propName][slotPropName] = resolveProps(defaultSlotProps[slotPropName], slotProps[slotPropName], mergeClassNameAndStyle);
-            }
-          }
-        }
-      } else if (propName === 'className' && mergeClassNameAndStyle && props.className) {
-        output.className = clsx(defaultProps?.className, props?.className);
-      } else if (propName === 'style' && mergeClassNameAndStyle && props.style) {
-        output.style = {
-          ...defaultProps?.style,
-          ...props?.style
-        };
-      } else if (output[propName] === undefined) {
-        output[propName] = defaultProps[propName];
-      }
-    }
-  }
-  return output;
-}
-
 function getThemeProps$1(params) {
   const {
     theme,
@@ -21126,199 +22067,6 @@ function useThemeProps({
  * and confirm it doesn't apply to your use-case.
  */
 const useEnhancedEffect = typeof window !== 'undefined' ? reactExports.useLayoutEffect : reactExports.useEffect;
-
-function clamp(val, min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER) {
-  return Math.max(min, Math.min(val, max));
-}
-
-function clampWrapper(value, min = 0, max = 1) {
-  return clamp(value, min, max);
-}
-function hexToRgb(color) {
-  color = color.slice(1);
-  const re = new RegExp(`.{1,${color.length >= 6 ? 2 : 1}}`, "g");
-  let colors = color.match(re);
-  if (colors && colors[0].length === 1) {
-    colors = colors.map((n) => n + n);
-  }
-  return colors ? `rgb${colors.length === 4 ? "a" : ""}(${colors.map((n, index) => {
-    return index < 3 ? parseInt(n, 16) : Math.round(parseInt(n, 16) / 255 * 1e3) / 1e3;
-  }).join(", ")})` : "";
-}
-function decomposeColor(color) {
-  if (color.type) {
-    return color;
-  }
-  if (color.charAt(0) === "#") {
-    return decomposeColor(hexToRgb(color));
-  }
-  const marker = color.indexOf("(");
-  const type = color.substring(0, marker);
-  if (!["rgb", "rgba", "hsl", "hsla", "color"].includes(type)) {
-    throw new Error(formatMuiErrorMessage(9, color));
-  }
-  let values = color.substring(marker + 1, color.length - 1);
-  let colorSpace;
-  if (type === "color") {
-    values = values.split(" ");
-    colorSpace = values.shift();
-    if (values.length === 4 && values[3].charAt(0) === "/") {
-      values[3] = values[3].slice(1);
-    }
-    if (!["srgb", "display-p3", "a98-rgb", "prophoto-rgb", "rec-2020"].includes(colorSpace)) {
-      throw new Error(formatMuiErrorMessage(10, colorSpace));
-    }
-  } else {
-    values = values.split(",");
-  }
-  values = values.map((value) => parseFloat(value));
-  return {
-    type,
-    values,
-    colorSpace
-  };
-}
-const colorChannel = (color) => {
-  const decomposedColor = decomposeColor(color);
-  return decomposedColor.values.slice(0, 3).map((val, idx) => decomposedColor.type.includes("hsl") && idx !== 0 ? `${val}%` : val).join(" ");
-};
-const private_safeColorChannel = (color, warning) => {
-  try {
-    return colorChannel(color);
-  } catch (error) {
-    return color;
-  }
-};
-function recomposeColor(color) {
-  const {
-    type,
-    colorSpace
-  } = color;
-  let {
-    values
-  } = color;
-  if (type.includes("rgb")) {
-    values = values.map((n, i) => i < 3 ? parseInt(n, 10) : n);
-  } else if (type.includes("hsl")) {
-    values[1] = `${values[1]}%`;
-    values[2] = `${values[2]}%`;
-  }
-  if (type.includes("color")) {
-    values = `${colorSpace} ${values.join(" ")}`;
-  } else {
-    values = `${values.join(", ")}`;
-  }
-  return `${type}(${values})`;
-}
-function hslToRgb(color) {
-  color = decomposeColor(color);
-  const {
-    values
-  } = color;
-  const h = values[0];
-  const s = values[1] / 100;
-  const l = values[2] / 100;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n, k = (n + h / 30) % 12) => l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-  let type = "rgb";
-  const rgb = [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)];
-  if (color.type === "hsla") {
-    type += "a";
-    rgb.push(values[3]);
-  }
-  return recomposeColor({
-    type,
-    values: rgb
-  });
-}
-function getLuminance(color) {
-  color = decomposeColor(color);
-  let rgb = color.type === "hsl" || color.type === "hsla" ? decomposeColor(hslToRgb(color)).values : color.values;
-  rgb = rgb.map((val) => {
-    if (color.type !== "color") {
-      val /= 255;
-    }
-    return val <= 0.03928 ? val / 12.92 : ((val + 0.055) / 1.055) ** 2.4;
-  });
-  return Number((0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]).toFixed(3));
-}
-function getContrastRatio(foreground, background) {
-  const lumA = getLuminance(foreground);
-  const lumB = getLuminance(background);
-  return (Math.max(lumA, lumB) + 0.05) / (Math.min(lumA, lumB) + 0.05);
-}
-function alpha(color, value) {
-  color = decomposeColor(color);
-  value = clampWrapper(value);
-  if (color.type === "rgb" || color.type === "hsl") {
-    color.type += "a";
-  }
-  if (color.type === "color") {
-    color.values[3] = `/${value}`;
-  } else {
-    color.values[3] = value;
-  }
-  return recomposeColor(color);
-}
-function private_safeAlpha(color, value, warning) {
-  try {
-    return alpha(color, value);
-  } catch (error) {
-    return color;
-  }
-}
-function darken(color, coefficient) {
-  color = decomposeColor(color);
-  coefficient = clampWrapper(coefficient);
-  if (color.type.includes("hsl")) {
-    color.values[2] *= 1 - coefficient;
-  } else if (color.type.includes("rgb") || color.type.includes("color")) {
-    for (let i = 0; i < 3; i += 1) {
-      color.values[i] *= 1 - coefficient;
-    }
-  }
-  return recomposeColor(color);
-}
-function private_safeDarken(color, coefficient, warning) {
-  try {
-    return darken(color, coefficient);
-  } catch (error) {
-    return color;
-  }
-}
-function lighten(color, coefficient) {
-  color = decomposeColor(color);
-  coefficient = clampWrapper(coefficient);
-  if (color.type.includes("hsl")) {
-    color.values[2] += (100 - color.values[2]) * coefficient;
-  } else if (color.type.includes("rgb")) {
-    for (let i = 0; i < 3; i += 1) {
-      color.values[i] += (255 - color.values[i]) * coefficient;
-    }
-  } else if (color.type.includes("color")) {
-    for (let i = 0; i < 3; i += 1) {
-      color.values[i] += (1 - color.values[i]) * coefficient;
-    }
-  }
-  return recomposeColor(color);
-}
-function private_safeLighten(color, coefficient, warning) {
-  try {
-    return lighten(color, coefficient);
-  } catch (error) {
-    return color;
-  }
-}
-function emphasize(color, coefficient = 0.15) {
-  return getLuminance(color) > 0.5 ? darken(color, coefficient) : lighten(color, coefficient);
-}
-function private_safeEmphasize(color, coefficient, warning) {
-  try {
-    return emphasize(color, coefficient);
-  } catch (error) {
-    return color;
-  }
-}
 
 const RtlContext = /* @__PURE__ */ reactExports.createContext();
 const useRtl = () => {
@@ -22931,7 +23679,7 @@ const zIndex = {
 
 /* eslint-disable import/prefer-default-export */
 function isSerializable(val) {
-  return isPlainObject$2(val) || typeof val === 'undefined' || typeof val === 'string' || typeof val === 'boolean' || typeof val === 'number' || Array.isArray(val);
+  return isPlainObject$1(val) || typeof val === 'undefined' || typeof val === 'string' || typeof val === 'boolean' || typeof val === 'number' || Array.isArray(val);
 }
 
 /**
@@ -22964,7 +23712,7 @@ function stringifyTheme(baseTheme = {}) {
       const [key, value] = array[index];
       if (!isSerializable(value) || key.startsWith('unstable_')) {
         delete object[key];
-      } else if (isPlainObject$2(value)) {
+      } else if (isPlainObject$1(value)) {
         object[key] = {
           ...value
         };
@@ -23646,1149 +24394,503 @@ function useDefaultProps(params) {
   return useDefaultProps$1(params);
 }
 
-/**
- * Type guard to check if the object has a "main" property of type string.
- *
- * @param obj - the object to check
- * @returns boolean
- */
-function hasCorrectMainProperty(obj) {
-  return typeof obj.main === 'string';
+function getSvgIconUtilityClass(slot) {
+  return generateUtilityClass('MuiSvgIcon', slot);
 }
-/**
- * Checks if the object conforms to the SimplePaletteColorOptions type.
- * The minimum requirement is that the object has a "main" property of type string, this is always checked.
- * Optionally, you can pass additional properties to check.
- *
- * @param obj - The object to check
- * @param additionalPropertiesToCheck - Array containing "light", "dark", and/or "contrastText"
- * @returns boolean
- */
-function checkSimplePaletteColorValues(obj, additionalPropertiesToCheck = []) {
-  if (!hasCorrectMainProperty(obj)) {
-    return false;
-  }
-  for (const value of additionalPropertiesToCheck) {
-    if (!obj.hasOwnProperty(value) || typeof obj[value] !== 'string') {
-      return false;
-    }
-  }
-  return true;
-}
+generateUtilityClasses('MuiSvgIcon', ['root', 'colorPrimary', 'colorSecondary', 'colorAction', 'colorError', 'colorDisabled', 'fontSizeInherit', 'fontSizeSmall', 'fontSizeMedium', 'fontSizeLarge']);
 
-/**
- * Creates a filter function used to filter simple palette color options.
- * The minimum requirement is that the object has a "main" property of type string, this is always checked.
- * Optionally, you can pass additional properties to check.
- *
- * @param additionalPropertiesToCheck - Array containing "light", "dark", and/or "contrastText"
- * @returns ([, value]: [any, PaletteColorOptions]) => boolean
- */
-function createSimplePaletteValueFilter(additionalPropertiesToCheck = []) {
-  return ([, value]) => value && checkSimplePaletteColorValues(value, additionalPropertiesToCheck);
-}
-
-function getCircularProgressUtilityClass(slot) {
-  return generateUtilityClass('MuiCircularProgress', slot);
-}
-generateUtilityClasses('MuiCircularProgress', ['root', 'determinate', 'indeterminate', 'colorPrimary', 'colorSecondary', 'svg', 'circle', 'circleDeterminate', 'circleIndeterminate', 'circleDisableShrink']);
-
-const SIZE = 44;
-const circularRotateKeyframe = keyframes`
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-`;
-const circularDashKeyframe = keyframes`
-  0% {
-    stroke-dasharray: 1px, 200px;
-    stroke-dashoffset: 0;
-  }
-
-  50% {
-    stroke-dasharray: 100px, 200px;
-    stroke-dashoffset: -15px;
-  }
-
-  100% {
-    stroke-dasharray: 1px, 200px;
-    stroke-dashoffset: -126px;
-  }
-`;
-const rotateAnimation = typeof circularRotateKeyframe !== "string" ? css`
-        animation: ${circularRotateKeyframe} 1.4s linear infinite;
-      ` : null;
-const dashAnimation = typeof circularDashKeyframe !== "string" ? css`
-        animation: ${circularDashKeyframe} 1.4s ease-in-out infinite;
-      ` : null;
 const useUtilityClasses$H = (ownerState) => {
   const {
-    classes,
-    variant,
     color,
-    disableShrink
-  } = ownerState;
-  const slots = {
-    root: ["root", variant, `color${capitalize(color)}`],
-    svg: ["svg"],
-    circle: ["circle", `circle${capitalize(variant)}`, disableShrink && "circleDisableShrink"]
-  };
-  return composeClasses(slots, getCircularProgressUtilityClass, classes);
-};
-const CircularProgressRoot = styled("span", {
-  name: "MuiCircularProgress",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[ownerState.variant], styles[`color${capitalize(ownerState.color)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  display: "inline-block",
-  variants: [{
-    props: {
-      variant: "determinate"
-    },
-    style: {
-      transition: theme.transitions.create("transform")
-    }
-  }, {
-    props: {
-      variant: "indeterminate"
-    },
-    style: rotateAnimation || {
-      animation: `${circularRotateKeyframe} 1.4s linear infinite`
-    }
-  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
-    props: {
-      color
-    },
-    style: {
-      color: (theme.vars || theme).palette[color].main
-    }
-  }))]
-})));
-const CircularProgressSVG = styled("svg", {
-  name: "MuiCircularProgress",
-  slot: "Svg"
-})({
-  display: "block"
-  // Keeps the progress centered
-});
-const CircularProgressCircle = styled("circle", {
-  name: "MuiCircularProgress",
-  slot: "Circle",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.circle, styles[`circle${capitalize(ownerState.variant)}`], ownerState.disableShrink && styles.circleDisableShrink];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  stroke: "currentColor",
-  variants: [{
-    props: {
-      variant: "determinate"
-    },
-    style: {
-      transition: theme.transitions.create("stroke-dashoffset")
-    }
-  }, {
-    props: {
-      variant: "indeterminate"
-    },
-    style: {
-      // Some default value that looks fine waiting for the animation to kicks in.
-      strokeDasharray: "80px, 200px",
-      strokeDashoffset: 0
-      // Add the unit to fix a Edge 16 and below bug.
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.variant === "indeterminate" && !ownerState.disableShrink,
-    style: dashAnimation || {
-      // At runtime for Pigment CSS, `bufferAnimation` will be null and the generated keyframe will be used.
-      animation: `${circularDashKeyframe} 1.4s ease-in-out infinite`
-    }
-  }]
-})));
-const CircularProgress = /* @__PURE__ */ reactExports.forwardRef(function CircularProgress2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiCircularProgress"
-  });
-  const {
-    className,
-    color = "primary",
-    disableShrink = false,
-    size = 40,
-    style,
-    thickness = 3.6,
-    value = 0,
-    variant = "indeterminate",
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    color,
-    disableShrink,
-    size,
-    thickness,
-    value,
-    variant
-  };
-  const classes = useUtilityClasses$H(ownerState);
-  const circleStyle = {};
-  const rootStyle = {};
-  const rootProps = {};
-  if (variant === "determinate") {
-    const circumference = 2 * Math.PI * ((SIZE - thickness) / 2);
-    circleStyle.strokeDasharray = circumference.toFixed(3);
-    rootProps["aria-valuenow"] = Math.round(value);
-    circleStyle.strokeDashoffset = `${((100 - value) / 100 * circumference).toFixed(3)}px`;
-    rootStyle.transform = "rotate(-90deg)";
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgressRoot, {
-    className: clsx(classes.root, className),
-    style: {
-      width: size,
-      height: size,
-      ...rootStyle,
-      ...style
-    },
-    ownerState,
-    ref,
-    role: "progressbar",
-    ...rootProps,
-    ...other,
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgressSVG, {
-      className: classes.svg,
-      ownerState,
-      viewBox: `${SIZE / 2} ${SIZE / 2} ${SIZE} ${SIZE}`,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgressCircle, {
-        className: classes.circle,
-        style: circleStyle,
-        ownerState,
-        cx: SIZE,
-        cy: SIZE,
-        r: (SIZE - thickness) / 2,
-        fill: "none",
-        strokeWidth: thickness
-      })
-    })
-  });
-});
-
-function getTypographyUtilityClass(slot) {
-  return generateUtilityClass('MuiTypography', slot);
-}
-generateUtilityClasses('MuiTypography', ['root', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'inherit', 'button', 'caption', 'overline', 'alignLeft', 'alignRight', 'alignCenter', 'alignJustify', 'noWrap', 'gutterBottom', 'paragraph']);
-
-const v6Colors = {
-  primary: true,
-  secondary: true,
-  error: true,
-  info: true,
-  success: true,
-  warning: true,
-  textPrimary: true,
-  textSecondary: true,
-  textDisabled: true
-};
-const extendSxProp = internal_createExtendSxProp();
-const useUtilityClasses$G = (ownerState) => {
-  const {
-    align,
-    gutterBottom,
-    noWrap,
-    paragraph,
-    variant,
+    fontSize,
     classes
   } = ownerState;
   const slots = {
-    root: ["root", variant, ownerState.align !== "inherit" && `align${capitalize(align)}`, gutterBottom && "gutterBottom", noWrap && "noWrap", paragraph && "paragraph"]
+    root: ["root", color !== "inherit" && `color${capitalize(color)}`, `fontSize${capitalize(fontSize)}`]
   };
-  return composeClasses(slots, getTypographyUtilityClass, classes);
+  return composeClasses(slots, getSvgIconUtilityClass, classes);
 };
-const TypographyRoot = styled("span", {
-  name: "MuiTypography",
+const SvgIconRoot = styled("svg", {
+  name: "MuiSvgIcon",
   slot: "Root",
   overridesResolver: (props, styles) => {
     const {
       ownerState
     } = props;
-    return [styles.root, ownerState.variant && styles[ownerState.variant], ownerState.align !== "inherit" && styles[`align${capitalize(ownerState.align)}`], ownerState.noWrap && styles.noWrap, ownerState.gutterBottom && styles.gutterBottom, ownerState.paragraph && styles.paragraph];
+    return [styles.root, ownerState.color !== "inherit" && styles[`color${capitalize(ownerState.color)}`], styles[`fontSize${capitalize(ownerState.fontSize)}`]];
   }
 })(memoTheme(({
   theme
 }) => ({
-  margin: 0,
-  variants: [{
-    props: {
-      variant: "inherit"
+  userSelect: "none",
+  width: "1em",
+  height: "1em",
+  display: "inline-block",
+  flexShrink: 0,
+  transition: theme.transitions?.create?.("fill", {
+    duration: (theme.vars ?? theme).transitions?.duration?.shorter
+  }),
+  variants: [
+    {
+      props: (props) => !props.hasSvgAsChild,
+      style: {
+        // the <svg> will define the property that has `currentColor`
+        // for example heroicons uses fill="none" and stroke="currentColor"
+        fill: "currentColor"
+      }
     },
-    style: {
-      // Some elements, like <button> on Chrome have default font that doesn't inherit, reset this.
-      font: "inherit",
-      lineHeight: "inherit",
-      letterSpacing: "inherit"
-    }
-  }, ...Object.entries(theme.typography).filter(([variant, value]) => variant !== "inherit" && value && typeof value === "object").map(([variant, value]) => ({
-    props: {
-      variant
+    {
+      props: {
+        fontSize: "inherit"
+      },
+      style: {
+        fontSize: "inherit"
+      }
     },
-    style: value
-  })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
-    props: {
-      color
+    {
+      props: {
+        fontSize: "small"
+      },
+      style: {
+        fontSize: theme.typography?.pxToRem?.(20) || "1.25rem"
+      }
     },
-    style: {
-      color: (theme.vars || theme).palette[color].main
-    }
-  })), ...Object.entries(theme.palette?.text || {}).filter(([, value]) => typeof value === "string").map(([color]) => ({
-    props: {
-      color: `text${capitalize(color)}`
+    {
+      props: {
+        fontSize: "medium"
+      },
+      style: {
+        fontSize: theme.typography?.pxToRem?.(24) || "1.5rem"
+      }
     },
-    style: {
-      color: (theme.vars || theme).palette.text[color]
+    {
+      props: {
+        fontSize: "large"
+      },
+      style: {
+        fontSize: theme.typography?.pxToRem?.(35) || "2.1875rem"
+      }
+    },
+    // TODO v5 deprecate color prop, v6 remove for sx
+    ...Object.entries((theme.vars ?? theme).palette).filter(([, value]) => value && value.main).map(([color]) => ({
+      props: {
+        color
+      },
+      style: {
+        color: (theme.vars ?? theme).palette?.[color]?.main
+      }
+    })),
+    {
+      props: {
+        color: "action"
+      },
+      style: {
+        color: (theme.vars ?? theme).palette?.action?.active
+      }
+    },
+    {
+      props: {
+        color: "disabled"
+      },
+      style: {
+        color: (theme.vars ?? theme).palette?.action?.disabled
+      }
+    },
+    {
+      props: {
+        color: "inherit"
+      },
+      style: {
+        color: void 0
+      }
     }
-  })), {
-    props: ({
-      ownerState
-    }) => ownerState.align !== "inherit",
-    style: {
-      textAlign: "var(--Typography-textAlign)"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.noWrap,
-    style: {
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.gutterBottom,
-    style: {
-      marginBottom: "0.35em"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.paragraph,
-    style: {
-      marginBottom: 16
-    }
-  }]
+  ]
 })));
-const defaultVariantMapping = {
-  h1: "h1",
-  h2: "h2",
-  h3: "h3",
-  h4: "h4",
-  h5: "h5",
-  h6: "h6",
-  subtitle1: "h6",
-  subtitle2: "h6",
-  body1: "p",
-  body2: "p",
-  inherit: "p"
-};
-const Typography = /* @__PURE__ */ reactExports.forwardRef(function Typography2(inProps, ref) {
-  const {
-    color,
-    ...themeProps
-  } = useDefaultProps({
+const SvgIcon = /* @__PURE__ */ reactExports.forwardRef(function SvgIcon2(inProps, ref) {
+  const props = useDefaultProps({
     props: inProps,
-    name: "MuiTypography"
-  });
-  const isSxColor = !v6Colors[color];
-  const props = extendSxProp({
-    ...themeProps,
-    ...isSxColor && {
-      color
-    }
+    name: "MuiSvgIcon"
   });
   const {
-    align = "inherit",
+    children,
     className,
-    component,
-    gutterBottom = false,
-    noWrap = false,
-    paragraph = false,
-    variant = "body1",
-    variantMapping = defaultVariantMapping,
+    color = "inherit",
+    component = "svg",
+    fontSize = "medium",
+    htmlColor,
+    inheritViewBox = false,
+    titleAccess,
+    viewBox = "0 0 24 24",
     ...other
   } = props;
+  const hasSvgAsChild = /* @__PURE__ */ reactExports.isValidElement(children) && children.type === "svg";
   const ownerState = {
     ...props,
-    align,
     color,
-    className,
     component,
-    gutterBottom,
-    noWrap,
-    paragraph,
-    variant,
-    variantMapping
+    fontSize,
+    instanceFontSize: inProps.fontSize,
+    inheritViewBox,
+    viewBox,
+    hasSvgAsChild
   };
-  const Component = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
-  const classes = useUtilityClasses$G(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(TypographyRoot, {
-    as: Component,
-    ref,
+  const more = {};
+  if (!inheritViewBox) {
+    more.viewBox = viewBox;
+  }
+  const classes = useUtilityClasses$H(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(SvgIconRoot, {
+    as: component,
     className: clsx(classes.root, className),
+    focusable: "false",
+    color: htmlColor,
+    "aria-hidden": titleAccess ? void 0 : true,
+    role: titleAccess ? "img" : void 0,
+    ref,
+    ...more,
     ...other,
+    ...hasSvgAsChild && children.props,
     ownerState,
-    style: {
-      ...align !== "inherit" && {
-        "--Typography-textAlign": align
-      },
-      ...other.style
-    }
+    children: [hasSvgAsChild ? children.props.children : children, titleAccess ? /* @__PURE__ */ jsxRuntimeExports.jsx("title", {
+      children: titleAccess
+    }) : null]
   });
 });
+SvgIcon.muiName = "SvgIcon";
 
-var NOTHING = Symbol.for("immer-nothing");
-var DRAFTABLE = Symbol.for("immer-draftable");
-var DRAFT_STATE = Symbol.for("immer-state");
-function die(error, ...args) {
-  throw new Error(
-    `[Immer] minified error nr: ${error}. Full error at: https://bit.ly/3cXEKWf`
-  );
-}
-var getPrototypeOf = Object.getPrototypeOf;
-function isDraft(value) {
-  return !!value && !!value[DRAFT_STATE];
-}
-function isDraftable(value) {
-  if (!value)
-    return false;
-  return isPlainObject$1(value) || Array.isArray(value) || !!value[DRAFTABLE] || !!value.constructor?.[DRAFTABLE] || isMap(value) || isSet(value);
-}
-var objectCtorString = Object.prototype.constructor.toString();
-function isPlainObject$1(value) {
-  if (!value || typeof value !== "object")
-    return false;
-  const proto = getPrototypeOf(value);
-  if (proto === null) {
-    return true;
-  }
-  const Ctor = Object.hasOwnProperty.call(proto, "constructor") && proto.constructor;
-  if (Ctor === Object)
-    return true;
-  return typeof Ctor == "function" && Function.toString.call(Ctor) === objectCtorString;
-}
-function each(obj, iter) {
-  if (getArchtype(obj) === 0) {
-    Reflect.ownKeys(obj).forEach((key) => {
-      iter(key, obj[key], obj);
+function createSvgIcon(path, displayName) {
+  function Component(props, ref) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(SvgIcon, {
+      "data-testid": void 0,
+      ref,
+      ...props,
+      children: path
     });
-  } else {
-    obj.forEach((entry, index) => iter(index, entry, obj));
+  }
+  Component.muiName = SvgIcon.muiName;
+  return /* @__PURE__ */ reactExports.memo(/* @__PURE__ */ reactExports.forwardRef(Component));
+}
+
+// Corresponds to 10 frames at 60 Hz.
+// A few bytes payload overhead when lodash/debounce is ~3 kB and debounce ~300 B.
+function debounce(func, wait = 166) {
+  let timeout;
+  function debounced(...args) {
+    const later = () => {
+      // @ts-ignore
+      func.apply(this, args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  }
+  debounced.clear = () => {
+    clearTimeout(timeout);
+  };
+  return debounced;
+}
+
+function ownerDocument(node) {
+  return node && node.ownerDocument || document;
+}
+
+function ownerWindow(node) {
+  const doc = ownerDocument(node);
+  return doc.defaultView || window;
+}
+
+/**
+ * TODO v5: consider making it private
+ *
+ * passes {value} to {ref}
+ *
+ * WARNING: Be sure to only call this inside a callback that is passed as a ref.
+ * Otherwise, make sure to cleanup the previous {ref} if it changes. See
+ * https://github.com/mui/material-ui/issues/13539
+ *
+ * Useful if you want to expose the ref of an inner component to the public API
+ * while still using it inside the component.
+ * @param ref A ref callback or ref object. If anything falsy, this is a no-op.
+ */
+function setRef(ref, value) {
+  if (typeof ref === 'function') {
+    ref(value);
+  } else if (ref) {
+    ref.current = value;
   }
 }
-function getArchtype(thing) {
-  const state = thing[DRAFT_STATE];
-  return state ? state.type_ : Array.isArray(thing) ? 1 : isMap(thing) ? 2 : isSet(thing) ? 3 : 0;
+
+function useControlled(props) {
+  const {
+    controlled,
+    default: defaultProp,
+    name,
+    state = "value"
+  } = props;
+  const {
+    current: isControlled
+  } = reactExports.useRef(controlled !== void 0);
+  const [valueState, setValue] = reactExports.useState(defaultProp);
+  const value = isControlled ? controlled : valueState;
+  const setValueIfUncontrolled = reactExports.useCallback((newValue) => {
+    if (!isControlled) {
+      setValue(newValue);
+    }
+  }, []);
+  return [value, setValueIfUncontrolled];
 }
-function has(thing, prop) {
-  return getArchtype(thing) === 2 ? thing.has(prop) : Object.prototype.hasOwnProperty.call(thing, prop);
+
+/**
+ * Inspired by https://github.com/facebook/react/issues/14099#issuecomment-440013892
+ * See RFC in https://github.com/reactjs/rfcs/pull/220
+ */
+
+function useEventCallback(fn) {
+  const ref = reactExports.useRef(fn);
+  useEnhancedEffect(() => {
+    ref.current = fn;
+  });
+  return reactExports.useRef((...args) =>
+  // @ts-expect-error hide `this`
+  (0, ref.current)(...args)).current;
 }
-function set$1(thing, propOrOldValue, value) {
-  const t = getArchtype(thing);
-  if (t === 2)
-    thing.set(propOrOldValue, value);
-  else if (t === 3) {
-    thing.add(value);
-  } else
-    thing[propOrOldValue] = value;
-}
-function is(x, y) {
-  if (x === y) {
-    return x !== 0 || 1 / x === 1 / y;
-  } else {
-    return x !== x && y !== y;
-  }
-}
-function isMap(target) {
-  return target instanceof Map;
-}
-function isSet(target) {
-  return target instanceof Set;
-}
-function latest(state) {
-  return state.copy_ || state.base_;
-}
-function shallowCopy(base, strict) {
-  if (isMap(base)) {
-    return new Map(base);
-  }
-  if (isSet(base)) {
-    return new Set(base);
-  }
-  if (Array.isArray(base))
-    return Array.prototype.slice.call(base);
-  const isPlain = isPlainObject$1(base);
-  if (strict === true || strict === "class_only" && !isPlain) {
-    const descriptors = Object.getOwnPropertyDescriptors(base);
-    delete descriptors[DRAFT_STATE];
-    let keys = Reflect.ownKeys(descriptors);
-    for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
-      const desc = descriptors[key];
-      if (desc.writable === false) {
-        desc.writable = true;
-        desc.configurable = true;
+
+/**
+ * Merges refs into a single memoized callback ref or `null`.
+ *
+ * ```tsx
+ * const rootRef = React.useRef<Instance>(null);
+ * const refFork = useForkRef(rootRef, props.ref);
+ *
+ * return (
+ *   <Root {...props} ref={refFork} />
+ * );
+ * ```
+ *
+ * @param {Array<React.Ref<Instance> | undefined>} refs The ref array.
+ * @returns {React.RefCallback<Instance> | null} The new ref callback.
+ */
+function useForkRef(...refs) {
+  const cleanupRef = reactExports.useRef(undefined);
+  const refEffect = reactExports.useCallback(instance => {
+    const cleanups = refs.map(ref => {
+      if (ref == null) {
+        return null;
       }
-      if (desc.get || desc.set)
-        descriptors[key] = {
-          configurable: true,
-          writable: true,
-          // could live with !!desc.set as well here...
-          enumerable: desc.enumerable,
-          value: base[key]
+      if (typeof ref === 'function') {
+        const refCallback = ref;
+        const refCleanup = refCallback(instance);
+        return typeof refCleanup === 'function' ? refCleanup : () => {
+          refCallback(null);
         };
+      }
+      ref.current = instance;
+      return () => {
+        ref.current = null;
+      };
+    });
+    return () => {
+      cleanups.forEach(refCleanup => refCleanup?.());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, refs);
+  return reactExports.useMemo(() => {
+    if (refs.every(ref => ref == null)) {
+      return null;
     }
-    return Object.create(getPrototypeOf(base), descriptors);
-  } else {
-    const proto = getPrototypeOf(base);
-    if (proto !== null && isPlain) {
-      return { ...base };
-    }
-    const obj = Object.create(proto);
-    return Object.assign(obj, base);
+    return value => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = undefined;
+      }
+      if (value != null) {
+        cleanupRef.current = refEffect(value);
+      }
+    };
+    // TODO: uncomment once we enable eslint-plugin-react-compiler // eslint-disable-next-line react-compiler/react-compiler -- intentionally ignoring that the dependency array must be an array literal
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, refs);
+}
+
+// Brought from [Base UI](https://github.com/mui/base-ui/blob/master/packages/react/src/merge-props/mergeProps.ts#L119)
+// Use it directly from Base UI once it's a package dependency.
+function isEventHandler(key, value) {
+  // This approach is more efficient than using a regex.
+  const thirdCharCode = key.charCodeAt(2);
+  return key[0] === 'o' && key[1] === 'n' && thirdCharCode >= 65 /* A */ && thirdCharCode <= 90 /* Z */ && typeof value === 'function';
+}
+function mergeSlotProps$1(externalSlotProps, defaultSlotProps) {
+  if (!externalSlotProps) {
+    return defaultSlotProps;
   }
-}
-function freeze(obj, deep = false) {
-  if (isFrozen(obj) || isDraft(obj) || !isDraftable(obj))
-    return obj;
-  if (getArchtype(obj) > 1) {
-    obj.set = obj.add = obj.clear = obj.delete = dontMutateFrozenCollections;
+  function extractHandlers(externalSlotPropsValue, defaultSlotPropsValue) {
+    const handlers = {};
+    Object.keys(defaultSlotPropsValue).forEach(key => {
+      if (isEventHandler(key, defaultSlotPropsValue[key]) && typeof externalSlotPropsValue[key] === 'function') {
+        // only compose the handlers if both default and external slot props match the event handler
+        handlers[key] = (...args) => {
+          externalSlotPropsValue[key](...args);
+          defaultSlotPropsValue[key](...args);
+        };
+      }
+    });
+    return handlers;
   }
-  Object.freeze(obj);
-  if (deep)
-    Object.entries(obj).forEach(([key, value]) => freeze(value, true));
-  return obj;
-}
-function dontMutateFrozenCollections() {
-  die(2);
-}
-function isFrozen(obj) {
-  return Object.isFrozen(obj);
-}
-var plugins = {};
-function getPlugin(pluginKey) {
-  const plugin = plugins[pluginKey];
-  if (!plugin) {
-    die(0, pluginKey);
+  if (typeof externalSlotProps === 'function' || typeof defaultSlotProps === 'function') {
+    return ownerState => {
+      const defaultSlotPropsValue = typeof defaultSlotProps === 'function' ? defaultSlotProps(ownerState) : defaultSlotProps;
+      const externalSlotPropsValue = typeof externalSlotProps === 'function' ? externalSlotProps({
+        ...ownerState,
+        ...defaultSlotPropsValue
+      }) : externalSlotProps;
+      const className = clsx(ownerState?.className, defaultSlotPropsValue?.className, externalSlotPropsValue?.className);
+      const handlers = extractHandlers(externalSlotPropsValue, defaultSlotPropsValue);
+      return {
+        ...defaultSlotPropsValue,
+        ...externalSlotPropsValue,
+        ...handlers,
+        ...(!!className && {
+          className
+        }),
+        ...(defaultSlotPropsValue?.style && externalSlotPropsValue?.style && {
+          style: {
+            ...defaultSlotPropsValue.style,
+            ...externalSlotPropsValue.style
+          }
+        }),
+        ...(defaultSlotPropsValue?.sx && externalSlotPropsValue?.sx && {
+          sx: [...(Array.isArray(defaultSlotPropsValue.sx) ? defaultSlotPropsValue.sx : [defaultSlotPropsValue.sx]), ...(Array.isArray(externalSlotPropsValue.sx) ? externalSlotPropsValue.sx : [externalSlotPropsValue.sx])]
+        })
+      };
+    };
   }
-  return plugin;
-}
-var currentScope;
-function getCurrentScope() {
-  return currentScope;
-}
-function createScope(parent_, immer_) {
+  const typedDefaultSlotProps = defaultSlotProps;
+  const handlers = extractHandlers(externalSlotProps, typedDefaultSlotProps);
+  const className = clsx(typedDefaultSlotProps?.className, externalSlotProps?.className);
   return {
-    drafts_: [],
-    parent_,
-    immer_,
-    // Whenever the modified draft contains a draft from another scope, we
-    // need to prevent auto-freezing so the unowned draft can be finalized.
-    canAutoFreeze_: true,
-    unfinalizedDrafts_: 0
+    ...defaultSlotProps,
+    ...externalSlotProps,
+    ...handlers,
+    ...(!!className && {
+      className
+    }),
+    ...(typedDefaultSlotProps?.style && externalSlotProps?.style && {
+      style: {
+        ...typedDefaultSlotProps.style,
+        ...externalSlotProps.style
+      }
+    }),
+    ...(typedDefaultSlotProps?.sx && externalSlotProps?.sx && {
+      sx: [...(Array.isArray(typedDefaultSlotProps.sx) ? typedDefaultSlotProps.sx : [typedDefaultSlotProps.sx]), ...(Array.isArray(externalSlotProps.sx) ? externalSlotProps.sx : [externalSlotProps.sx])]
+    })
   };
 }
-function usePatchesInScope(scope, patchListener) {
-  if (patchListener) {
-    getPlugin("Patches");
-    scope.patches_ = [];
-    scope.inversePatches_ = [];
-    scope.patchListener_ = patchListener;
+
+function isFocusVisible(element) {
+  try {
+    return element.matches(":focus-visible");
+  } catch (error) {
   }
+  return false;
 }
-function revokeScope(scope) {
-  leaveScope(scope);
-  scope.drafts_.forEach(revokeDraft);
-  scope.drafts_ = null;
-}
-function leaveScope(scope) {
-  if (scope === currentScope) {
-    currentScope = scope.parent_;
+
+const UNINITIALIZED = {};
+
+/**
+ * A React.useRef() that is initialized lazily with a function. Note that it accepts an optional
+ * initialization argument, so the initialization function doesn't need to be an inline closure.
+ *
+ * @usage
+ *   const ref = useLazyRef(sortColumns, columns)
+ */
+function useLazyRef(init, initArg) {
+  const ref = reactExports.useRef(UNINITIALIZED);
+  if (ref.current === UNINITIALIZED) {
+    ref.current = init(initArg);
   }
+  return ref;
 }
-function enterScope(immer2) {
-  return currentScope = createScope(currentScope, immer2);
-}
-function revokeDraft(draft) {
-  const state = draft[DRAFT_STATE];
-  if (state.type_ === 0 || state.type_ === 1)
-    state.revoke_();
-  else
-    state.revoked_ = true;
-}
-function processResult(result, scope) {
-  scope.unfinalizedDrafts_ = scope.drafts_.length;
-  const baseDraft = scope.drafts_[0];
-  const isReplaced = result !== void 0 && result !== baseDraft;
-  if (isReplaced) {
-    if (baseDraft[DRAFT_STATE].modified_) {
-      revokeScope(scope);
-      die(4);
+
+/**
+ * Lazy initialization container for the Ripple instance. This improves
+ * performance by delaying mounting the ripple until it's needed.
+ */
+class LazyRipple {
+  /** React ref to the ripple instance */
+
+  /** If the ripple component should be mounted */
+
+  /** Promise that resolves when the ripple component is mounted */
+
+  /** If the ripple component has been mounted */
+
+  /** React state hook setter */
+
+  static create() {
+    return new LazyRipple();
+  }
+  static use() {
+    /* eslint-disable */
+    const ripple = useLazyRef(LazyRipple.create).current;
+    const [shouldMount, setShouldMount] = reactExports.useState(false);
+    ripple.shouldMount = shouldMount;
+    ripple.setShouldMount = setShouldMount;
+    reactExports.useEffect(ripple.mountEffect, [shouldMount]);
+    /* eslint-enable */
+
+    return ripple;
+  }
+  constructor() {
+    this.ref = {
+      current: null
+    };
+    this.mounted = null;
+    this.didMount = false;
+    this.shouldMount = false;
+    this.setShouldMount = null;
+  }
+  mount() {
+    if (!this.mounted) {
+      this.mounted = createControlledPromise();
+      this.shouldMount = true;
+      this.setShouldMount(this.shouldMount);
     }
-    if (isDraftable(result)) {
-      result = finalize(scope, result);
-      if (!scope.parent_)
-        maybeFreeze(scope, result);
+    return this.mounted;
+  }
+  mountEffect = () => {
+    if (this.shouldMount && !this.didMount) {
+      if (this.ref.current !== null) {
+        this.didMount = true;
+        this.mounted.resolve();
+      }
     }
-    if (scope.patches_) {
-      getPlugin("Patches").generateReplacementPatches_(
-        baseDraft[DRAFT_STATE].base_,
-        result,
-        scope.patches_,
-        scope.inversePatches_
-      );
-    }
-  } else {
-    result = finalize(scope, baseDraft, []);
-  }
-  revokeScope(scope);
-  if (scope.patches_) {
-    scope.patchListener_(scope.patches_, scope.inversePatches_);
-  }
-  return result !== NOTHING ? result : void 0;
-}
-function finalize(rootScope, value, path) {
-  if (isFrozen(value))
-    return value;
-  const state = value[DRAFT_STATE];
-  if (!state) {
-    each(
-      value,
-      (key, childValue) => finalizeProperty(rootScope, state, value, key, childValue, path)
-    );
-    return value;
-  }
-  if (state.scope_ !== rootScope)
-    return value;
-  if (!state.modified_) {
-    maybeFreeze(rootScope, state.base_, true);
-    return state.base_;
-  }
-  if (!state.finalized_) {
-    state.finalized_ = true;
-    state.scope_.unfinalizedDrafts_--;
-    const result = state.copy_;
-    let resultEach = result;
-    let isSet2 = false;
-    if (state.type_ === 3) {
-      resultEach = new Set(result);
-      result.clear();
-      isSet2 = true;
-    }
-    each(
-      resultEach,
-      (key, childValue) => finalizeProperty(rootScope, state, result, key, childValue, path, isSet2)
-    );
-    maybeFreeze(rootScope, result, false);
-    if (path && rootScope.patches_) {
-      getPlugin("Patches").generatePatches_(
-        state,
-        path,
-        rootScope.patches_,
-        rootScope.inversePatches_
-      );
-    }
-  }
-  return state.copy_;
-}
-function finalizeProperty(rootScope, parentState, targetObject, prop, childValue, rootPath, targetIsSet) {
-  if (isDraft(childValue)) {
-    const path = rootPath && parentState && parentState.type_ !== 3 && // Set objects are atomic since they have no keys.
-    !has(parentState.assigned_, prop) ? rootPath.concat(prop) : void 0;
-    const res = finalize(rootScope, childValue, path);
-    set$1(targetObject, prop, res);
-    if (isDraft(res)) {
-      rootScope.canAutoFreeze_ = false;
-    } else
-      return;
-  } else if (targetIsSet) {
-    targetObject.add(childValue);
-  }
-  if (isDraftable(childValue) && !isFrozen(childValue)) {
-    if (!rootScope.immer_.autoFreeze_ && rootScope.unfinalizedDrafts_ < 1) {
-      return;
-    }
-    finalize(rootScope, childValue);
-    if ((!parentState || !parentState.scope_.parent_) && typeof prop !== "symbol" && Object.prototype.propertyIsEnumerable.call(targetObject, prop))
-      maybeFreeze(rootScope, childValue);
-  }
-}
-function maybeFreeze(scope, value, deep = false) {
-  if (!scope.parent_ && scope.immer_.autoFreeze_ && scope.canAutoFreeze_) {
-    freeze(value, deep);
-  }
-}
-function createProxyProxy(base, parent) {
-  const isArray = Array.isArray(base);
-  const state = {
-    type_: isArray ? 1 : 0,
-    // Track which produce call this is associated with.
-    scope_: parent ? parent.scope_ : getCurrentScope(),
-    // True for both shallow and deep changes.
-    modified_: false,
-    // Used during finalization.
-    finalized_: false,
-    // Track which properties have been assigned (true) or deleted (false).
-    assigned_: {},
-    // The parent draft state.
-    parent_: parent,
-    // The base state.
-    base_: base,
-    // The base proxy.
-    draft_: null,
-    // set below
-    // The base copy with any updated values.
-    copy_: null,
-    // Called by the `produce` function.
-    revoke_: null,
-    isManual_: false
   };
-  let target = state;
-  let traps = objectTraps;
-  if (isArray) {
-    target = [state];
-    traps = arrayTraps;
-  }
-  const { revoke, proxy } = Proxy.revocable(target, traps);
-  state.draft_ = proxy;
-  state.revoke_ = revoke;
-  return proxy;
-}
-var objectTraps = {
-  get(state, prop) {
-    if (prop === DRAFT_STATE)
-      return state;
-    const source = latest(state);
-    if (!has(source, prop)) {
-      return readPropFromProto(state, source, prop);
-    }
-    const value = source[prop];
-    if (state.finalized_ || !isDraftable(value)) {
-      return value;
-    }
-    if (value === peek(state.base_, prop)) {
-      prepareCopy(state);
-      return state.copy_[prop] = createProxy(value, state);
-    }
-    return value;
-  },
-  has(state, prop) {
-    return prop in latest(state);
-  },
-  ownKeys(state) {
-    return Reflect.ownKeys(latest(state));
-  },
-  set(state, prop, value) {
-    const desc = getDescriptorFromProto(latest(state), prop);
-    if (desc?.set) {
-      desc.set.call(state.draft_, value);
-      return true;
-    }
-    if (!state.modified_) {
-      const current2 = peek(latest(state), prop);
-      const currentState = current2?.[DRAFT_STATE];
-      if (currentState && currentState.base_ === value) {
-        state.copy_[prop] = value;
-        state.assigned_[prop] = false;
-        return true;
-      }
-      if (is(value, current2) && (value !== void 0 || has(state.base_, prop)))
-        return true;
-      prepareCopy(state);
-      markChanged(state);
-    }
-    if (state.copy_[prop] === value && // special case: handle new props with value 'undefined'
-    (value !== void 0 || prop in state.copy_) || // special case: NaN
-    Number.isNaN(value) && Number.isNaN(state.copy_[prop]))
-      return true;
-    state.copy_[prop] = value;
-    state.assigned_[prop] = true;
-    return true;
-  },
-  deleteProperty(state, prop) {
-    if (peek(state.base_, prop) !== void 0 || prop in state.base_) {
-      state.assigned_[prop] = false;
-      prepareCopy(state);
-      markChanged(state);
-    } else {
-      delete state.assigned_[prop];
-    }
-    if (state.copy_) {
-      delete state.copy_[prop];
-    }
-    return true;
-  },
-  // Note: We never coerce `desc.value` into an Immer draft, because we can't make
-  // the same guarantee in ES5 mode.
-  getOwnPropertyDescriptor(state, prop) {
-    const owner = latest(state);
-    const desc = Reflect.getOwnPropertyDescriptor(owner, prop);
-    if (!desc)
-      return desc;
-    return {
-      writable: true,
-      configurable: state.type_ !== 1 || prop !== "length",
-      enumerable: desc.enumerable,
-      value: owner[prop]
-    };
-  },
-  defineProperty() {
-    die(11);
-  },
-  getPrototypeOf(state) {
-    return getPrototypeOf(state.base_);
-  },
-  setPrototypeOf() {
-    die(12);
-  }
-};
-var arrayTraps = {};
-each(objectTraps, (key, fn) => {
-  arrayTraps[key] = function() {
-    arguments[0] = arguments[0][0];
-    return fn.apply(this, arguments);
-  };
-});
-arrayTraps.deleteProperty = function(state, prop) {
-  return arrayTraps.set.call(this, state, prop, void 0);
-};
-arrayTraps.set = function(state, prop, value) {
-  return objectTraps.set.call(this, state[0], prop, value, state[0]);
-};
-function peek(draft, prop) {
-  const state = draft[DRAFT_STATE];
-  const source = state ? latest(state) : draft;
-  return source[prop];
-}
-function readPropFromProto(state, source, prop) {
-  const desc = getDescriptorFromProto(source, prop);
-  return desc ? `value` in desc ? desc.value : (
-    // This is a very special case, if the prop is a getter defined by the
-    // prototype, we should invoke it with the draft as context!
-    desc.get?.call(state.draft_)
-  ) : void 0;
-}
-function getDescriptorFromProto(source, prop) {
-  if (!(prop in source))
-    return void 0;
-  let proto = getPrototypeOf(source);
-  while (proto) {
-    const desc = Object.getOwnPropertyDescriptor(proto, prop);
-    if (desc)
-      return desc;
-    proto = getPrototypeOf(proto);
-  }
-  return void 0;
-}
-function markChanged(state) {
-  if (!state.modified_) {
-    state.modified_ = true;
-    if (state.parent_) {
-      markChanged(state.parent_);
-    }
-  }
-}
-function prepareCopy(state) {
-  if (!state.copy_) {
-    state.copy_ = shallowCopy(
-      state.base_,
-      state.scope_.immer_.useStrictShallowCopy_
-    );
-  }
-}
-var Immer2 = class {
-  constructor(config) {
-    this.autoFreeze_ = true;
-    this.useStrictShallowCopy_ = false;
-    this.produce = (base, recipe, patchListener) => {
-      if (typeof base === "function" && typeof recipe !== "function") {
-        const defaultBase = recipe;
-        recipe = base;
-        const self = this;
-        return function curriedProduce(base2 = defaultBase, ...args) {
-          return self.produce(base2, (draft) => recipe.call(this, draft, ...args));
-        };
-      }
-      if (typeof recipe !== "function")
-        die(6);
-      if (patchListener !== void 0 && typeof patchListener !== "function")
-        die(7);
-      let result;
-      if (isDraftable(base)) {
-        const scope = enterScope(this);
-        const proxy = createProxy(base, void 0);
-        let hasError = true;
-        try {
-          result = recipe(proxy);
-          hasError = false;
-        } finally {
-          if (hasError)
-            revokeScope(scope);
-          else
-            leaveScope(scope);
-        }
-        usePatchesInScope(scope, patchListener);
-        return processResult(result, scope);
-      } else if (!base || typeof base !== "object") {
-        result = recipe(base);
-        if (result === void 0)
-          result = base;
-        if (result === NOTHING)
-          result = void 0;
-        if (this.autoFreeze_)
-          freeze(result, true);
-        if (patchListener) {
-          const p = [];
-          const ip = [];
-          getPlugin("Patches").generateReplacementPatches_(base, result, p, ip);
-          patchListener(p, ip);
-        }
-        return result;
-      } else
-        die(1, base);
-    };
-    this.produceWithPatches = (base, recipe) => {
-      if (typeof base === "function") {
-        return (state, ...args) => this.produceWithPatches(state, (draft) => base(draft, ...args));
-      }
-      let patches, inversePatches;
-      const result = this.produce(base, recipe, (p, ip) => {
-        patches = p;
-        inversePatches = ip;
-      });
-      return [result, patches, inversePatches];
-    };
-    if (typeof config?.autoFreeze === "boolean")
-      this.setAutoFreeze(config.autoFreeze);
-    if (typeof config?.useStrictShallowCopy === "boolean")
-      this.setUseStrictShallowCopy(config.useStrictShallowCopy);
-  }
-  createDraft(base) {
-    if (!isDraftable(base))
-      die(8);
-    if (isDraft(base))
-      base = current(base);
-    const scope = enterScope(this);
-    const proxy = createProxy(base, void 0);
-    proxy[DRAFT_STATE].isManual_ = true;
-    leaveScope(scope);
-    return proxy;
-  }
-  finishDraft(draft, patchListener) {
-    const state = draft && draft[DRAFT_STATE];
-    if (!state || !state.isManual_)
-      die(9);
-    const { scope_: scope } = state;
-    usePatchesInScope(scope, patchListener);
-    return processResult(void 0, scope);
-  }
-  /**
-   * Pass true to automatically freeze all copies created by Immer.
-   *
-   * By default, auto-freezing is enabled.
-   */
-  setAutoFreeze(value) {
-    this.autoFreeze_ = value;
-  }
-  /**
-   * Pass true to enable strict shallow copy.
-   *
-   * By default, immer does not copy the object descriptors such as getter, setter and non-enumrable properties.
-   */
-  setUseStrictShallowCopy(value) {
-    this.useStrictShallowCopy_ = value;
-  }
-  applyPatches(base, patches) {
-    let i;
-    for (i = patches.length - 1; i >= 0; i--) {
-      const patch = patches[i];
-      if (patch.path.length === 0 && patch.op === "replace") {
-        base = patch.value;
-        break;
-      }
-    }
-    if (i > -1) {
-      patches = patches.slice(i + 1);
-    }
-    const applyPatchesImpl = getPlugin("Patches").applyPatches_;
-    if (isDraft(base)) {
-      return applyPatchesImpl(base, patches);
-    }
-    return this.produce(
-      base,
-      (draft) => applyPatchesImpl(draft, patches)
-    );
-  }
-};
-function createProxy(value, parent) {
-  const draft = isMap(value) ? getPlugin("MapSet").proxyMap_(value, parent) : isSet(value) ? getPlugin("MapSet").proxySet_(value, parent) : createProxyProxy(value, parent);
-  const scope = parent ? parent.scope_ : getCurrentScope();
-  scope.drafts_.push(draft);
-  return draft;
-}
-function current(value) {
-  if (!isDraft(value))
-    die(10, value);
-  return currentImpl(value);
-}
-function currentImpl(value) {
-  if (!isDraftable(value) || isFrozen(value))
-    return value;
-  const state = value[DRAFT_STATE];
-  let copy;
-  if (state) {
-    if (!state.modified_)
-      return state.base_;
-    state.finalized_ = true;
-    copy = shallowCopy(value, state.scope_.immer_.useStrictShallowCopy_);
-  } else {
-    copy = shallowCopy(value, true);
-  }
-  each(copy, (key, childValue) => {
-    set$1(copy, key, currentImpl(childValue));
-  });
-  if (state) {
-    state.finalized_ = false;
-  }
-  return copy;
-}
-var immer = new Immer2();
-var produce = immer.produce;
-immer.produceWithPatches.bind(
-  immer
-);
-immer.setAutoFreeze.bind(immer);
-immer.setUseStrictShallowCopy.bind(immer);
-immer.applyPatches.bind(immer);
-immer.createDraft.bind(immer);
-immer.finishDraft.bind(immer);
 
-function e(n,t,o){var i=reactExports.useMemo(function(){return produce(n)},[n]);return reactExports.useReducer(i,t,o)}
+  /* Ripple API */
 
-function initWallets() {
-  const wallets = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const address = localStorage.key(i);
-    if (address) {
-      const name = localStorage.getItem(address) || "";
-      wallets.push({ address, name });
-    }
+  start(...args) {
+    this.mount().then(() => this.ref.current?.start(...args));
   }
-  return wallets;
-}
-function setItemAsync(key, value) {
-  return new Promise((resolve) => {
-    const callback = () => {
-      try {
-        localStorage.setItem(key, value);
-        resolve();
-      } catch (error) {
-        console.error("localStorage.setItem failed:", error);
-        resolve();
-      }
-    };
-    if (typeof requestIdleCallback !== "undefined") {
-      requestIdleCallback(callback);
-    } else {
-      setTimeout(callback, 0);
-    }
-  });
-}
-function removeItemAsync(key) {
-  return new Promise((resolve) => {
-    const callback = () => {
-      try {
-        localStorage.removeItem(key);
-        resolve();
-      } catch (error) {
-        console.error("localStorage.removeItem failed:", error);
-        resolve();
-      }
-    };
-    if (typeof requestIdleCallback !== "undefined") {
-      requestIdleCallback(callback);
-    } else {
-      setTimeout(callback, 0);
-    }
-  });
-}
-function clearAsync() {
-  return new Promise((resolve) => {
-    const callback = () => {
-      try {
-        localStorage.clear();
-        resolve();
-      } catch (error) {
-        console.error("localStorage.clear failed:", error);
-        resolve();
-      }
-    };
-    if (typeof requestIdleCallback !== "undefined") {
-      requestIdleCallback(callback);
-    } else {
-      setTimeout(callback, 0);
-    }
-  });
-}
-function walletsReducer(draft, action) {
-  switch (action.type) {
-    case "add": {
-      const w = action.wallet;
-      draft.push(w);
-      setItemAsync(w.address, w.name).catch(console.error);
-      break;
-    }
-    case "delete": {
-      removeItemAsync(action.address).catch(console.error);
-      return draft.filter((wallet) => wallet.address !== action.address);
-    }
-    case "clear": {
-      clearAsync().catch(console.error);
-      draft.length = 0;
-      break;
-    }
-    case "modify": {
-      const index = draft.findIndex(
-        (wallet) => wallet.address === action.wallet.address
-      );
-      if (index !== -1) {
-        draft[index] = action.wallet;
-        setItemAsync(action.wallet.address, action.wallet.name).catch(
-          console.error
-        );
-      }
-      break;
-    }
+  stop(...args) {
+    this.mount().then(() => this.ref.current?.stop(...args));
   }
-  return draft;
+  pulsate(...args) {
+    this.mount().then(() => this.ref.current?.pulsate(...args));
+  }
 }
-
-const WalletsCtx = reactExports.createContext(null);
+function useLazyRipple() {
+  return LazyRipple.use();
+}
+function createControlledPromise() {
+  let resolve;
+  let reject;
+  const p = new Promise((resolveFn, rejectFn) => {
+    resolve = resolveFn;
+    reject = rejectFn;
+  });
+  p.resolve = resolve;
+  p.reject = reject;
+  return p;
+}
 
 function _objectWithoutPropertiesLoose(r, e) {
   if (null == r) return {};
@@ -25288,23 +25390,6 @@ var TransitionGroup = /* @__PURE__ */ function(_React$Component) {
 TransitionGroup.propTypes = {};
 TransitionGroup.defaultProps = defaultProps;
 
-const UNINITIALIZED = {};
-
-/**
- * A React.useRef() that is initialized lazily with a function. Note that it accepts an optional
- * initialization argument, so the initialization function doesn't need to be an inline closure.
- *
- * @usage
- *   const ref = useLazyRef(sortColumns, columns)
- */
-function useLazyRef(init, initArg) {
-  const ref = reactExports.useRef(UNINITIALIZED);
-  if (ref.current === UNINITIALIZED) {
-    ref.current = init(initArg);
-  }
-  return ref;
-}
-
 const EMPTY = [];
 
 /**
@@ -25347,1372 +25432,6 @@ function useTimeout() {
   const timeout = useLazyRef(Timeout.create).current;
   useOnMount(timeout.disposeEffect);
   return timeout;
-}
-
-const reflow = node => node.scrollTop;
-function getTransitionProps(props, options) {
-  const {
-    timeout,
-    easing,
-    style = {}
-  } = props;
-  return {
-    duration: style.transitionDuration ?? (typeof timeout === 'number' ? timeout : timeout[options.mode] || 0),
-    easing: style.transitionTimingFunction ?? (typeof easing === 'object' ? easing[options.mode] : easing),
-    delay: style.transitionDelay
-  };
-}
-
-/**
- * Safe chained function.
- *
- * Will only create a new function if needed,
- * otherwise will pass back existing functions or null.
- */
-function createChainedFunction(...funcs) {
-  return funcs.reduce((acc, func) => {
-    if (func == null) {
-      return acc;
-    }
-    return function chainedFunction(...args) {
-      acc.apply(this, args);
-      func.apply(this, args);
-    };
-  }, () => {});
-}
-
-function getSvgIconUtilityClass(slot) {
-  return generateUtilityClass('MuiSvgIcon', slot);
-}
-generateUtilityClasses('MuiSvgIcon', ['root', 'colorPrimary', 'colorSecondary', 'colorAction', 'colorError', 'colorDisabled', 'fontSizeInherit', 'fontSizeSmall', 'fontSizeMedium', 'fontSizeLarge']);
-
-const useUtilityClasses$F = (ownerState) => {
-  const {
-    color,
-    fontSize,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", color !== "inherit" && `color${capitalize(color)}`, `fontSize${capitalize(fontSize)}`]
-  };
-  return composeClasses(slots, getSvgIconUtilityClass, classes);
-};
-const SvgIconRoot = styled("svg", {
-  name: "MuiSvgIcon",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, ownerState.color !== "inherit" && styles[`color${capitalize(ownerState.color)}`], styles[`fontSize${capitalize(ownerState.fontSize)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  userSelect: "none",
-  width: "1em",
-  height: "1em",
-  display: "inline-block",
-  flexShrink: 0,
-  transition: theme.transitions?.create?.("fill", {
-    duration: (theme.vars ?? theme).transitions?.duration?.shorter
-  }),
-  variants: [
-    {
-      props: (props) => !props.hasSvgAsChild,
-      style: {
-        // the <svg> will define the property that has `currentColor`
-        // for example heroicons uses fill="none" and stroke="currentColor"
-        fill: "currentColor"
-      }
-    },
-    {
-      props: {
-        fontSize: "inherit"
-      },
-      style: {
-        fontSize: "inherit"
-      }
-    },
-    {
-      props: {
-        fontSize: "small"
-      },
-      style: {
-        fontSize: theme.typography?.pxToRem?.(20) || "1.25rem"
-      }
-    },
-    {
-      props: {
-        fontSize: "medium"
-      },
-      style: {
-        fontSize: theme.typography?.pxToRem?.(24) || "1.5rem"
-      }
-    },
-    {
-      props: {
-        fontSize: "large"
-      },
-      style: {
-        fontSize: theme.typography?.pxToRem?.(35) || "2.1875rem"
-      }
-    },
-    // TODO v5 deprecate color prop, v6 remove for sx
-    ...Object.entries((theme.vars ?? theme).palette).filter(([, value]) => value && value.main).map(([color]) => ({
-      props: {
-        color
-      },
-      style: {
-        color: (theme.vars ?? theme).palette?.[color]?.main
-      }
-    })),
-    {
-      props: {
-        color: "action"
-      },
-      style: {
-        color: (theme.vars ?? theme).palette?.action?.active
-      }
-    },
-    {
-      props: {
-        color: "disabled"
-      },
-      style: {
-        color: (theme.vars ?? theme).palette?.action?.disabled
-      }
-    },
-    {
-      props: {
-        color: "inherit"
-      },
-      style: {
-        color: void 0
-      }
-    }
-  ]
-})));
-const SvgIcon = /* @__PURE__ */ reactExports.forwardRef(function SvgIcon2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiSvgIcon"
-  });
-  const {
-    children,
-    className,
-    color = "inherit",
-    component = "svg",
-    fontSize = "medium",
-    htmlColor,
-    inheritViewBox = false,
-    titleAccess,
-    viewBox = "0 0 24 24",
-    ...other
-  } = props;
-  const hasSvgAsChild = /* @__PURE__ */ reactExports.isValidElement(children) && children.type === "svg";
-  const ownerState = {
-    ...props,
-    color,
-    component,
-    fontSize,
-    instanceFontSize: inProps.fontSize,
-    inheritViewBox,
-    viewBox,
-    hasSvgAsChild
-  };
-  const more = {};
-  if (!inheritViewBox) {
-    more.viewBox = viewBox;
-  }
-  const classes = useUtilityClasses$F(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(SvgIconRoot, {
-    as: component,
-    className: clsx(classes.root, className),
-    focusable: "false",
-    color: htmlColor,
-    "aria-hidden": titleAccess ? void 0 : true,
-    role: titleAccess ? "img" : void 0,
-    ref,
-    ...more,
-    ...other,
-    ...hasSvgAsChild && children.props,
-    ownerState,
-    children: [hasSvgAsChild ? children.props.children : children, titleAccess ? /* @__PURE__ */ jsxRuntimeExports.jsx("title", {
-      children: titleAccess
-    }) : null]
-  });
-});
-SvgIcon.muiName = "SvgIcon";
-
-function createSvgIcon(path, displayName) {
-  function Component(props, ref) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(SvgIcon, {
-      "data-testid": void 0,
-      ref,
-      ...props,
-      children: path
-    });
-  }
-  Component.muiName = SvgIcon.muiName;
-  return /* @__PURE__ */ reactExports.memo(/* @__PURE__ */ reactExports.forwardRef(Component));
-}
-
-// Corresponds to 10 frames at 60 Hz.
-// A few bytes payload overhead when lodash/debounce is ~3 kB and debounce ~300 B.
-function debounce(func, wait = 166) {
-  let timeout;
-  function debounced(...args) {
-    const later = () => {
-      // @ts-ignore
-      func.apply(this, args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  }
-  debounced.clear = () => {
-    clearTimeout(timeout);
-  };
-  return debounced;
-}
-
-function ownerDocument(node) {
-  return node && node.ownerDocument || document;
-}
-
-function ownerWindow(node) {
-  const doc = ownerDocument(node);
-  return doc.defaultView || window;
-}
-
-/**
- * TODO v5: consider making it private
- *
- * passes {value} to {ref}
- *
- * WARNING: Be sure to only call this inside a callback that is passed as a ref.
- * Otherwise, make sure to cleanup the previous {ref} if it changes. See
- * https://github.com/mui/material-ui/issues/13539
- *
- * Useful if you want to expose the ref of an inner component to the public API
- * while still using it inside the component.
- * @param ref A ref callback or ref object. If anything falsy, this is a no-op.
- */
-function setRef(ref, value) {
-  if (typeof ref === 'function') {
-    ref(value);
-  } else if (ref) {
-    ref.current = value;
-  }
-}
-
-function useControlled(props) {
-  const {
-    controlled,
-    default: defaultProp,
-    name,
-    state = "value"
-  } = props;
-  const {
-    current: isControlled
-  } = reactExports.useRef(controlled !== void 0);
-  const [valueState, setValue] = reactExports.useState(defaultProp);
-  const value = isControlled ? controlled : valueState;
-  const setValueIfUncontrolled = reactExports.useCallback((newValue) => {
-    if (!isControlled) {
-      setValue(newValue);
-    }
-  }, []);
-  return [value, setValueIfUncontrolled];
-}
-
-/**
- * Inspired by https://github.com/facebook/react/issues/14099#issuecomment-440013892
- * See RFC in https://github.com/reactjs/rfcs/pull/220
- */
-
-function useEventCallback(fn) {
-  const ref = reactExports.useRef(fn);
-  useEnhancedEffect(() => {
-    ref.current = fn;
-  });
-  return reactExports.useRef((...args) =>
-  // @ts-expect-error hide `this`
-  (0, ref.current)(...args)).current;
-}
-
-/**
- * Merges refs into a single memoized callback ref or `null`.
- *
- * ```tsx
- * const rootRef = React.useRef<Instance>(null);
- * const refFork = useForkRef(rootRef, props.ref);
- *
- * return (
- *   <Root {...props} ref={refFork} />
- * );
- * ```
- *
- * @param {Array<React.Ref<Instance> | undefined>} refs The ref array.
- * @returns {React.RefCallback<Instance> | null} The new ref callback.
- */
-function useForkRef(...refs) {
-  const cleanupRef = reactExports.useRef(undefined);
-  const refEffect = reactExports.useCallback(instance => {
-    const cleanups = refs.map(ref => {
-      if (ref == null) {
-        return null;
-      }
-      if (typeof ref === 'function') {
-        const refCallback = ref;
-        const refCleanup = refCallback(instance);
-        return typeof refCleanup === 'function' ? refCleanup : () => {
-          refCallback(null);
-        };
-      }
-      ref.current = instance;
-      return () => {
-        ref.current = null;
-      };
-    });
-    return () => {
-      cleanups.forEach(refCleanup => refCleanup?.());
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, refs);
-  return reactExports.useMemo(() => {
-    if (refs.every(ref => ref == null)) {
-      return null;
-    }
-    return value => {
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = undefined;
-      }
-      if (value != null) {
-        cleanupRef.current = refEffect(value);
-      }
-    };
-    // TODO: uncomment once we enable eslint-plugin-react-compiler // eslint-disable-next-line react-compiler/react-compiler -- intentionally ignoring that the dependency array must be an array literal
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, refs);
-}
-
-// Brought from [Base UI](https://github.com/mui/base-ui/blob/master/packages/react/src/merge-props/mergeProps.ts#L119)
-// Use it directly from Base UI once it's a package dependency.
-function isEventHandler(key, value) {
-  // This approach is more efficient than using a regex.
-  const thirdCharCode = key.charCodeAt(2);
-  return key[0] === 'o' && key[1] === 'n' && thirdCharCode >= 65 /* A */ && thirdCharCode <= 90 /* Z */ && typeof value === 'function';
-}
-function mergeSlotProps$1(externalSlotProps, defaultSlotProps) {
-  if (!externalSlotProps) {
-    return defaultSlotProps;
-  }
-  function extractHandlers(externalSlotPropsValue, defaultSlotPropsValue) {
-    const handlers = {};
-    Object.keys(defaultSlotPropsValue).forEach(key => {
-      if (isEventHandler(key, defaultSlotPropsValue[key]) && typeof externalSlotPropsValue[key] === 'function') {
-        // only compose the handlers if both default and external slot props match the event handler
-        handlers[key] = (...args) => {
-          externalSlotPropsValue[key](...args);
-          defaultSlotPropsValue[key](...args);
-        };
-      }
-    });
-    return handlers;
-  }
-  if (typeof externalSlotProps === 'function' || typeof defaultSlotProps === 'function') {
-    return ownerState => {
-      const defaultSlotPropsValue = typeof defaultSlotProps === 'function' ? defaultSlotProps(ownerState) : defaultSlotProps;
-      const externalSlotPropsValue = typeof externalSlotProps === 'function' ? externalSlotProps({
-        ...ownerState,
-        ...defaultSlotPropsValue
-      }) : externalSlotProps;
-      const className = clsx(ownerState?.className, defaultSlotPropsValue?.className, externalSlotPropsValue?.className);
-      const handlers = extractHandlers(externalSlotPropsValue, defaultSlotPropsValue);
-      return {
-        ...defaultSlotPropsValue,
-        ...externalSlotPropsValue,
-        ...handlers,
-        ...(!!className && {
-          className
-        }),
-        ...(defaultSlotPropsValue?.style && externalSlotPropsValue?.style && {
-          style: {
-            ...defaultSlotPropsValue.style,
-            ...externalSlotPropsValue.style
-          }
-        }),
-        ...(defaultSlotPropsValue?.sx && externalSlotPropsValue?.sx && {
-          sx: [...(Array.isArray(defaultSlotPropsValue.sx) ? defaultSlotPropsValue.sx : [defaultSlotPropsValue.sx]), ...(Array.isArray(externalSlotPropsValue.sx) ? externalSlotPropsValue.sx : [externalSlotPropsValue.sx])]
-        })
-      };
-    };
-  }
-  const typedDefaultSlotProps = defaultSlotProps;
-  const handlers = extractHandlers(externalSlotProps, typedDefaultSlotProps);
-  const className = clsx(typedDefaultSlotProps?.className, externalSlotProps?.className);
-  return {
-    ...defaultSlotProps,
-    ...externalSlotProps,
-    ...handlers,
-    ...(!!className && {
-      className
-    }),
-    ...(typedDefaultSlotProps?.style && externalSlotProps?.style && {
-      style: {
-        ...typedDefaultSlotProps.style,
-        ...externalSlotProps.style
-      }
-    }),
-    ...(typedDefaultSlotProps?.sx && externalSlotProps?.sx && {
-      sx: [...(Array.isArray(typedDefaultSlotProps.sx) ? typedDefaultSlotProps.sx : [typedDefaultSlotProps.sx]), ...(Array.isArray(externalSlotProps.sx) ? externalSlotProps.sx : [externalSlotProps.sx])]
-    })
-  };
-}
-
-function getCollapseUtilityClass(slot) {
-  return generateUtilityClass('MuiCollapse', slot);
-}
-generateUtilityClasses('MuiCollapse', ['root', 'horizontal', 'vertical', 'entered', 'hidden', 'wrapper', 'wrapperInner']);
-
-const useUtilityClasses$E = (ownerState) => {
-  const {
-    orientation,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", `${orientation}`],
-    entered: ["entered"],
-    hidden: ["hidden"],
-    wrapper: ["wrapper", `${orientation}`],
-    wrapperInner: ["wrapperInner", `${orientation}`]
-  };
-  return composeClasses(slots, getCollapseUtilityClass, classes);
-};
-const CollapseRoot = styled("div", {
-  name: "MuiCollapse",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[ownerState.orientation], ownerState.state === "entered" && styles.entered, ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px" && styles.hidden];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  height: 0,
-  overflow: "hidden",
-  transition: theme.transitions.create("height"),
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      height: "auto",
-      width: 0,
-      transition: theme.transitions.create("width")
-    }
-  }, {
-    props: {
-      state: "entered"
-    },
-    style: {
-      height: "auto",
-      overflow: "visible"
-    }
-  }, {
-    props: {
-      state: "entered",
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px",
-    style: {
-      visibility: "hidden"
-    }
-  }]
-})));
-const CollapseWrapper = styled("div", {
-  name: "MuiCollapse",
-  slot: "Wrapper"
-})({
-  // Hack to get children with a negative margin to not falsify the height computation.
-  display: "flex",
-  width: "100%",
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto",
-      height: "100%"
-    }
-  }]
-});
-const CollapseWrapperInner = styled("div", {
-  name: "MuiCollapse",
-  slot: "WrapperInner"
-})({
-  width: "100%",
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto",
-      height: "100%"
-    }
-  }]
-});
-const Collapse = /* @__PURE__ */ reactExports.forwardRef(function Collapse2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiCollapse"
-  });
-  const {
-    addEndListener,
-    children,
-    className,
-    collapsedSize: collapsedSizeProp = "0px",
-    component,
-    easing,
-    in: inProp,
-    onEnter,
-    onEntered,
-    onEntering,
-    onExit,
-    onExited,
-    onExiting,
-    orientation = "vertical",
-    style,
-    timeout = duration.standard,
-    // eslint-disable-next-line react/prop-types
-    TransitionComponent = Transition,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    orientation,
-    collapsedSize: collapsedSizeProp
-  };
-  const classes = useUtilityClasses$E(ownerState);
-  const theme = useTheme();
-  const timer = useTimeout();
-  const wrapperRef = reactExports.useRef(null);
-  const autoTransitionDuration = reactExports.useRef();
-  const collapsedSize = typeof collapsedSizeProp === "number" ? `${collapsedSizeProp}px` : collapsedSizeProp;
-  const isHorizontal = orientation === "horizontal";
-  const size = isHorizontal ? "width" : "height";
-  const nodeRef = reactExports.useRef(null);
-  const handleRef = useForkRef(ref, nodeRef);
-  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
-    if (callback) {
-      const node = nodeRef.current;
-      if (maybeIsAppearing === void 0) {
-        callback(node);
-      } else {
-        callback(node, maybeIsAppearing);
-      }
-    }
-  };
-  const getWrapperSize = () => wrapperRef.current ? wrapperRef.current[isHorizontal ? "clientWidth" : "clientHeight"] : 0;
-  const handleEnter = normalizedTransitionCallback((node, isAppearing) => {
-    if (wrapperRef.current && isHorizontal) {
-      wrapperRef.current.style.position = "absolute";
-    }
-    node.style[size] = collapsedSize;
-    if (onEnter) {
-      onEnter(node, isAppearing);
-    }
-  });
-  const handleEntering = normalizedTransitionCallback((node, isAppearing) => {
-    const wrapperSize = getWrapperSize();
-    if (wrapperRef.current && isHorizontal) {
-      wrapperRef.current.style.position = "";
-    }
-    const {
-      duration: transitionDuration,
-      easing: transitionTimingFunction
-    } = getTransitionProps({
-      style,
-      timeout,
-      easing
-    }, {
-      mode: "enter"
-    });
-    if (timeout === "auto") {
-      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
-      node.style.transitionDuration = `${duration2}ms`;
-      autoTransitionDuration.current = duration2;
-    } else {
-      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
-    }
-    node.style[size] = `${wrapperSize}px`;
-    node.style.transitionTimingFunction = transitionTimingFunction;
-    if (onEntering) {
-      onEntering(node, isAppearing);
-    }
-  });
-  const handleEntered = normalizedTransitionCallback((node, isAppearing) => {
-    node.style[size] = "auto";
-    if (onEntered) {
-      onEntered(node, isAppearing);
-    }
-  });
-  const handleExit = normalizedTransitionCallback((node) => {
-    node.style[size] = `${getWrapperSize()}px`;
-    if (onExit) {
-      onExit(node);
-    }
-  });
-  const handleExited = normalizedTransitionCallback(onExited);
-  const handleExiting = normalizedTransitionCallback((node) => {
-    const wrapperSize = getWrapperSize();
-    const {
-      duration: transitionDuration,
-      easing: transitionTimingFunction
-    } = getTransitionProps({
-      style,
-      timeout,
-      easing
-    }, {
-      mode: "exit"
-    });
-    if (timeout === "auto") {
-      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
-      node.style.transitionDuration = `${duration2}ms`;
-      autoTransitionDuration.current = duration2;
-    } else {
-      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
-    }
-    node.style[size] = collapsedSize;
-    node.style.transitionTimingFunction = transitionTimingFunction;
-    if (onExiting) {
-      onExiting(node);
-    }
-  });
-  const handleAddEndListener = (next) => {
-    if (timeout === "auto") {
-      timer.start(autoTransitionDuration.current || 0, next);
-    }
-    if (addEndListener) {
-      addEndListener(nodeRef.current, next);
-    }
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionComponent, {
-    in: inProp,
-    onEnter: handleEnter,
-    onEntered: handleEntered,
-    onEntering: handleEntering,
-    onExit: handleExit,
-    onExited: handleExited,
-    onExiting: handleExiting,
-    addEndListener: handleAddEndListener,
-    nodeRef,
-    timeout: timeout === "auto" ? null : timeout,
-    ...other,
-    children: (state, {
-      ownerState: incomingOwnerState,
-      ...restChildProps
-    }) => /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseRoot, {
-      as: component,
-      className: clsx(classes.root, className, {
-        "entered": classes.entered,
-        "exited": !inProp && collapsedSize === "0px" && classes.hidden
-      }[state]),
-      style: {
-        [isHorizontal ? "minWidth" : "minHeight"]: collapsedSize,
-        ...style
-      },
-      ref: handleRef,
-      ownerState: {
-        ...ownerState,
-        state
-      },
-      ...restChildProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapper, {
-        ownerState: {
-          ...ownerState,
-          state
-        },
-        className: classes.wrapper,
-        ref: wrapperRef,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapperInner, {
-          ownerState: {
-            ...ownerState,
-            state
-          },
-          className: classes.wrapperInner,
-          children
-        })
-      })
-    })
-  });
-});
-if (Collapse) {
-  Collapse.muiSupportAuto = true;
-}
-
-function getPaperUtilityClass(slot) {
-  return generateUtilityClass('MuiPaper', slot);
-}
-generateUtilityClasses('MuiPaper', ['root', 'rounded', 'outlined', 'elevation', 'elevation0', 'elevation1', 'elevation2', 'elevation3', 'elevation4', 'elevation5', 'elevation6', 'elevation7', 'elevation8', 'elevation9', 'elevation10', 'elevation11', 'elevation12', 'elevation13', 'elevation14', 'elevation15', 'elevation16', 'elevation17', 'elevation18', 'elevation19', 'elevation20', 'elevation21', 'elevation22', 'elevation23', 'elevation24']);
-
-const useUtilityClasses$D = (ownerState) => {
-  const {
-    square,
-    elevation,
-    variant,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", variant, !square && "rounded", variant === "elevation" && `elevation${elevation}`]
-  };
-  return composeClasses(slots, getPaperUtilityClass, classes);
-};
-const PaperRoot = styled("div", {
-  name: "MuiPaper",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[ownerState.variant], !ownerState.square && styles.rounded, ownerState.variant === "elevation" && styles[`elevation${ownerState.elevation}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  backgroundColor: (theme.vars || theme).palette.background.paper,
-  color: (theme.vars || theme).palette.text.primary,
-  transition: theme.transitions.create("box-shadow"),
-  variants: [{
-    props: ({
-      ownerState
-    }) => !ownerState.square,
-    style: {
-      borderRadius: theme.shape.borderRadius
-    }
-  }, {
-    props: {
-      variant: "outlined"
-    },
-    style: {
-      border: `1px solid ${(theme.vars || theme).palette.divider}`
-    }
-  }, {
-    props: {
-      variant: "elevation"
-    },
-    style: {
-      boxShadow: "var(--Paper-shadow)",
-      backgroundImage: "var(--Paper-overlay)"
-    }
-  }]
-})));
-const Paper = /* @__PURE__ */ reactExports.forwardRef(function Paper2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiPaper"
-  });
-  const theme = useTheme();
-  const {
-    className,
-    component = "div",
-    elevation = 1,
-    square = false,
-    variant = "elevation",
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    component,
-    elevation,
-    square,
-    variant
-  };
-  const classes = useUtilityClasses$D(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(PaperRoot, {
-    as: component,
-    ownerState,
-    className: clsx(classes.root, className),
-    ref,
-    ...other,
-    style: {
-      ...variant === "elevation" && {
-        "--Paper-shadow": (theme.vars || theme).shadows[elevation],
-        ...theme.vars && {
-          "--Paper-overlay": theme.vars.overlays?.[elevation]
-        },
-        ...!theme.vars && theme.palette.mode === "dark" && {
-          "--Paper-overlay": `linear-gradient(${alpha("#fff", getOverlayAlpha(elevation))}, ${alpha("#fff", getOverlayAlpha(elevation))})`
-        }
-      },
-      ...other.style
-    }
-  });
-});
-
-const AccordionContext = /* @__PURE__ */ reactExports.createContext({});
-
-/**
- * Determines if a given element is a DOM element name (i.e. not a React component).
- */
-function isHostComponent$1(element) {
-  return typeof element === 'string';
-}
-
-/**
- * Type of the ownerState based on the type of an element it applies to.
- * This resolves to the provided OwnerState for React components and `undefined` for host components.
- * Falls back to `OwnerState | undefined` when the exact type can't be determined in development time.
- */
-
-/**
- * Appends the ownerState object to the props, merging with the existing one if necessary.
- *
- * @param elementType Type of the element that owns the `existingProps`. If the element is a DOM node or undefined, `ownerState` is not applied.
- * @param otherProps Props of the element.
- * @param ownerState
- */
-function appendOwnerState(elementType, otherProps, ownerState) {
-  if (elementType === undefined || isHostComponent$1(elementType)) {
-    return otherProps;
-  }
-  return {
-    ...otherProps,
-    ownerState: {
-      ...otherProps.ownerState,
-      ...ownerState
-    }
-  };
-}
-
-/**
- * If `componentProps` is a function, calls it with the provided `ownerState`.
- * Otherwise, just returns `componentProps`.
- */
-function resolveComponentProps(componentProps, ownerState, slotState) {
-  if (typeof componentProps === 'function') {
-    return componentProps(ownerState, slotState);
-  }
-  return componentProps;
-}
-
-/**
- * Extracts event handlers from a given object.
- * A prop is considered an event handler if it is a function and its name starts with `on`.
- *
- * @param object An object to extract event handlers from.
- * @param excludeKeys An array of keys to exclude from the returned object.
- */
-function extractEventHandlers(object, excludeKeys = []) {
-  if (object === undefined) {
-    return {};
-  }
-  const result = {};
-  Object.keys(object).filter(prop => prop.match(/^on[A-Z]/) && typeof object[prop] === 'function' && !excludeKeys.includes(prop)).forEach(prop => {
-    result[prop] = object[prop];
-  });
-  return result;
-}
-
-/**
- * Removes event handlers from the given object.
- * A field is considered an event handler if it is a function with a name beginning with `on`.
- *
- * @param object Object to remove event handlers from.
- * @returns Object with event handlers removed.
- */
-function omitEventHandlers(object) {
-  if (object === undefined) {
-    return {};
-  }
-  const result = {};
-  Object.keys(object).filter(prop => !(prop.match(/^on[A-Z]/) && typeof object[prop] === 'function')).forEach(prop => {
-    result[prop] = object[prop];
-  });
-  return result;
-}
-
-/**
- * Merges the slot component internal props (usually coming from a hook)
- * with the externally provided ones.
- *
- * The merge order is (the latter overrides the former):
- * 1. The internal props (specified as a getter function to work with get*Props hook result)
- * 2. Additional props (specified internally on a Base UI component)
- * 3. External props specified on the owner component. These should only be used on a root slot.
- * 4. External props specified in the `slotProps.*` prop.
- * 5. The `className` prop - combined from all the above.
- * @param parameters
- * @returns
- */
-function mergeSlotProps(parameters) {
-  const {
-    getSlotProps,
-    additionalProps,
-    externalSlotProps,
-    externalForwardedProps,
-    className
-  } = parameters;
-  if (!getSlotProps) {
-    // The simpler case - getSlotProps is not defined, so no internal event handlers are defined,
-    // so we can simply merge all the props without having to worry about extracting event handlers.
-    const joinedClasses = clsx(additionalProps?.className, className, externalForwardedProps?.className, externalSlotProps?.className);
-    const mergedStyle = {
-      ...additionalProps?.style,
-      ...externalForwardedProps?.style,
-      ...externalSlotProps?.style
-    };
-    const props = {
-      ...additionalProps,
-      ...externalForwardedProps,
-      ...externalSlotProps
-    };
-    if (joinedClasses.length > 0) {
-      props.className = joinedClasses;
-    }
-    if (Object.keys(mergedStyle).length > 0) {
-      props.style = mergedStyle;
-    }
-    return {
-      props,
-      internalRef: undefined
-    };
-  }
-
-  // In this case, getSlotProps is responsible for calling the external event handlers.
-  // We don't need to include them in the merged props because of this.
-
-  const eventHandlers = extractEventHandlers({
-    ...externalForwardedProps,
-    ...externalSlotProps
-  });
-  const componentsPropsWithoutEventHandlers = omitEventHandlers(externalSlotProps);
-  const otherPropsWithoutEventHandlers = omitEventHandlers(externalForwardedProps);
-  const internalSlotProps = getSlotProps(eventHandlers);
-
-  // The order of classes is important here.
-  // Emotion (that we use in libraries consuming Base UI) depends on this order
-  // to properly override style. It requires the most important classes to be last
-  // (see https://github.com/mui/material-ui/pull/33205) for the related discussion.
-  const joinedClasses = clsx(internalSlotProps?.className, additionalProps?.className, className, externalForwardedProps?.className, externalSlotProps?.className);
-  const mergedStyle = {
-    ...internalSlotProps?.style,
-    ...additionalProps?.style,
-    ...externalForwardedProps?.style,
-    ...externalSlotProps?.style
-  };
-  const props = {
-    ...internalSlotProps,
-    ...additionalProps,
-    ...otherPropsWithoutEventHandlers,
-    ...componentsPropsWithoutEventHandlers
-  };
-  if (joinedClasses.length > 0) {
-    props.className = joinedClasses;
-  }
-  if (Object.keys(mergedStyle).length > 0) {
-    props.style = mergedStyle;
-  }
-  return {
-    props,
-    internalRef: internalSlotProps.ref
-  };
-}
-
-/**
- * An internal function to create a Material UI slot.
- *
- * This is an advanced version of Base UI `useSlotProps` because Material UI allows leaf component to be customized via `component` prop
- * while Base UI does not need to support leaf component customization.
- *
- * @param {string} name: name of the slot
- * @param {object} parameters
- * @returns {[Slot, slotProps]} The slot's React component and the slot's props
- *
- * Note: the returned slot's props
- * - will never contain `component` prop.
- * - might contain `as` prop.
- */
-function useSlot(
-/**
- * The slot's name. All Material UI components should have `root` slot.
- *
- * If the name is `root`, the logic behaves differently from other slots,
- * e.g. the `externalForwardedProps` are spread to `root` slot but not other slots.
- */
-name, parameters) {
-  const {
-    className,
-    elementType: initialElementType,
-    ownerState,
-    externalForwardedProps,
-    internalForwardedProps,
-    shouldForwardComponentProp = false,
-    ...useSlotPropsParams
-  } = parameters;
-  const {
-    component: rootComponent,
-    slots = {
-      [name]: undefined
-    },
-    slotProps = {
-      [name]: undefined
-    },
-    ...other
-  } = externalForwardedProps;
-  const elementType = slots[name] || initialElementType;
-
-  // `slotProps[name]` can be a callback that receives the component's ownerState.
-  // `resolvedComponentsProps` is always a plain object.
-  const resolvedComponentsProps = resolveComponentProps(slotProps[name], ownerState);
-  const {
-    props: {
-      component: slotComponent,
-      ...mergedProps
-    },
-    internalRef
-  } = mergeSlotProps({
-    className,
-    ...useSlotPropsParams,
-    externalForwardedProps: name === 'root' ? other : undefined,
-    externalSlotProps: resolvedComponentsProps
-  });
-  const ref = useForkRef(internalRef, resolvedComponentsProps?.ref, parameters.ref);
-  const LeafComponent = name === 'root' ? slotComponent || rootComponent : slotComponent;
-  const props = appendOwnerState(elementType, {
-    ...(name === 'root' && !rootComponent && !slots[name] && internalForwardedProps),
-    ...(name !== 'root' && !slots[name] && internalForwardedProps),
-    ...mergedProps,
-    ...(LeafComponent && !shouldForwardComponentProp && {
-      as: LeafComponent
-    }),
-    ...(LeafComponent && shouldForwardComponentProp && {
-      component: LeafComponent
-    }),
-    ref
-  }, ownerState);
-  return [elementType, props];
-}
-
-function getAccordionUtilityClass(slot) {
-  return generateUtilityClass('MuiAccordion', slot);
-}
-const accordionClasses = generateUtilityClasses('MuiAccordion', ['root', 'heading', 'rounded', 'expanded', 'disabled', 'gutters', 'region']);
-
-const useUtilityClasses$C = (ownerState) => {
-  const {
-    classes,
-    square,
-    expanded,
-    disabled,
-    disableGutters
-  } = ownerState;
-  const slots = {
-    root: ["root", !square && "rounded", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
-    heading: ["heading"],
-    region: ["region"]
-  };
-  return composeClasses(slots, getAccordionUtilityClass, classes);
-};
-const AccordionRoot = styled(Paper, {
-  name: "MuiAccordion",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [{
-      [`& .${accordionClasses.region}`]: styles.region
-    }, styles.root, !ownerState.square && styles.rounded, !ownerState.disableGutters && styles.gutters];
-  }
-})(memoTheme(({
-  theme
-}) => {
-  const transition = {
-    duration: theme.transitions.duration.shortest
-  };
-  return {
-    position: "relative",
-    transition: theme.transitions.create(["margin"], transition),
-    overflowAnchor: "none",
-    // Keep the same scrolling position
-    "&::before": {
-      position: "absolute",
-      left: 0,
-      top: -1,
-      right: 0,
-      height: 1,
-      content: '""',
-      opacity: 1,
-      backgroundColor: (theme.vars || theme).palette.divider,
-      transition: theme.transitions.create(["opacity", "background-color"], transition)
-    },
-    "&:first-of-type": {
-      "&::before": {
-        display: "none"
-      }
-    },
-    [`&.${accordionClasses.expanded}`]: {
-      "&::before": {
-        opacity: 0
-      },
-      "&:first-of-type": {
-        marginTop: 0
-      },
-      "&:last-of-type": {
-        marginBottom: 0
-      },
-      "& + &": {
-        "&::before": {
-          display: "none"
-        }
-      }
-    },
-    [`&.${accordionClasses.disabled}`]: {
-      backgroundColor: (theme.vars || theme).palette.action.disabledBackground
-    }
-  };
-}), memoTheme(({
-  theme
-}) => ({
-  variants: [{
-    props: (props) => !props.square,
-    style: {
-      borderRadius: 0,
-      "&:first-of-type": {
-        borderTopLeftRadius: (theme.vars || theme).shape.borderRadius,
-        borderTopRightRadius: (theme.vars || theme).shape.borderRadius
-      },
-      "&:last-of-type": {
-        borderBottomLeftRadius: (theme.vars || theme).shape.borderRadius,
-        borderBottomRightRadius: (theme.vars || theme).shape.borderRadius,
-        // Fix a rendering issue on Edge
-        "@supports (-ms-ime-align: auto)": {
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0
-        }
-      }
-    }
-  }, {
-    props: (props) => !props.disableGutters,
-    style: {
-      [`&.${accordionClasses.expanded}`]: {
-        margin: "16px 0"
-      }
-    }
-  }]
-})));
-const AccordionHeading = styled("h3", {
-  name: "MuiAccordion",
-  slot: "Heading"
-})({
-  all: "unset"
-});
-const Accordion = /* @__PURE__ */ reactExports.forwardRef(function Accordion2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordion"
-  });
-  const {
-    children: childrenProp,
-    className,
-    defaultExpanded = false,
-    disabled = false,
-    disableGutters = false,
-    expanded: expandedProp,
-    onChange,
-    square = false,
-    slots = {},
-    slotProps = {},
-    TransitionComponent: TransitionComponentProp,
-    TransitionProps: TransitionPropsProp,
-    ...other
-  } = props;
-  const [expanded, setExpandedState] = useControlled({
-    controlled: expandedProp,
-    default: defaultExpanded,
-    name: "Accordion",
-    state: "expanded"
-  });
-  const handleChange = reactExports.useCallback((event) => {
-    setExpandedState(!expanded);
-    if (onChange) {
-      onChange(event, !expanded);
-    }
-  }, [expanded, onChange, setExpandedState]);
-  const [summary, ...children] = reactExports.Children.toArray(childrenProp);
-  const contextValue = reactExports.useMemo(() => ({
-    expanded,
-    disabled,
-    disableGutters,
-    toggle: handleChange
-  }), [expanded, disabled, disableGutters, handleChange]);
-  const ownerState = {
-    ...props,
-    square,
-    disabled,
-    disableGutters,
-    expanded
-  };
-  const classes = useUtilityClasses$C(ownerState);
-  const backwardCompatibleSlots = {
-    transition: TransitionComponentProp,
-    ...slots
-  };
-  const backwardCompatibleSlotProps = {
-    transition: TransitionPropsProp,
-    ...slotProps
-  };
-  const externalForwardedProps = {
-    slots: backwardCompatibleSlots,
-    slotProps: backwardCompatibleSlotProps
-  };
-  const [RootSlot, rootProps] = useSlot("root", {
-    elementType: AccordionRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    className: clsx(classes.root, className),
-    shouldForwardComponentProp: true,
-    ownerState,
-    ref,
-    additionalProps: {
-      square
-    }
-  });
-  const [AccordionHeadingSlot, accordionProps] = useSlot("heading", {
-    elementType: AccordionHeading,
-    externalForwardedProps,
-    className: classes.heading,
-    ownerState
-  });
-  const [TransitionSlot, transitionProps] = useSlot("transition", {
-    elementType: Collapse,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
-    ...rootProps,
-    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(AccordionHeadingSlot, {
-      ...accordionProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionContext.Provider, {
-        value: contextValue,
-        children: summary
-      })
-    }), /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionSlot, {
-      in: expanded,
-      timeout: "auto",
-      ...transitionProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", {
-        "aria-labelledby": summary.props.id,
-        id: summary.props["aria-controls"],
-        role: "region",
-        className: classes.region,
-        children
-      })
-    })]
-  });
-});
-
-function isFocusVisible(element) {
-  try {
-    return element.matches(":focus-visible");
-  } catch (error) {
-  }
-  return false;
-}
-
-/**
- * Lazy initialization container for the Ripple instance. This improves
- * performance by delaying mounting the ripple until it's needed.
- */
-class LazyRipple {
-  /** React ref to the ripple instance */
-
-  /** If the ripple component should be mounted */
-
-  /** Promise that resolves when the ripple component is mounted */
-
-  /** If the ripple component has been mounted */
-
-  /** React state hook setter */
-
-  static create() {
-    return new LazyRipple();
-  }
-  static use() {
-    /* eslint-disable */
-    const ripple = useLazyRef(LazyRipple.create).current;
-    const [shouldMount, setShouldMount] = reactExports.useState(false);
-    ripple.shouldMount = shouldMount;
-    ripple.setShouldMount = setShouldMount;
-    reactExports.useEffect(ripple.mountEffect, [shouldMount]);
-    /* eslint-enable */
-
-    return ripple;
-  }
-  constructor() {
-    this.ref = {
-      current: null
-    };
-    this.mounted = null;
-    this.didMount = false;
-    this.shouldMount = false;
-    this.setShouldMount = null;
-  }
-  mount() {
-    if (!this.mounted) {
-      this.mounted = createControlledPromise();
-      this.shouldMount = true;
-      this.setShouldMount(this.shouldMount);
-    }
-    return this.mounted;
-  }
-  mountEffect = () => {
-    if (this.shouldMount && !this.didMount) {
-      if (this.ref.current !== null) {
-        this.didMount = true;
-        this.mounted.resolve();
-      }
-    }
-  };
-
-  /* Ripple API */
-
-  start(...args) {
-    this.mount().then(() => this.ref.current?.start(...args));
-  }
-  stop(...args) {
-    this.mount().then(() => this.ref.current?.stop(...args));
-  }
-  pulsate(...args) {
-    this.mount().then(() => this.ref.current?.pulsate(...args));
-  }
-}
-function useLazyRipple() {
-  return LazyRipple.use();
-}
-function createControlledPromise() {
-  let resolve;
-  let reject;
-  const p = new Promise((resolveFn, rejectFn) => {
-    resolve = resolveFn;
-    reject = rejectFn;
-  });
-  p.resolve = resolve;
-  p.reject = reject;
-  return p;
 }
 
 function Ripple(props) {
@@ -27033,7 +25752,7 @@ function getButtonBaseUtilityClass(slot) {
 }
 const buttonBaseClasses = generateUtilityClasses('MuiButtonBase', ['root', 'disabled', 'focusVisible']);
 
-const useUtilityClasses$B = (ownerState) => {
+const useUtilityClasses$G = (ownerState) => {
   const {
     disabled,
     focusVisible,
@@ -27249,7 +25968,7 @@ const ButtonBase = /* @__PURE__ */ reactExports.forwardRef(function ButtonBase2(
     tabIndex,
     focusVisible
   };
-  const classes = useUtilityClasses$B(ownerState);
+  const classes = useUtilityClasses$G(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ButtonBaseRoot, {
     as: ComponentProp,
     className: clsx(classes.root, className),
@@ -27291,225 +26010,246 @@ function useRippleHandler(ripple, rippleAction, eventCallback, skipRippleAction 
   });
 }
 
-function getAccordionSummaryUtilityClass(slot) {
-  return generateUtilityClass('MuiAccordionSummary', slot);
+/**
+ * Type guard to check if the object has a "main" property of type string.
+ *
+ * @param obj - the object to check
+ * @returns boolean
+ */
+function hasCorrectMainProperty(obj) {
+  return typeof obj.main === 'string';
 }
-const accordionSummaryClasses = generateUtilityClasses('MuiAccordionSummary', ['root', 'expanded', 'focusVisible', 'disabled', 'gutters', 'contentGutters', 'content', 'expandIconWrapper']);
+/**
+ * Checks if the object conforms to the SimplePaletteColorOptions type.
+ * The minimum requirement is that the object has a "main" property of type string, this is always checked.
+ * Optionally, you can pass additional properties to check.
+ *
+ * @param obj - The object to check
+ * @param additionalPropertiesToCheck - Array containing "light", "dark", and/or "contrastText"
+ * @returns boolean
+ */
+function checkSimplePaletteColorValues(obj, additionalPropertiesToCheck = []) {
+  if (!hasCorrectMainProperty(obj)) {
+    return false;
+  }
+  for (const value of additionalPropertiesToCheck) {
+    if (!obj.hasOwnProperty(value) || typeof obj[value] !== 'string') {
+      return false;
+    }
+  }
+  return true;
+}
 
-const useUtilityClasses$A = (ownerState) => {
+/**
+ * Creates a filter function used to filter simple palette color options.
+ * The minimum requirement is that the object has a "main" property of type string, this is always checked.
+ * Optionally, you can pass additional properties to check.
+ *
+ * @param additionalPropertiesToCheck - Array containing "light", "dark", and/or "contrastText"
+ * @returns ([, value]: [any, PaletteColorOptions]) => boolean
+ */
+function createSimplePaletteValueFilter(additionalPropertiesToCheck = []) {
+  return ([, value]) => value && checkSimplePaletteColorValues(value, additionalPropertiesToCheck);
+}
+
+function getCircularProgressUtilityClass(slot) {
+  return generateUtilityClass('MuiCircularProgress', slot);
+}
+generateUtilityClasses('MuiCircularProgress', ['root', 'determinate', 'indeterminate', 'colorPrimary', 'colorSecondary', 'svg', 'circle', 'circleDeterminate', 'circleIndeterminate', 'circleDisableShrink']);
+
+const SIZE = 44;
+const circularRotateKeyframe = keyframes`
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+`;
+const circularDashKeyframe = keyframes`
+  0% {
+    stroke-dasharray: 1px, 200px;
+    stroke-dashoffset: 0;
+  }
+
+  50% {
+    stroke-dasharray: 100px, 200px;
+    stroke-dashoffset: -15px;
+  }
+
+  100% {
+    stroke-dasharray: 1px, 200px;
+    stroke-dashoffset: -126px;
+  }
+`;
+const rotateAnimation = typeof circularRotateKeyframe !== "string" ? css`
+        animation: ${circularRotateKeyframe} 1.4s linear infinite;
+      ` : null;
+const dashAnimation = typeof circularDashKeyframe !== "string" ? css`
+        animation: ${circularDashKeyframe} 1.4s ease-in-out infinite;
+      ` : null;
+const useUtilityClasses$F = (ownerState) => {
   const {
     classes,
-    expanded,
-    disabled,
-    disableGutters
+    variant,
+    color,
+    disableShrink
   } = ownerState;
   const slots = {
-    root: ["root", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
-    focusVisible: ["focusVisible"],
-    content: ["content", expanded && "expanded", !disableGutters && "contentGutters"],
-    expandIconWrapper: ["expandIconWrapper", expanded && "expanded"]
+    root: ["root", variant, `color${capitalize(color)}`],
+    svg: ["svg"],
+    circle: ["circle", `circle${capitalize(variant)}`, disableShrink && "circleDisableShrink"]
   };
-  return composeClasses(slots, getAccordionSummaryUtilityClass, classes);
+  return composeClasses(slots, getCircularProgressUtilityClass, classes);
 };
-const AccordionSummaryRoot = styled(ButtonBase, {
-  name: "MuiAccordionSummary",
-  slot: "Root"
-})(memoTheme(({
-  theme
-}) => {
-  const transition = {
-    duration: theme.transitions.duration.shortest
-  };
-  return {
-    display: "flex",
-    width: "100%",
-    minHeight: 48,
-    padding: theme.spacing(0, 2),
-    transition: theme.transitions.create(["min-height", "background-color"], transition),
-    [`&.${accordionSummaryClasses.focusVisible}`]: {
-      backgroundColor: (theme.vars || theme).palette.action.focus
-    },
-    [`&.${accordionSummaryClasses.disabled}`]: {
-      opacity: (theme.vars || theme).palette.action.disabledOpacity
-    },
-    [`&:hover:not(.${accordionSummaryClasses.disabled})`]: {
-      cursor: "pointer"
-    },
-    variants: [{
-      props: (props) => !props.disableGutters,
-      style: {
-        [`&.${accordionSummaryClasses.expanded}`]: {
-          minHeight: 64
-        }
-      }
-    }]
-  };
-}));
-const AccordionSummaryContent = styled("span", {
-  name: "MuiAccordionSummary",
-  slot: "Content"
+const CircularProgressRoot = styled("span", {
+  name: "MuiCircularProgress",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[ownerState.variant], styles[`color${capitalize(ownerState.color)}`]];
+  }
 })(memoTheme(({
   theme
 }) => ({
-  display: "flex",
-  textAlign: "start",
-  flexGrow: 1,
-  margin: "12px 0",
+  display: "inline-block",
   variants: [{
-    props: (props) => !props.disableGutters,
+    props: {
+      variant: "determinate"
+    },
     style: {
-      transition: theme.transitions.create(["margin"], {
-        duration: theme.transitions.duration.shortest
-      }),
-      [`&.${accordionSummaryClasses.expanded}`]: {
-        margin: "20px 0"
-      }
+      transition: theme.transitions.create("transform")
+    }
+  }, {
+    props: {
+      variant: "indeterminate"
+    },
+    style: rotateAnimation || {
+      animation: `${circularRotateKeyframe} 1.4s linear infinite`
+    }
+  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      color: (theme.vars || theme).palette[color].main
+    }
+  }))]
+})));
+const CircularProgressSVG = styled("svg", {
+  name: "MuiCircularProgress",
+  slot: "Svg"
+})({
+  display: "block"
+  // Keeps the progress centered
+});
+const CircularProgressCircle = styled("circle", {
+  name: "MuiCircularProgress",
+  slot: "Circle",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.circle, styles[`circle${capitalize(ownerState.variant)}`], ownerState.disableShrink && styles.circleDisableShrink];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  stroke: "currentColor",
+  variants: [{
+    props: {
+      variant: "determinate"
+    },
+    style: {
+      transition: theme.transitions.create("stroke-dashoffset")
+    }
+  }, {
+    props: {
+      variant: "indeterminate"
+    },
+    style: {
+      // Some default value that looks fine waiting for the animation to kicks in.
+      strokeDasharray: "80px, 200px",
+      strokeDashoffset: 0
+      // Add the unit to fix a Edge 16 and below bug.
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.variant === "indeterminate" && !ownerState.disableShrink,
+    style: dashAnimation || {
+      // At runtime for Pigment CSS, `bufferAnimation` will be null and the generated keyframe will be used.
+      animation: `${circularDashKeyframe} 1.4s ease-in-out infinite`
     }
   }]
 })));
-const AccordionSummaryExpandIconWrapper = styled("span", {
-  name: "MuiAccordionSummary",
-  slot: "ExpandIconWrapper"
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  color: (theme.vars || theme).palette.action.active,
-  transform: "rotate(0deg)",
-  transition: theme.transitions.create("transform", {
-    duration: theme.transitions.duration.shortest
-  }),
-  [`&.${accordionSummaryClasses.expanded}`]: {
-    transform: "rotate(180deg)"
-  }
-})));
-const AccordionSummary = /* @__PURE__ */ reactExports.forwardRef(function AccordionSummary2(inProps, ref) {
+const CircularProgress = /* @__PURE__ */ reactExports.forwardRef(function CircularProgress2(inProps, ref) {
   const props = useDefaultProps({
     props: inProps,
-    name: "MuiAccordionSummary"
+    name: "MuiCircularProgress"
   });
   const {
-    children,
     className,
-    expandIcon,
-    focusVisibleClassName,
-    onClick,
-    slots,
-    slotProps,
+    color = "primary",
+    disableShrink = false,
+    size = 40,
+    style,
+    thickness = 3.6,
+    value = 0,
+    variant = "indeterminate",
     ...other
   } = props;
-  const {
-    disabled = false,
-    disableGutters,
-    expanded,
-    toggle
-  } = reactExports.useContext(AccordionContext);
-  const handleChange = (event) => {
-    if (toggle) {
-      toggle(event);
-    }
-    if (onClick) {
-      onClick(event);
-    }
-  };
   const ownerState = {
     ...props,
-    expanded,
-    disabled,
-    disableGutters
+    color,
+    disableShrink,
+    size,
+    thickness,
+    value,
+    variant
   };
-  const classes = useUtilityClasses$A(ownerState);
-  const externalForwardedProps = {
-    slots,
-    slotProps
-  };
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    ref,
-    shouldForwardComponentProp: true,
+  const classes = useUtilityClasses$F(ownerState);
+  const circleStyle = {};
+  const rootStyle = {};
+  const rootProps = {};
+  if (variant === "determinate") {
+    const circumference = 2 * Math.PI * ((SIZE - thickness) / 2);
+    circleStyle.strokeDasharray = circumference.toFixed(3);
+    rootProps["aria-valuenow"] = Math.round(value);
+    circleStyle.strokeDashoffset = `${((100 - value) / 100 * circumference).toFixed(3)}px`;
+    rootStyle.transform = "rotate(-90deg)";
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgressRoot, {
     className: clsx(classes.root, className),
-    elementType: AccordionSummaryRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
+    style: {
+      width: size,
+      height: size,
+      ...rootStyle,
+      ...style
     },
     ownerState,
-    additionalProps: {
-      focusRipple: false,
-      disableRipple: true,
-      disabled,
-      "aria-expanded": expanded,
-      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName)
-    },
-    getSlotProps: (handlers) => ({
-      ...handlers,
-      onClick: (event) => {
-        handlers.onClick?.(event);
-        handleChange(event);
-      }
+    ref,
+    role: "progressbar",
+    ...rootProps,
+    ...other,
+    children: /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgressSVG, {
+      className: classes.svg,
+      ownerState,
+      viewBox: `${SIZE / 2} ${SIZE / 2} ${SIZE} ${SIZE}`,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgressCircle, {
+        className: classes.circle,
+        style: circleStyle,
+        ownerState,
+        cx: SIZE,
+        cy: SIZE,
+        r: (SIZE - thickness) / 2,
+        fill: "none",
+        strokeWidth: thickness
+      })
     })
-  });
-  const [ContentSlot, contentSlotProps] = useSlot("content", {
-    className: classes.content,
-    elementType: AccordionSummaryContent,
-    externalForwardedProps,
-    ownerState
-  });
-  const [ExpandIconWrapperSlot, expandIconWrapperSlotProps] = useSlot("expandIconWrapper", {
-    className: classes.expandIconWrapper,
-    elementType: AccordionSummaryExpandIconWrapper,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
-    ...rootSlotProps,
-    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(ContentSlot, {
-      ...contentSlotProps,
-      children
-    }), expandIcon && /* @__PURE__ */ jsxRuntimeExports.jsx(ExpandIconWrapperSlot, {
-      ...expandIconWrapperSlotProps,
-      children: expandIcon
-    })]
-  });
-});
-
-function getAccordionDetailsUtilityClass(slot) {
-  return generateUtilityClass('MuiAccordionDetails', slot);
-}
-generateUtilityClasses('MuiAccordionDetails', ['root']);
-
-const useUtilityClasses$z = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  return composeClasses(slots, getAccordionDetailsUtilityClass, classes);
-};
-const AccordionDetailsRoot = styled("div", {
-  name: "MuiAccordionDetails",
-  slot: "Root"
-})(memoTheme(({
-  theme
-}) => ({
-  padding: theme.spacing(1, 2, 2)
-})));
-const AccordionDetails = /* @__PURE__ */ reactExports.forwardRef(function AccordionDetails2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordionDetails"
-  });
-  const {
-    className,
-    ...other
-  } = props;
-  const ownerState = props;
-  const classes = useUtilityClasses$z(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionDetailsRoot, {
-    className: clsx(classes.root, className),
-    ref,
-    ownerState,
-    ...other
   });
 });
 
@@ -27522,7 +26262,7 @@ const ButtonGroupContext = /* @__PURE__ */ reactExports.createContext({});
 
 const ButtonGroupButtonContext = /* @__PURE__ */ reactExports.createContext(void 0);
 
-const useUtilityClasses$y = (ownerState) => {
+const useUtilityClasses$E = (ownerState) => {
   const {
     color,
     disableElevation,
@@ -28022,7 +26762,7 @@ const Button = /* @__PURE__ */ reactExports.forwardRef(function Button2(inProps,
     type,
     variant
   };
-  const classes = useUtilityClasses$y(ownerState);
+  const classes = useUtilityClasses$E(ownerState);
   const startIcon = (startIconProp || loading && loadingPosition === "start") && /* @__PURE__ */ jsxRuntimeExports.jsx(ButtonStartIcon, {
     className: classes.startIcon,
     ownerState,
@@ -28552,6 +27292,262 @@ const Portal = /* @__PURE__ */ reactExports.forwardRef(function Portal2(props, f
   return mountNode ? /* @__PURE__ */ reactDomExports.createPortal(children, mountNode) : mountNode;
 });
 
+/**
+ * Determines if a given element is a DOM element name (i.e. not a React component).
+ */
+function isHostComponent$1(element) {
+  return typeof element === 'string';
+}
+
+/**
+ * Type of the ownerState based on the type of an element it applies to.
+ * This resolves to the provided OwnerState for React components and `undefined` for host components.
+ * Falls back to `OwnerState | undefined` when the exact type can't be determined in development time.
+ */
+
+/**
+ * Appends the ownerState object to the props, merging with the existing one if necessary.
+ *
+ * @param elementType Type of the element that owns the `existingProps`. If the element is a DOM node or undefined, `ownerState` is not applied.
+ * @param otherProps Props of the element.
+ * @param ownerState
+ */
+function appendOwnerState(elementType, otherProps, ownerState) {
+  if (elementType === undefined || isHostComponent$1(elementType)) {
+    return otherProps;
+  }
+  return {
+    ...otherProps,
+    ownerState: {
+      ...otherProps.ownerState,
+      ...ownerState
+    }
+  };
+}
+
+/**
+ * If `componentProps` is a function, calls it with the provided `ownerState`.
+ * Otherwise, just returns `componentProps`.
+ */
+function resolveComponentProps(componentProps, ownerState, slotState) {
+  if (typeof componentProps === 'function') {
+    return componentProps(ownerState, slotState);
+  }
+  return componentProps;
+}
+
+/**
+ * Extracts event handlers from a given object.
+ * A prop is considered an event handler if it is a function and its name starts with `on`.
+ *
+ * @param object An object to extract event handlers from.
+ * @param excludeKeys An array of keys to exclude from the returned object.
+ */
+function extractEventHandlers(object, excludeKeys = []) {
+  if (object === undefined) {
+    return {};
+  }
+  const result = {};
+  Object.keys(object).filter(prop => prop.match(/^on[A-Z]/) && typeof object[prop] === 'function' && !excludeKeys.includes(prop)).forEach(prop => {
+    result[prop] = object[prop];
+  });
+  return result;
+}
+
+/**
+ * Removes event handlers from the given object.
+ * A field is considered an event handler if it is a function with a name beginning with `on`.
+ *
+ * @param object Object to remove event handlers from.
+ * @returns Object with event handlers removed.
+ */
+function omitEventHandlers(object) {
+  if (object === undefined) {
+    return {};
+  }
+  const result = {};
+  Object.keys(object).filter(prop => !(prop.match(/^on[A-Z]/) && typeof object[prop] === 'function')).forEach(prop => {
+    result[prop] = object[prop];
+  });
+  return result;
+}
+
+/**
+ * Merges the slot component internal props (usually coming from a hook)
+ * with the externally provided ones.
+ *
+ * The merge order is (the latter overrides the former):
+ * 1. The internal props (specified as a getter function to work with get*Props hook result)
+ * 2. Additional props (specified internally on a Base UI component)
+ * 3. External props specified on the owner component. These should only be used on a root slot.
+ * 4. External props specified in the `slotProps.*` prop.
+ * 5. The `className` prop - combined from all the above.
+ * @param parameters
+ * @returns
+ */
+function mergeSlotProps(parameters) {
+  const {
+    getSlotProps,
+    additionalProps,
+    externalSlotProps,
+    externalForwardedProps,
+    className
+  } = parameters;
+  if (!getSlotProps) {
+    // The simpler case - getSlotProps is not defined, so no internal event handlers are defined,
+    // so we can simply merge all the props without having to worry about extracting event handlers.
+    const joinedClasses = clsx(additionalProps?.className, className, externalForwardedProps?.className, externalSlotProps?.className);
+    const mergedStyle = {
+      ...additionalProps?.style,
+      ...externalForwardedProps?.style,
+      ...externalSlotProps?.style
+    };
+    const props = {
+      ...additionalProps,
+      ...externalForwardedProps,
+      ...externalSlotProps
+    };
+    if (joinedClasses.length > 0) {
+      props.className = joinedClasses;
+    }
+    if (Object.keys(mergedStyle).length > 0) {
+      props.style = mergedStyle;
+    }
+    return {
+      props,
+      internalRef: undefined
+    };
+  }
+
+  // In this case, getSlotProps is responsible for calling the external event handlers.
+  // We don't need to include them in the merged props because of this.
+
+  const eventHandlers = extractEventHandlers({
+    ...externalForwardedProps,
+    ...externalSlotProps
+  });
+  const componentsPropsWithoutEventHandlers = omitEventHandlers(externalSlotProps);
+  const otherPropsWithoutEventHandlers = omitEventHandlers(externalForwardedProps);
+  const internalSlotProps = getSlotProps(eventHandlers);
+
+  // The order of classes is important here.
+  // Emotion (that we use in libraries consuming Base UI) depends on this order
+  // to properly override style. It requires the most important classes to be last
+  // (see https://github.com/mui/material-ui/pull/33205) for the related discussion.
+  const joinedClasses = clsx(internalSlotProps?.className, additionalProps?.className, className, externalForwardedProps?.className, externalSlotProps?.className);
+  const mergedStyle = {
+    ...internalSlotProps?.style,
+    ...additionalProps?.style,
+    ...externalForwardedProps?.style,
+    ...externalSlotProps?.style
+  };
+  const props = {
+    ...internalSlotProps,
+    ...additionalProps,
+    ...otherPropsWithoutEventHandlers,
+    ...componentsPropsWithoutEventHandlers
+  };
+  if (joinedClasses.length > 0) {
+    props.className = joinedClasses;
+  }
+  if (Object.keys(mergedStyle).length > 0) {
+    props.style = mergedStyle;
+  }
+  return {
+    props,
+    internalRef: internalSlotProps.ref
+  };
+}
+
+/**
+ * An internal function to create a Material UI slot.
+ *
+ * This is an advanced version of Base UI `useSlotProps` because Material UI allows leaf component to be customized via `component` prop
+ * while Base UI does not need to support leaf component customization.
+ *
+ * @param {string} name: name of the slot
+ * @param {object} parameters
+ * @returns {[Slot, slotProps]} The slot's React component and the slot's props
+ *
+ * Note: the returned slot's props
+ * - will never contain `component` prop.
+ * - might contain `as` prop.
+ */
+function useSlot(
+/**
+ * The slot's name. All Material UI components should have `root` slot.
+ *
+ * If the name is `root`, the logic behaves differently from other slots,
+ * e.g. the `externalForwardedProps` are spread to `root` slot but not other slots.
+ */
+name, parameters) {
+  const {
+    className,
+    elementType: initialElementType,
+    ownerState,
+    externalForwardedProps,
+    internalForwardedProps,
+    shouldForwardComponentProp = false,
+    ...useSlotPropsParams
+  } = parameters;
+  const {
+    component: rootComponent,
+    slots = {
+      [name]: undefined
+    },
+    slotProps = {
+      [name]: undefined
+    },
+    ...other
+  } = externalForwardedProps;
+  const elementType = slots[name] || initialElementType;
+
+  // `slotProps[name]` can be a callback that receives the component's ownerState.
+  // `resolvedComponentsProps` is always a plain object.
+  const resolvedComponentsProps = resolveComponentProps(slotProps[name], ownerState);
+  const {
+    props: {
+      component: slotComponent,
+      ...mergedProps
+    },
+    internalRef
+  } = mergeSlotProps({
+    className,
+    ...useSlotPropsParams,
+    externalForwardedProps: name === 'root' ? other : undefined,
+    externalSlotProps: resolvedComponentsProps
+  });
+  const ref = useForkRef(internalRef, resolvedComponentsProps?.ref, parameters.ref);
+  const LeafComponent = name === 'root' ? slotComponent || rootComponent : slotComponent;
+  const props = appendOwnerState(elementType, {
+    ...(name === 'root' && !rootComponent && !slots[name] && internalForwardedProps),
+    ...(name !== 'root' && !slots[name] && internalForwardedProps),
+    ...mergedProps,
+    ...(LeafComponent && !shouldForwardComponentProp && {
+      as: LeafComponent
+    }),
+    ...(LeafComponent && shouldForwardComponentProp && {
+      component: LeafComponent
+    }),
+    ref
+  }, ownerState);
+  return [elementType, props];
+}
+
+const reflow = node => node.scrollTop;
+function getTransitionProps(props, options) {
+  const {
+    timeout,
+    easing,
+    style = {}
+  } = props;
+  return {
+    duration: style.transitionDuration ?? (typeof timeout === 'number' ? timeout : timeout[options.mode] || 0),
+    easing: style.transitionTimingFunction ?? (typeof easing === 'object' ? easing[options.mode] : easing),
+    delay: style.transitionDelay
+  };
+}
+
 const styles$2 = {
   entering: {
     opacity: 1
@@ -28671,7 +27667,7 @@ function getBackdropUtilityClass(slot) {
 }
 generateUtilityClasses('MuiBackdrop', ['root', 'invisible']);
 
-const useUtilityClasses$x = (ownerState) => {
+const useUtilityClasses$D = (ownerState) => {
   const {
     classes,
     invisible
@@ -28734,7 +27730,7 @@ const Backdrop = /* @__PURE__ */ reactExports.forwardRef(function Backdrop2(inPr
     component,
     invisible
   };
-  const classes = useUtilityClasses$x(ownerState);
+  const classes = useUtilityClasses$D(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     root: components.Root,
@@ -28964,7 +27960,7 @@ function getModalUtilityClass(slot) {
 }
 generateUtilityClasses('MuiModal', ['root', 'hidden', 'backdrop']);
 
-const useUtilityClasses$w = (ownerState) => {
+const useUtilityClasses$C = (ownerState) => {
   const {
     open,
     exited,
@@ -29071,7 +28067,7 @@ const Modal = /* @__PURE__ */ reactExports.forwardRef(function Modal2(inProps, r
     ...propsWithDefaults,
     exited
   };
-  const classes = useUtilityClasses$w(ownerState);
+  const classes = useUtilityClasses$C(ownerState);
   const childProps = {};
   if (children.props.tabIndex === void 0) {
     childProps.tabIndex = "-1";
@@ -29149,6 +28145,105 @@ const Modal = /* @__PURE__ */ reactExports.forwardRef(function Modal2(inProps, r
   });
 });
 
+function getPaperUtilityClass(slot) {
+  return generateUtilityClass('MuiPaper', slot);
+}
+generateUtilityClasses('MuiPaper', ['root', 'rounded', 'outlined', 'elevation', 'elevation0', 'elevation1', 'elevation2', 'elevation3', 'elevation4', 'elevation5', 'elevation6', 'elevation7', 'elevation8', 'elevation9', 'elevation10', 'elevation11', 'elevation12', 'elevation13', 'elevation14', 'elevation15', 'elevation16', 'elevation17', 'elevation18', 'elevation19', 'elevation20', 'elevation21', 'elevation22', 'elevation23', 'elevation24']);
+
+const useUtilityClasses$B = (ownerState) => {
+  const {
+    square,
+    elevation,
+    variant,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", variant, !square && "rounded", variant === "elevation" && `elevation${elevation}`]
+  };
+  return composeClasses(slots, getPaperUtilityClass, classes);
+};
+const PaperRoot = styled("div", {
+  name: "MuiPaper",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[ownerState.variant], !ownerState.square && styles.rounded, ownerState.variant === "elevation" && styles[`elevation${ownerState.elevation}`]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  backgroundColor: (theme.vars || theme).palette.background.paper,
+  color: (theme.vars || theme).palette.text.primary,
+  transition: theme.transitions.create("box-shadow"),
+  variants: [{
+    props: ({
+      ownerState
+    }) => !ownerState.square,
+    style: {
+      borderRadius: theme.shape.borderRadius
+    }
+  }, {
+    props: {
+      variant: "outlined"
+    },
+    style: {
+      border: `1px solid ${(theme.vars || theme).palette.divider}`
+    }
+  }, {
+    props: {
+      variant: "elevation"
+    },
+    style: {
+      boxShadow: "var(--Paper-shadow)",
+      backgroundImage: "var(--Paper-overlay)"
+    }
+  }]
+})));
+const Paper = /* @__PURE__ */ reactExports.forwardRef(function Paper2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiPaper"
+  });
+  const theme = useTheme();
+  const {
+    className,
+    component = "div",
+    elevation = 1,
+    square = false,
+    variant = "elevation",
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    component,
+    elevation,
+    square,
+    variant
+  };
+  const classes = useUtilityClasses$B(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(PaperRoot, {
+    as: component,
+    ownerState,
+    className: clsx(classes.root, className),
+    ref,
+    ...other,
+    style: {
+      ...variant === "elevation" && {
+        "--Paper-shadow": (theme.vars || theme).shadows[elevation],
+        ...theme.vars && {
+          "--Paper-overlay": theme.vars.overlays?.[elevation]
+        },
+        ...!theme.vars && theme.palette.mode === "dark" && {
+          "--Paper-overlay": `linear-gradient(${alpha("#fff", getOverlayAlpha(elevation))}, ${alpha("#fff", getOverlayAlpha(elevation))})`
+        }
+      },
+      ...other.style
+    }
+  });
+});
+
 function getDialogUtilityClass(slot) {
   return generateUtilityClass('MuiDialog', slot);
 }
@@ -29164,7 +28259,7 @@ const DialogBackdrop = styled(Backdrop, {
   // Improve scrollable dialog support.
   zIndex: -1
 });
-const useUtilityClasses$v = (ownerState) => {
+const useUtilityClasses$A = (ownerState) => {
   const {
     classes,
     scroll,
@@ -29367,7 +28462,7 @@ const Dialog = /* @__PURE__ */ reactExports.forwardRef(function Dialog2(inProps,
     maxWidth,
     scroll
   };
-  const classes = useUtilityClasses$v(ownerState);
+  const classes = useUtilityClasses$A(ownerState);
   const backdropClick = reactExports.useRef();
   const handleMouseDown = (event) => {
     backdropClick.current = event.target === event.currentTarget;
@@ -29488,7 +28583,7 @@ function getDialogActionsUtilityClass(slot) {
 }
 generateUtilityClasses('MuiDialogActions', ['root', 'spacing']);
 
-const useUtilityClasses$u = (ownerState) => {
+const useUtilityClasses$z = (ownerState) => {
   const {
     classes,
     disableSpacing
@@ -29538,7 +28633,7 @@ const DialogActions = /* @__PURE__ */ reactExports.forwardRef(function DialogAct
     ...props,
     disableSpacing
   };
-  const classes = useUtilityClasses$u(ownerState);
+  const classes = useUtilityClasses$z(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogActionsRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -29557,7 +28652,7 @@ function getDialogTitleUtilityClass(slot) {
 }
 const dialogTitleClasses = generateUtilityClasses('MuiDialogTitle', ['root']);
 
-const useUtilityClasses$t = (ownerState) => {
+const useUtilityClasses$y = (ownerState) => {
   const {
     classes,
     dividers
@@ -29618,7 +28713,7 @@ const DialogContent = /* @__PURE__ */ reactExports.forwardRef(function DialogCon
     ...props,
     dividers
   };
-  const classes = useUtilityClasses$t(ownerState);
+  const classes = useUtilityClasses$y(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -29627,12 +28722,185 @@ const DialogContent = /* @__PURE__ */ reactExports.forwardRef(function DialogCon
   });
 });
 
+function getTypographyUtilityClass(slot) {
+  return generateUtilityClass('MuiTypography', slot);
+}
+generateUtilityClasses('MuiTypography', ['root', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'inherit', 'button', 'caption', 'overline', 'alignLeft', 'alignRight', 'alignCenter', 'alignJustify', 'noWrap', 'gutterBottom', 'paragraph']);
+
+const v6Colors = {
+  primary: true,
+  secondary: true,
+  error: true,
+  info: true,
+  success: true,
+  warning: true,
+  textPrimary: true,
+  textSecondary: true,
+  textDisabled: true
+};
+const extendSxProp = internal_createExtendSxProp();
+const useUtilityClasses$x = (ownerState) => {
+  const {
+    align,
+    gutterBottom,
+    noWrap,
+    paragraph,
+    variant,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", variant, ownerState.align !== "inherit" && `align${capitalize(align)}`, gutterBottom && "gutterBottom", noWrap && "noWrap", paragraph && "paragraph"]
+  };
+  return composeClasses(slots, getTypographyUtilityClass, classes);
+};
+const TypographyRoot = styled("span", {
+  name: "MuiTypography",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, ownerState.variant && styles[ownerState.variant], ownerState.align !== "inherit" && styles[`align${capitalize(ownerState.align)}`], ownerState.noWrap && styles.noWrap, ownerState.gutterBottom && styles.gutterBottom, ownerState.paragraph && styles.paragraph];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  margin: 0,
+  variants: [{
+    props: {
+      variant: "inherit"
+    },
+    style: {
+      // Some elements, like <button> on Chrome have default font that doesn't inherit, reset this.
+      font: "inherit",
+      lineHeight: "inherit",
+      letterSpacing: "inherit"
+    }
+  }, ...Object.entries(theme.typography).filter(([variant, value]) => variant !== "inherit" && value && typeof value === "object").map(([variant, value]) => ({
+    props: {
+      variant
+    },
+    style: value
+  })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      color: (theme.vars || theme).palette[color].main
+    }
+  })), ...Object.entries(theme.palette?.text || {}).filter(([, value]) => typeof value === "string").map(([color]) => ({
+    props: {
+      color: `text${capitalize(color)}`
+    },
+    style: {
+      color: (theme.vars || theme).palette.text[color]
+    }
+  })), {
+    props: ({
+      ownerState
+    }) => ownerState.align !== "inherit",
+    style: {
+      textAlign: "var(--Typography-textAlign)"
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.noWrap,
+    style: {
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.gutterBottom,
+    style: {
+      marginBottom: "0.35em"
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.paragraph,
+    style: {
+      marginBottom: 16
+    }
+  }]
+})));
+const defaultVariantMapping = {
+  h1: "h1",
+  h2: "h2",
+  h3: "h3",
+  h4: "h4",
+  h5: "h5",
+  h6: "h6",
+  subtitle1: "h6",
+  subtitle2: "h6",
+  body1: "p",
+  body2: "p",
+  inherit: "p"
+};
+const Typography = /* @__PURE__ */ reactExports.forwardRef(function Typography2(inProps, ref) {
+  const {
+    color,
+    ...themeProps
+  } = useDefaultProps({
+    props: inProps,
+    name: "MuiTypography"
+  });
+  const isSxColor = !v6Colors[color];
+  const props = extendSxProp({
+    ...themeProps,
+    ...isSxColor && {
+      color
+    }
+  });
+  const {
+    align = "inherit",
+    className,
+    component,
+    gutterBottom = false,
+    noWrap = false,
+    paragraph = false,
+    variant = "body1",
+    variantMapping = defaultVariantMapping,
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    align,
+    color,
+    className,
+    component,
+    gutterBottom,
+    noWrap,
+    paragraph,
+    variant,
+    variantMapping
+  };
+  const Component = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
+  const classes = useUtilityClasses$x(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(TypographyRoot, {
+    as: Component,
+    ref,
+    className: clsx(classes.root, className),
+    ...other,
+    ownerState,
+    style: {
+      ...align !== "inherit" && {
+        "--Typography-textAlign": align
+      },
+      ...other.style
+    }
+  });
+});
+
 function getDialogContentTextUtilityClass(slot) {
   return generateUtilityClass('MuiDialogContentText', slot);
 }
 generateUtilityClasses('MuiDialogContentText', ['root']);
 
-const useUtilityClasses$s = (ownerState) => {
+const useUtilityClasses$w = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -29661,7 +28929,7 @@ const DialogContentText = /* @__PURE__ */ reactExports.forwardRef(function Dialo
     className,
     ...ownerState
   } = props;
-  const classes = useUtilityClasses$s(ownerState);
+  const classes = useUtilityClasses$w(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentTextRoot, {
     component: "p",
     variant: "body1",
@@ -29674,7 +28942,7 @@ const DialogContentText = /* @__PURE__ */ reactExports.forwardRef(function Dialo
   });
 });
 
-const useUtilityClasses$r = (ownerState) => {
+const useUtilityClasses$v = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -29701,7 +28969,7 @@ const DialogTitle = /* @__PURE__ */ reactExports.forwardRef(function DialogTitle
     ...other
   } = props;
   const ownerState = props;
-  const classes = useUtilityClasses$r(ownerState);
+  const classes = useUtilityClasses$v(ownerState);
   const {
     titleId = idProp
   } = reactExports.useContext(DialogContext);
@@ -29973,7 +29241,7 @@ const inputOverridesResolver = (props, styles) => {
   } = props;
   return [styles.input, ownerState.size === "small" && styles.inputSizeSmall, ownerState.multiline && styles.inputMultiline, ownerState.type === "search" && styles.inputTypeSearch, ownerState.startAdornment && styles.inputAdornedStart, ownerState.endAdornment && styles.inputAdornedEnd, ownerState.hiddenLabel && styles.inputHiddenLabel];
 };
-const useUtilityClasses$q = (ownerState) => {
+const useUtilityClasses$u = (ownerState) => {
   const {
     classes,
     color,
@@ -30359,7 +29627,7 @@ const InputBase = /* @__PURE__ */ reactExports.forwardRef(function InputBase2(in
     startAdornment,
     type
   };
-  const classes = useUtilityClasses$q(ownerState);
+  const classes = useUtilityClasses$u(ownerState);
   const Root = slots.root || components.Root || InputBaseRoot;
   const rootProps = slotProps.root || componentsProps.root || {};
   const Input = slots.input || components.Input || InputBaseInput;
@@ -30432,7 +29700,7 @@ const inputClasses = {
   ...generateUtilityClasses('MuiInput', ['root', 'underline', 'input'])
 };
 
-const useUtilityClasses$p = (ownerState) => {
+const useUtilityClasses$t = (ownerState) => {
   const {
     classes,
     disableUnderline
@@ -30565,7 +29833,7 @@ const Input = /* @__PURE__ */ reactExports.forwardRef(function Input2(inProps, r
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$p(props);
+  const classes = useUtilityClasses$t(props);
   const ownerState = {
     disableUnderline
   };
@@ -30602,7 +29870,7 @@ const filledInputClasses = {
   ...generateUtilityClasses('MuiFilledInput', ['root', 'underline', 'input', 'adornedStart', 'adornedEnd', 'sizeSmall', 'multiline', 'hiddenLabel'])
 };
 
-const useUtilityClasses$o = (ownerState) => {
+const useUtilityClasses$s = (ownerState) => {
   const {
     classes,
     disableUnderline,
@@ -30881,7 +30149,7 @@ const FilledInput = /* @__PURE__ */ reactExports.forwardRef(function FilledInput
     multiline,
     type
   };
-  const classes = useUtilityClasses$o(props);
+  const classes = useUtilityClasses$s(props);
   const filledInputComponentsProps = {
     root: {
       ownerState
@@ -31039,7 +30307,7 @@ const outlinedInputClasses = {
   ...generateUtilityClasses('MuiOutlinedInput', ['root', 'notchedOutline', 'input'])
 };
 
-const useUtilityClasses$n = (ownerState) => {
+const useUtilityClasses$r = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -31217,7 +30485,7 @@ const OutlinedInput = /* @__PURE__ */ reactExports.forwardRef(function OutlinedI
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$n(props);
+  const classes = useUtilityClasses$r(props);
   const muiFormControl = useFormControl();
   const fcs = formControlState({
     props,
@@ -31283,7 +30551,7 @@ function getFormLabelUtilityClasses(slot) {
 }
 const formLabelClasses = generateUtilityClasses('MuiFormLabel', ['root', 'colorSecondary', 'focused', 'disabled', 'error', 'filled', 'required', 'asterisk']);
 
-const useUtilityClasses$m = (ownerState) => {
+const useUtilityClasses$q = (ownerState) => {
   const {
     classes,
     color,
@@ -31380,7 +30648,7 @@ const FormLabel = /* @__PURE__ */ reactExports.forwardRef(function FormLabel2(in
     focused: fcs.focused,
     required: fcs.required
   };
-  const classes = useUtilityClasses$m(ownerState);
+  const classes = useUtilityClasses$q(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(FormLabelRoot, {
     as: component,
     ownerState,
@@ -31401,7 +30669,7 @@ function getInputLabelUtilityClasses(slot) {
 }
 generateUtilityClasses('MuiInputLabel', ['root', 'focused', 'disabled', 'error', 'required', 'asterisk', 'formControl', 'sizeSmall', 'shrink', 'animated', 'standard', 'filled', 'outlined']);
 
-const useUtilityClasses$l = (ownerState) => {
+const useUtilityClasses$p = (ownerState) => {
   const {
     classes,
     formControl,
@@ -31590,7 +30858,7 @@ const InputLabel = /* @__PURE__ */ reactExports.forwardRef(function InputLabel2(
     required: fcs.required,
     focused: fcs.focused
   };
-  const classes = useUtilityClasses$l(ownerState);
+  const classes = useUtilityClasses$p(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(InputLabelRoot, {
     "data-shrink": shrink,
     ref,
@@ -31606,7 +30874,7 @@ function getFormControlUtilityClasses(slot) {
 }
 generateUtilityClasses('MuiFormControl', ['root', 'marginNone', 'marginNormal', 'marginDense', 'fullWidth', 'disabled']);
 
-const useUtilityClasses$k = (ownerState) => {
+const useUtilityClasses$o = (ownerState) => {
   const {
     classes,
     margin,
@@ -31696,7 +30964,7 @@ const FormControl = /* @__PURE__ */ reactExports.forwardRef(function FormControl
     size,
     variant
   };
-  const classes = useUtilityClasses$k(ownerState);
+  const classes = useUtilityClasses$o(ownerState);
   const [adornedStart, setAdornedStart] = reactExports.useState(() => {
     let initialAdornedStart = false;
     if (children) {
@@ -31783,7 +31051,7 @@ function getFormHelperTextUtilityClasses(slot) {
 const formHelperTextClasses = generateUtilityClasses('MuiFormHelperText', ['root', 'error', 'disabled', 'sizeSmall', 'sizeMedium', 'contained', 'focused', 'filled', 'required']);
 
 var _span$2;
-const useUtilityClasses$j = (ownerState) => {
+const useUtilityClasses$n = (ownerState) => {
   const {
     classes,
     contained,
@@ -31878,7 +31146,7 @@ const FormHelperText = /* @__PURE__ */ reactExports.forwardRef(function FormHelp
     required: fcs.required
   };
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$j(ownerState);
+  const classes = useUtilityClasses$n(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(FormHelperTextRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -31935,7 +31203,7 @@ function getListUtilityClass(slot) {
 }
 generateUtilityClasses('MuiList', ['root', 'padding', 'dense', 'subheader']);
 
-const useUtilityClasses$i = (ownerState) => {
+const useUtilityClasses$m = (ownerState) => {
   const {
     classes,
     disablePadding,
@@ -32001,7 +31269,7 @@ const List = /* @__PURE__ */ reactExports.forwardRef(function List2(inProps, ref
     dense,
     disablePadding
   };
-  const classes = useUtilityClasses$i(ownerState);
+  const classes = useUtilityClasses$m(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(ListContext.Provider, {
     value: context,
     children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ListRoot, {
@@ -32403,7 +31671,7 @@ function getTransformOriginValue(transformOrigin) {
 function resolveAnchorEl(anchorEl) {
   return typeof anchorEl === "function" ? anchorEl() : anchorEl;
 }
-const useUtilityClasses$h = (ownerState) => {
+const useUtilityClasses$l = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -32481,7 +31749,7 @@ const Popover = /* @__PURE__ */ reactExports.forwardRef(function Popover2(inProp
     transitionDuration: transitionDurationProp,
     TransitionProps
   };
-  const classes = useUtilityClasses$h(ownerState);
+  const classes = useUtilityClasses$l(ownerState);
   const getAnchorOffset = reactExports.useCallback(() => {
     if (anchorReference === "anchorPosition") {
       return anchorPosition;
@@ -32705,7 +31973,7 @@ const LTR_ORIGIN = {
   vertical: "top",
   horizontal: "left"
 };
-const useUtilityClasses$g = (ownerState) => {
+const useUtilityClasses$k = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -32776,7 +32044,7 @@ const Menu = /* @__PURE__ */ reactExports.forwardRef(function Menu2(inProps, ref
     TransitionProps,
     variant
   };
-  const classes = useUtilityClasses$g(ownerState);
+  const classes = useUtilityClasses$k(ownerState);
   const autoFocusItem = autoFocus && !disableAutoFocusItem && open;
   const menuListActionsRef = reactExports.useRef(null);
   const handleEntering = (element, isAppearing) => {
@@ -32897,7 +32165,7 @@ function getNativeSelectUtilityClasses(slot) {
 }
 const nativeSelectClasses = generateUtilityClasses('MuiNativeSelect', ['root', 'select', 'multiple', 'filled', 'outlined', 'standard', 'disabled', 'icon', 'iconOpen', 'iconFilled', 'iconOutlined', 'iconStandard', 'nativeInput', 'error']);
 
-const useUtilityClasses$f = (ownerState) => {
+const useUtilityClasses$j = (ownerState) => {
   const {
     classes,
     variant,
@@ -33056,7 +32324,7 @@ const NativeSelectInput = /* @__PURE__ */ reactExports.forwardRef(function Nativ
     variant,
     error
   };
-  const classes = useUtilityClasses$f(ownerState);
+  const classes = useUtilityClasses$j(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(reactExports.Fragment, {
     children: [/* @__PURE__ */ jsxRuntimeExports.jsx(NativeSelectSelect, {
       ownerState,
@@ -33145,7 +32413,7 @@ function areEqualValues(a, b) {
 function isEmpty(display) {
   return display == null || typeof display === "string" && !display.trim();
 }
-const useUtilityClasses$e = (ownerState) => {
+const useUtilityClasses$i = (ownerState) => {
   const {
     classes,
     variant,
@@ -33447,7 +32715,7 @@ const SelectInput = /* @__PURE__ */ reactExports.forwardRef(function SelectInput
     open,
     error
   };
-  const classes = useUtilityClasses$e(ownerState);
+  const classes = useUtilityClasses$i(ownerState);
   const paperProps = {
     ...MenuProps.PaperProps,
     ...MenuProps.slotProps?.paper
@@ -33547,7 +32815,7 @@ const ArrowDropDownIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path
   d: "M7 10l5 5 5-5z"
 }));
 
-const useUtilityClasses$d = (ownerState) => {
+const useUtilityClasses$h = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -33610,7 +32878,7 @@ const Select = /* @__PURE__ */ reactExports.forwardRef(function Select2(inProps,
     variant,
     classes: classesProp
   };
-  const classes = useUtilityClasses$d(ownerState);
+  const classes = useUtilityClasses$h(ownerState);
   const {
     root,
     ...restOfClasses
@@ -33687,7 +32955,7 @@ const variantComponent = {
   filled: FilledInput,
   outlined: OutlinedInput
 };
-const useUtilityClasses$c = (ownerState) => {
+const useUtilityClasses$g = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -33754,7 +33022,7 @@ const TextField = /* @__PURE__ */ reactExports.forwardRef(function TextField2(in
     select,
     variant
   };
-  const classes = useUtilityClasses$c(ownerState);
+  const classes = useUtilityClasses$g(ownerState);
   const id = useId(idOverride);
   const helperTextId = helperText && id ? `${id}-helper-text` : void 0;
   const inputLabelId = label && id ? `${id}-label` : void 0;
@@ -33882,7 +33150,7 @@ function getSwitchBaseUtilityClass(slot) {
 }
 generateUtilityClasses('PrivateSwitchBase', ['root', 'checked', 'disabled', 'input', 'edgeStart', 'edgeEnd']);
 
-const useUtilityClasses$b = (ownerState) => {
+const useUtilityClasses$f = (ownerState) => {
   const {
     classes,
     checked,
@@ -34022,7 +33290,7 @@ const SwitchBase = /* @__PURE__ */ reactExports.forwardRef(function SwitchBase2(
     disableFocusRipple,
     edge
   };
-  const classes = useUtilityClasses$b(ownerState);
+  const classes = useUtilityClasses$f(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -34114,7 +33382,7 @@ function getCheckboxUtilityClass(slot) {
 }
 const checkboxClasses = generateUtilityClasses('MuiCheckbox', ['root', 'checked', 'disabled', 'indeterminate', 'colorPrimary', 'colorSecondary', 'sizeSmall', 'sizeMedium']);
 
-const useUtilityClasses$a = (ownerState) => {
+const useUtilityClasses$e = (ownerState) => {
   const {
     classes,
     indeterminate,
@@ -34223,7 +33491,7 @@ const Checkbox = /* @__PURE__ */ reactExports.forwardRef(function Checkbox2(inPr
     indeterminate,
     size
   };
-  const classes = useUtilityClasses$a(ownerState);
+  const classes = useUtilityClasses$e(ownerState);
   const externalInputProps = slotProps.input ?? inputProps;
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
@@ -34264,7 +33532,7 @@ function getFormControlLabelUtilityClasses(slot) {
 }
 const formControlLabelClasses = generateUtilityClasses('MuiFormControlLabel', ['root', 'labelPlacementStart', 'labelPlacementTop', 'labelPlacementBottom', 'disabled', 'label', 'error', 'required', 'asterisk']);
 
-const useUtilityClasses$9 = (ownerState) => {
+const useUtilityClasses$d = (ownerState) => {
   const {
     classes,
     disabled,
@@ -34399,7 +33667,7 @@ const FormControlLabel = /* @__PURE__ */ reactExports.forwardRef(function FormCo
     required,
     error: fcs.error
   };
-  const classes = useUtilityClasses$9(ownerState);
+  const classes = useUtilityClasses$d(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -34798,2322 +34066,6 @@ var useConfirm = function useConfirm() {
   }, [parentId]);
   return confirm;
 };
-
-function getAlertUtilityClass(slot) {
-  return generateUtilityClass('MuiAlert', slot);
-}
-const alertClasses = generateUtilityClasses('MuiAlert', ['root', 'action', 'icon', 'message', 'filled', 'colorSuccess', 'colorInfo', 'colorWarning', 'colorError', 'filledSuccess', 'filledInfo', 'filledWarning', 'filledError', 'outlined', 'outlinedSuccess', 'outlinedInfo', 'outlinedWarning', 'outlinedError', 'standard', 'standardSuccess', 'standardInfo', 'standardWarning', 'standardError']);
-
-function getIconButtonUtilityClass(slot) {
-  return generateUtilityClass('MuiIconButton', slot);
-}
-const iconButtonClasses = generateUtilityClasses('MuiIconButton', ['root', 'disabled', 'colorInherit', 'colorPrimary', 'colorSecondary', 'colorError', 'colorInfo', 'colorSuccess', 'colorWarning', 'edgeStart', 'edgeEnd', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'loading', 'loadingIndicator', 'loadingWrapper']);
-
-const useUtilityClasses$8 = (ownerState) => {
-  const {
-    classes,
-    disabled,
-    color,
-    edge,
-    size,
-    loading
-  } = ownerState;
-  const slots = {
-    root: ["root", loading && "loading", disabled && "disabled", color !== "default" && `color${capitalize(color)}`, edge && `edge${capitalize(edge)}`, `size${capitalize(size)}`],
-    loadingIndicator: ["loadingIndicator"],
-    loadingWrapper: ["loadingWrapper"]
-  };
-  return composeClasses(slots, getIconButtonUtilityClass, classes);
-};
-const IconButtonRoot = styled(ButtonBase, {
-  name: "MuiIconButton",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, ownerState.loading && styles.loading, ownerState.color !== "default" && styles[`color${capitalize(ownerState.color)}`], ownerState.edge && styles[`edge${capitalize(ownerState.edge)}`], styles[`size${capitalize(ownerState.size)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  textAlign: "center",
-  flex: "0 0 auto",
-  fontSize: theme.typography.pxToRem(24),
-  padding: 8,
-  borderRadius: "50%",
-  color: (theme.vars || theme).palette.action.active,
-  transition: theme.transitions.create("background-color", {
-    duration: theme.transitions.duration.shortest
-  }),
-  variants: [{
-    props: (props) => !props.disableRipple,
-    style: {
-      "--IconButton-hoverBg": theme.vars ? `rgba(${theme.vars.palette.action.activeChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha(theme.palette.action.active, theme.palette.action.hoverOpacity),
-      "&:hover": {
-        backgroundColor: "var(--IconButton-hoverBg)",
-        // Reset on touch devices, it doesn't add specificity
-        "@media (hover: none)": {
-          backgroundColor: "transparent"
-        }
-      }
-    }
-  }, {
-    props: {
-      edge: "start"
-    },
-    style: {
-      marginLeft: -12
-    }
-  }, {
-    props: {
-      edge: "start",
-      size: "small"
-    },
-    style: {
-      marginLeft: -3
-    }
-  }, {
-    props: {
-      edge: "end"
-    },
-    style: {
-      marginRight: -12
-    }
-  }, {
-    props: {
-      edge: "end",
-      size: "small"
-    },
-    style: {
-      marginRight: -3
-    }
-  }]
-})), memoTheme(({
-  theme
-}) => ({
-  variants: [{
-    props: {
-      color: "inherit"
-    },
-    style: {
-      color: "inherit"
-    }
-  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
-    props: {
-      color
-    },
-    style: {
-      color: (theme.vars || theme).palette[color].main
-    }
-  })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
-    props: {
-      color
-    },
-    style: {
-      "--IconButton-hoverBg": theme.vars ? `rgba(${(theme.vars || theme).palette[color].mainChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha((theme.vars || theme).palette[color].main, theme.palette.action.hoverOpacity)
-    }
-  })), {
-    props: {
-      size: "small"
-    },
-    style: {
-      padding: 5,
-      fontSize: theme.typography.pxToRem(18)
-    }
-  }, {
-    props: {
-      size: "large"
-    },
-    style: {
-      padding: 12,
-      fontSize: theme.typography.pxToRem(28)
-    }
-  }],
-  [`&.${iconButtonClasses.disabled}`]: {
-    backgroundColor: "transparent",
-    color: (theme.vars || theme).palette.action.disabled
-  },
-  [`&.${iconButtonClasses.loading}`]: {
-    color: "transparent"
-  }
-})));
-const IconButtonLoadingIndicator = styled("span", {
-  name: "MuiIconButton",
-  slot: "LoadingIndicator"
-})(({
-  theme
-}) => ({
-  display: "none",
-  position: "absolute",
-  visibility: "visible",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  color: (theme.vars || theme).palette.action.disabled,
-  variants: [{
-    props: {
-      loading: true
-    },
-    style: {
-      display: "flex"
-    }
-  }]
-}));
-const IconButton = /* @__PURE__ */ reactExports.forwardRef(function IconButton2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiIconButton"
-  });
-  const {
-    edge = false,
-    children,
-    className,
-    color = "default",
-    disabled = false,
-    disableFocusRipple = false,
-    size = "medium",
-    id: idProp,
-    loading = null,
-    loadingIndicator: loadingIndicatorProp,
-    ...other
-  } = props;
-  const loadingId = useId(idProp);
-  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgress, {
-    "aria-labelledby": loadingId,
-    color: "inherit",
-    size: 16
-  });
-  const ownerState = {
-    ...props,
-    edge,
-    color,
-    disabled,
-    disableFocusRipple,
-    loading,
-    loadingIndicator,
-    size
-  };
-  const classes = useUtilityClasses$8(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(IconButtonRoot, {
-    id: loading ? loadingId : idProp,
-    className: clsx(classes.root, className),
-    centerRipple: true,
-    focusRipple: !disableFocusRipple,
-    disabled: disabled || loading,
-    ref,
-    ...other,
-    ownerState,
-    children: [typeof loading === "boolean" && // use plain HTML span to minimize the runtime overhead
-    /* @__PURE__ */ jsxRuntimeExports.jsx("span", {
-      className: classes.loadingWrapper,
-      style: {
-        display: "contents"
-      },
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButtonLoadingIndicator, {
-        className: classes.loadingIndicator,
-        ownerState,
-        children: loading && loadingIndicator
-      })
-    }), children]
-  });
-});
-
-const SuccessOutlinedIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4C12.76,4 13.5,4.11 14.2, 4.31L15.77,2.74C14.61,2.26 13.34,2 12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0, 0 22,12M7.91,10.08L6.5,11.5L11,16L21,6L19.59,4.58L11,13.17L7.91,10.08Z"
-}));
-
-const ReportProblemOutlinedIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"
-}));
-
-const ErrorOutlineIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
-}));
-
-const InfoOutlinedIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20, 12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10, 10 0 0,0 12,2M11,17H13V11H11V17Z"
-}));
-
-const ClearIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-}));
-
-const useUtilityClasses$7 = (ownerState) => {
-  const {
-    variant,
-    color,
-    severity,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", `color${capitalize(color || severity)}`, `${variant}${capitalize(color || severity)}`, `${variant}`],
-    icon: ["icon"],
-    message: ["message"],
-    action: ["action"]
-  };
-  return composeClasses(slots, getAlertUtilityClass, classes);
-};
-const AlertRoot = styled(Paper, {
-  name: "MuiAlert",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[ownerState.variant], styles[`${ownerState.variant}${capitalize(ownerState.color || ownerState.severity)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => {
-  const getColor = theme.palette.mode === "light" ? darken : lighten;
-  const getBackgroundColor = theme.palette.mode === "light" ? lighten : darken;
-  return {
-    ...theme.typography.body2,
-    backgroundColor: "transparent",
-    display: "flex",
-    padding: "6px 16px",
-    variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color]) => ({
-      props: {
-        colorSeverity: color,
-        variant: "standard"
-      },
-      style: {
-        color: theme.vars ? theme.vars.palette.Alert[`${color}Color`] : getColor(theme.palette[color].light, 0.6),
-        backgroundColor: theme.vars ? theme.vars.palette.Alert[`${color}StandardBg`] : getBackgroundColor(theme.palette[color].light, 0.9),
-        [`& .${alertClasses.icon}`]: theme.vars ? {
-          color: theme.vars.palette.Alert[`${color}IconColor`]
-        } : {
-          color: theme.palette[color].main
-        }
-      }
-    })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color]) => ({
-      props: {
-        colorSeverity: color,
-        variant: "outlined"
-      },
-      style: {
-        color: theme.vars ? theme.vars.palette.Alert[`${color}Color`] : getColor(theme.palette[color].light, 0.6),
-        border: `1px solid ${(theme.vars || theme).palette[color].light}`,
-        [`& .${alertClasses.icon}`]: theme.vars ? {
-          color: theme.vars.palette.Alert[`${color}IconColor`]
-        } : {
-          color: theme.palette[color].main
-        }
-      }
-    })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color]) => ({
-      props: {
-        colorSeverity: color,
-        variant: "filled"
-      },
-      style: {
-        fontWeight: theme.typography.fontWeightMedium,
-        ...theme.vars ? {
-          color: theme.vars.palette.Alert[`${color}FilledColor`],
-          backgroundColor: theme.vars.palette.Alert[`${color}FilledBg`]
-        } : {
-          backgroundColor: theme.palette.mode === "dark" ? theme.palette[color].dark : theme.palette[color].main,
-          color: theme.palette.getContrastText(theme.palette[color].main)
-        }
-      }
-    }))]
-  };
-}));
-const AlertIcon = styled("div", {
-  name: "MuiAlert",
-  slot: "Icon"
-})({
-  marginRight: 12,
-  padding: "7px 0",
-  display: "flex",
-  fontSize: 22,
-  opacity: 0.9
-});
-const AlertMessage = styled("div", {
-  name: "MuiAlert",
-  slot: "Message"
-})({
-  padding: "8px 0",
-  minWidth: 0,
-  overflow: "auto"
-});
-const AlertAction = styled("div", {
-  name: "MuiAlert",
-  slot: "Action"
-})({
-  display: "flex",
-  alignItems: "flex-start",
-  padding: "4px 0 0 16px",
-  marginLeft: "auto",
-  marginRight: -8
-});
-const defaultIconMapping = {
-  success: /* @__PURE__ */ jsxRuntimeExports.jsx(SuccessOutlinedIcon, {
-    fontSize: "inherit"
-  }),
-  warning: /* @__PURE__ */ jsxRuntimeExports.jsx(ReportProblemOutlinedIcon, {
-    fontSize: "inherit"
-  }),
-  error: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorOutlineIcon, {
-    fontSize: "inherit"
-  }),
-  info: /* @__PURE__ */ jsxRuntimeExports.jsx(InfoOutlinedIcon, {
-    fontSize: "inherit"
-  })
-};
-const Alert = /* @__PURE__ */ reactExports.forwardRef(function Alert2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAlert"
-  });
-  const {
-    action,
-    children,
-    className,
-    closeText = "Close",
-    color,
-    components = {},
-    componentsProps = {},
-    icon,
-    iconMapping = defaultIconMapping,
-    onClose,
-    role = "alert",
-    severity = "success",
-    slotProps = {},
-    slots = {},
-    variant = "standard",
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    color,
-    severity,
-    variant,
-    colorSeverity: color || severity
-  };
-  const classes = useUtilityClasses$7(ownerState);
-  const externalForwardedProps = {
-    slots: {
-      closeButton: components.CloseButton,
-      closeIcon: components.CloseIcon,
-      ...slots
-    },
-    slotProps: {
-      ...componentsProps,
-      ...slotProps
-    }
-  };
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    ref,
-    shouldForwardComponentProp: true,
-    className: clsx(classes.root, className),
-    elementType: AlertRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    ownerState,
-    additionalProps: {
-      role,
-      elevation: 0
-    }
-  });
-  const [IconSlot, iconSlotProps] = useSlot("icon", {
-    className: classes.icon,
-    elementType: AlertIcon,
-    externalForwardedProps,
-    ownerState
-  });
-  const [MessageSlot, messageSlotProps] = useSlot("message", {
-    className: classes.message,
-    elementType: AlertMessage,
-    externalForwardedProps,
-    ownerState
-  });
-  const [ActionSlot, actionSlotProps] = useSlot("action", {
-    className: classes.action,
-    elementType: AlertAction,
-    externalForwardedProps,
-    ownerState
-  });
-  const [CloseButtonSlot, closeButtonProps] = useSlot("closeButton", {
-    elementType: IconButton,
-    externalForwardedProps,
-    ownerState
-  });
-  const [CloseIconSlot, closeIconProps] = useSlot("closeIcon", {
-    elementType: ClearIcon,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
-    ...rootSlotProps,
-    children: [icon !== false ? /* @__PURE__ */ jsxRuntimeExports.jsx(IconSlot, {
-      ...iconSlotProps,
-      children: icon || iconMapping[severity] || defaultIconMapping[severity]
-    }) : null, /* @__PURE__ */ jsxRuntimeExports.jsx(MessageSlot, {
-      ...messageSlotProps,
-      children
-    }), action != null ? /* @__PURE__ */ jsxRuntimeExports.jsx(ActionSlot, {
-      ...actionSlotProps,
-      children: action
-    }) : null, action == null && onClose ? /* @__PURE__ */ jsxRuntimeExports.jsx(ActionSlot, {
-      ...actionSlotProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CloseButtonSlot, {
-        size: "small",
-        "aria-label": closeText,
-        title: closeText,
-        color: "inherit",
-        onClick: onClose,
-        ...closeButtonProps,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CloseIconSlot, {
-          fontSize: "small",
-          ...closeIconProps
-        })
-      })
-    }) : null]
-  });
-});
-
-const CancelIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
-}));
-
-function getChipUtilityClass(slot) {
-  return generateUtilityClass('MuiChip', slot);
-}
-const chipClasses = generateUtilityClasses('MuiChip', ['root', 'sizeSmall', 'sizeMedium', 'colorDefault', 'colorError', 'colorInfo', 'colorPrimary', 'colorSecondary', 'colorSuccess', 'colorWarning', 'disabled', 'clickable', 'clickableColorPrimary', 'clickableColorSecondary', 'deletable', 'deletableColorPrimary', 'deletableColorSecondary', 'outlined', 'filled', 'outlinedPrimary', 'outlinedSecondary', 'filledPrimary', 'filledSecondary', 'avatar', 'avatarSmall', 'avatarMedium', 'avatarColorPrimary', 'avatarColorSecondary', 'icon', 'iconSmall', 'iconMedium', 'iconColorPrimary', 'iconColorSecondary', 'label', 'labelSmall', 'labelMedium', 'deleteIcon', 'deleteIconSmall', 'deleteIconMedium', 'deleteIconColorPrimary', 'deleteIconColorSecondary', 'deleteIconOutlinedColorPrimary', 'deleteIconOutlinedColorSecondary', 'deleteIconFilledColorPrimary', 'deleteIconFilledColorSecondary', 'focusVisible']);
-
-const useUtilityClasses$6 = (ownerState) => {
-  const {
-    classes,
-    disabled,
-    size,
-    color,
-    iconColor,
-    onDelete,
-    clickable,
-    variant
-  } = ownerState;
-  const slots = {
-    root: ["root", variant, disabled && "disabled", `size${capitalize(size)}`, `color${capitalize(color)}`, clickable && "clickable", clickable && `clickableColor${capitalize(color)}`, onDelete && "deletable", onDelete && `deletableColor${capitalize(color)}`, `${variant}${capitalize(color)}`],
-    label: ["label", `label${capitalize(size)}`],
-    avatar: ["avatar", `avatar${capitalize(size)}`, `avatarColor${capitalize(color)}`],
-    icon: ["icon", `icon${capitalize(size)}`, `iconColor${capitalize(iconColor)}`],
-    deleteIcon: ["deleteIcon", `deleteIcon${capitalize(size)}`, `deleteIconColor${capitalize(color)}`, `deleteIcon${capitalize(variant)}Color${capitalize(color)}`]
-  };
-  return composeClasses(slots, getChipUtilityClass, classes);
-};
-const ChipRoot = styled("div", {
-  name: "MuiChip",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    const {
-      color,
-      iconColor,
-      clickable,
-      onDelete,
-      size,
-      variant
-    } = ownerState;
-    return [{
-      [`& .${chipClasses.avatar}`]: styles.avatar
-    }, {
-      [`& .${chipClasses.avatar}`]: styles[`avatar${capitalize(size)}`]
-    }, {
-      [`& .${chipClasses.avatar}`]: styles[`avatarColor${capitalize(color)}`]
-    }, {
-      [`& .${chipClasses.icon}`]: styles.icon
-    }, {
-      [`& .${chipClasses.icon}`]: styles[`icon${capitalize(size)}`]
-    }, {
-      [`& .${chipClasses.icon}`]: styles[`iconColor${capitalize(iconColor)}`]
-    }, {
-      [`& .${chipClasses.deleteIcon}`]: styles.deleteIcon
-    }, {
-      [`& .${chipClasses.deleteIcon}`]: styles[`deleteIcon${capitalize(size)}`]
-    }, {
-      [`& .${chipClasses.deleteIcon}`]: styles[`deleteIconColor${capitalize(color)}`]
-    }, {
-      [`& .${chipClasses.deleteIcon}`]: styles[`deleteIcon${capitalize(variant)}Color${capitalize(color)}`]
-    }, styles.root, styles[`size${capitalize(size)}`], styles[`color${capitalize(color)}`], clickable && styles.clickable, clickable && color !== "default" && styles[`clickableColor${capitalize(color)})`], onDelete && styles.deletable, onDelete && color !== "default" && styles[`deletableColor${capitalize(color)}`], styles[variant], styles[`${variant}${capitalize(color)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => {
-  const textColor = theme.palette.mode === "light" ? theme.palette.grey[700] : theme.palette.grey[300];
-  return {
-    maxWidth: "100%",
-    fontFamily: theme.typography.fontFamily,
-    fontSize: theme.typography.pxToRem(13),
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 32,
-    lineHeight: 1.5,
-    color: (theme.vars || theme).palette.text.primary,
-    backgroundColor: (theme.vars || theme).palette.action.selected,
-    borderRadius: 32 / 2,
-    whiteSpace: "nowrap",
-    transition: theme.transitions.create(["background-color", "box-shadow"]),
-    // reset cursor explicitly in case ButtonBase is used
-    cursor: "unset",
-    // We disable the focus ring for mouse, touch and keyboard users.
-    outline: 0,
-    textDecoration: "none",
-    border: 0,
-    // Remove `button` border
-    padding: 0,
-    // Remove `button` padding
-    verticalAlign: "middle",
-    boxSizing: "border-box",
-    [`&.${chipClasses.disabled}`]: {
-      opacity: (theme.vars || theme).palette.action.disabledOpacity,
-      pointerEvents: "none"
-    },
-    [`& .${chipClasses.avatar}`]: {
-      marginLeft: 5,
-      marginRight: -6,
-      width: 24,
-      height: 24,
-      color: theme.vars ? theme.vars.palette.Chip.defaultAvatarColor : textColor,
-      fontSize: theme.typography.pxToRem(12)
-    },
-    [`& .${chipClasses.avatarColorPrimary}`]: {
-      color: (theme.vars || theme).palette.primary.contrastText,
-      backgroundColor: (theme.vars || theme).palette.primary.dark
-    },
-    [`& .${chipClasses.avatarColorSecondary}`]: {
-      color: (theme.vars || theme).palette.secondary.contrastText,
-      backgroundColor: (theme.vars || theme).palette.secondary.dark
-    },
-    [`& .${chipClasses.avatarSmall}`]: {
-      marginLeft: 4,
-      marginRight: -4,
-      width: 18,
-      height: 18,
-      fontSize: theme.typography.pxToRem(10)
-    },
-    [`& .${chipClasses.icon}`]: {
-      marginLeft: 5,
-      marginRight: -6
-    },
-    [`& .${chipClasses.deleteIcon}`]: {
-      WebkitTapHighlightColor: "transparent",
-      color: theme.vars ? `rgba(${theme.vars.palette.text.primaryChannel} / 0.26)` : alpha(theme.palette.text.primary, 0.26),
-      fontSize: 22,
-      cursor: "pointer",
-      margin: "0 5px 0 -6px",
-      "&:hover": {
-        color: theme.vars ? `rgba(${theme.vars.palette.text.primaryChannel} / 0.4)` : alpha(theme.palette.text.primary, 0.4)
-      }
-    },
-    variants: [{
-      props: {
-        size: "small"
-      },
-      style: {
-        height: 24,
-        [`& .${chipClasses.icon}`]: {
-          fontSize: 18,
-          marginLeft: 4,
-          marginRight: -4
-        },
-        [`& .${chipClasses.deleteIcon}`]: {
-          fontSize: 16,
-          marginRight: 4,
-          marginLeft: -4
-        }
-      }
-    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["contrastText"])).map(([color]) => {
-      return {
-        props: {
-          color
-        },
-        style: {
-          backgroundColor: (theme.vars || theme).palette[color].main,
-          color: (theme.vars || theme).palette[color].contrastText,
-          [`& .${chipClasses.deleteIcon}`]: {
-            color: theme.vars ? `rgba(${theme.vars.palette[color].contrastTextChannel} / 0.7)` : alpha(theme.palette[color].contrastText, 0.7),
-            "&:hover, &:active": {
-              color: (theme.vars || theme).palette[color].contrastText
-            }
-          }
-        }
-      };
-    }), {
-      props: (props) => props.iconColor === props.color,
-      style: {
-        [`& .${chipClasses.icon}`]: {
-          color: theme.vars ? theme.vars.palette.Chip.defaultIconColor : textColor
-        }
-      }
-    }, {
-      props: (props) => props.iconColor === props.color && props.color !== "default",
-      style: {
-        [`& .${chipClasses.icon}`]: {
-          color: "inherit"
-        }
-      }
-    }, {
-      props: {
-        onDelete: true
-      },
-      style: {
-        [`&.${chipClasses.focusVisible}`]: {
-          backgroundColor: theme.vars ? `rgba(${theme.vars.palette.action.selectedChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.focusOpacity}))` : alpha(theme.palette.action.selected, theme.palette.action.selectedOpacity + theme.palette.action.focusOpacity)
-        }
-      }
-    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color]) => {
-      return {
-        props: {
-          color,
-          onDelete: true
-        },
-        style: {
-          [`&.${chipClasses.focusVisible}`]: {
-            background: (theme.vars || theme).palette[color].dark
-          }
-        }
-      };
-    }), {
-      props: {
-        clickable: true
-      },
-      style: {
-        userSelect: "none",
-        WebkitTapHighlightColor: "transparent",
-        cursor: "pointer",
-        "&:hover": {
-          backgroundColor: theme.vars ? `rgba(${theme.vars.palette.action.selectedChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.hoverOpacity}))` : alpha(theme.palette.action.selected, theme.palette.action.selectedOpacity + theme.palette.action.hoverOpacity)
-        },
-        [`&.${chipClasses.focusVisible}`]: {
-          backgroundColor: theme.vars ? `rgba(${theme.vars.palette.action.selectedChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.focusOpacity}))` : alpha(theme.palette.action.selected, theme.palette.action.selectedOpacity + theme.palette.action.focusOpacity)
-        },
-        "&:active": {
-          boxShadow: (theme.vars || theme).shadows[1]
-        }
-      }
-    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color]) => ({
-      props: {
-        color,
-        clickable: true
-      },
-      style: {
-        [`&:hover, &.${chipClasses.focusVisible}`]: {
-          backgroundColor: (theme.vars || theme).palette[color].dark
-        }
-      }
-    })), {
-      props: {
-        variant: "outlined"
-      },
-      style: {
-        backgroundColor: "transparent",
-        border: theme.vars ? `1px solid ${theme.vars.palette.Chip.defaultBorder}` : `1px solid ${theme.palette.mode === "light" ? theme.palette.grey[400] : theme.palette.grey[700]}`,
-        [`&.${chipClasses.clickable}:hover`]: {
-          backgroundColor: (theme.vars || theme).palette.action.hover
-        },
-        [`&.${chipClasses.focusVisible}`]: {
-          backgroundColor: (theme.vars || theme).palette.action.focus
-        },
-        [`& .${chipClasses.avatar}`]: {
-          marginLeft: 4
-        },
-        [`& .${chipClasses.avatarSmall}`]: {
-          marginLeft: 2
-        },
-        [`& .${chipClasses.icon}`]: {
-          marginLeft: 4
-        },
-        [`& .${chipClasses.iconSmall}`]: {
-          marginLeft: 2
-        },
-        [`& .${chipClasses.deleteIcon}`]: {
-          marginRight: 5
-        },
-        [`& .${chipClasses.deleteIconSmall}`]: {
-          marginRight: 3
-        }
-      }
-    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
-      props: {
-        variant: "outlined",
-        color
-      },
-      style: {
-        color: (theme.vars || theme).palette[color].main,
-        border: `1px solid ${theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / 0.7)` : alpha(theme.palette[color].main, 0.7)}`,
-        [`&.${chipClasses.clickable}:hover`]: {
-          backgroundColor: theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha(theme.palette[color].main, theme.palette.action.hoverOpacity)
-        },
-        [`&.${chipClasses.focusVisible}`]: {
-          backgroundColor: theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / ${theme.vars.palette.action.focusOpacity})` : alpha(theme.palette[color].main, theme.palette.action.focusOpacity)
-        },
-        [`& .${chipClasses.deleteIcon}`]: {
-          color: theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / 0.7)` : alpha(theme.palette[color].main, 0.7),
-          "&:hover, &:active": {
-            color: (theme.vars || theme).palette[color].main
-          }
-        }
-      }
-    }))]
-  };
-}));
-const ChipLabel = styled("span", {
-  name: "MuiChip",
-  slot: "Label",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    const {
-      size
-    } = ownerState;
-    return [styles.label, styles[`label${capitalize(size)}`]];
-  }
-})({
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  paddingLeft: 12,
-  paddingRight: 12,
-  whiteSpace: "nowrap",
-  variants: [{
-    props: {
-      variant: "outlined"
-    },
-    style: {
-      paddingLeft: 11,
-      paddingRight: 11
-    }
-  }, {
-    props: {
-      size: "small"
-    },
-    style: {
-      paddingLeft: 8,
-      paddingRight: 8
-    }
-  }, {
-    props: {
-      size: "small",
-      variant: "outlined"
-    },
-    style: {
-      paddingLeft: 7,
-      paddingRight: 7
-    }
-  }]
-});
-function isDeleteKeyboardEvent(keyboardEvent) {
-  return keyboardEvent.key === "Backspace" || keyboardEvent.key === "Delete";
-}
-const Chip = /* @__PURE__ */ reactExports.forwardRef(function Chip2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiChip"
-  });
-  const {
-    avatar: avatarProp,
-    className,
-    clickable: clickableProp,
-    color = "default",
-    component: ComponentProp,
-    deleteIcon: deleteIconProp,
-    disabled = false,
-    icon: iconProp,
-    label,
-    onClick,
-    onDelete,
-    onKeyDown,
-    onKeyUp,
-    size = "medium",
-    variant = "filled",
-    tabIndex,
-    skipFocusWhenDisabled = false,
-    // TODO v6: Rename to `focusableWhenDisabled`.
-    slots = {},
-    slotProps = {},
-    ...other
-  } = props;
-  const chipRef = reactExports.useRef(null);
-  const handleRef = useForkRef(chipRef, ref);
-  const handleDeleteIconClick = (event) => {
-    event.stopPropagation();
-    if (onDelete) {
-      onDelete(event);
-    }
-  };
-  const handleKeyDown = (event) => {
-    if (event.currentTarget === event.target && isDeleteKeyboardEvent(event)) {
-      event.preventDefault();
-    }
-    if (onKeyDown) {
-      onKeyDown(event);
-    }
-  };
-  const handleKeyUp = (event) => {
-    if (event.currentTarget === event.target) {
-      if (onDelete && isDeleteKeyboardEvent(event)) {
-        onDelete(event);
-      }
-    }
-    if (onKeyUp) {
-      onKeyUp(event);
-    }
-  };
-  const clickable = clickableProp !== false && onClick ? true : clickableProp;
-  const component = clickable || onDelete ? ButtonBase : ComponentProp || "div";
-  const ownerState = {
-    ...props,
-    component,
-    disabled,
-    size,
-    color,
-    iconColor: /* @__PURE__ */ reactExports.isValidElement(iconProp) ? iconProp.props.color || color : color,
-    onDelete: !!onDelete,
-    clickable,
-    variant
-  };
-  const classes = useUtilityClasses$6(ownerState);
-  const moreProps = component === ButtonBase ? {
-    component: ComponentProp || "div",
-    focusVisibleClassName: classes.focusVisible,
-    ...onDelete && {
-      disableRipple: true
-    }
-  } : {};
-  let deleteIcon = null;
-  if (onDelete) {
-    deleteIcon = deleteIconProp && /* @__PURE__ */ reactExports.isValidElement(deleteIconProp) ? /* @__PURE__ */ reactExports.cloneElement(deleteIconProp, {
-      className: clsx(deleteIconProp.props.className, classes.deleteIcon),
-      onClick: handleDeleteIconClick
-    }) : /* @__PURE__ */ jsxRuntimeExports.jsx(CancelIcon, {
-      className: classes.deleteIcon,
-      onClick: handleDeleteIconClick
-    });
-  }
-  let avatar = null;
-  if (avatarProp && /* @__PURE__ */ reactExports.isValidElement(avatarProp)) {
-    avatar = /* @__PURE__ */ reactExports.cloneElement(avatarProp, {
-      className: clsx(classes.avatar, avatarProp.props.className)
-    });
-  }
-  let icon = null;
-  if (iconProp && /* @__PURE__ */ reactExports.isValidElement(iconProp)) {
-    icon = /* @__PURE__ */ reactExports.cloneElement(iconProp, {
-      className: clsx(classes.icon, iconProp.props.className)
-    });
-  }
-  const externalForwardedProps = {
-    slots,
-    slotProps
-  };
-  const [RootSlot, rootProps] = useSlot("root", {
-    elementType: ChipRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    ownerState,
-    // The `component` prop is preserved because `Chip` relies on it for internal logic. If `shouldForwardComponentProp` were `false`, `useSlot` would remove the `component` prop, potentially breaking the component's behavior.
-    shouldForwardComponentProp: true,
-    ref: handleRef,
-    className: clsx(classes.root, className),
-    additionalProps: {
-      disabled: clickable && disabled ? true : void 0,
-      tabIndex: skipFocusWhenDisabled && disabled ? -1 : tabIndex,
-      ...moreProps
-    },
-    getSlotProps: (handlers) => ({
-      ...handlers,
-      onClick: (event) => {
-        handlers.onClick?.(event);
-        onClick?.(event);
-      },
-      onKeyDown: (event) => {
-        handlers.onKeyDown?.(event);
-        handleKeyDown?.(event);
-      },
-      onKeyUp: (event) => {
-        handlers.onKeyUp?.(event);
-        handleKeyUp?.(event);
-      }
-    })
-  });
-  const [LabelSlot, labelProps] = useSlot("label", {
-    elementType: ChipLabel,
-    externalForwardedProps,
-    ownerState,
-    className: classes.label
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
-    as: component,
-    ...rootProps,
-    children: [avatar || icon, /* @__PURE__ */ jsxRuntimeExports.jsx(LabelSlot, {
-      ...labelProps,
-      children: label
-    }), deleteIcon]
-  });
-});
-
-const Person = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
-}));
-
-function getAvatarUtilityClass(slot) {
-  return generateUtilityClass('MuiAvatar', slot);
-}
-generateUtilityClasses('MuiAvatar', ['root', 'colorDefault', 'circular', 'rounded', 'square', 'img', 'fallback']);
-
-const useUtilityClasses$5 = (ownerState) => {
-  const {
-    classes,
-    variant,
-    colorDefault
-  } = ownerState;
-  const slots = {
-    root: ["root", variant, colorDefault && "colorDefault"],
-    img: ["img"],
-    fallback: ["fallback"]
-  };
-  return composeClasses(slots, getAvatarUtilityClass, classes);
-};
-const AvatarRoot = styled("div", {
-  name: "MuiAvatar",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[ownerState.variant], ownerState.colorDefault && styles.colorDefault];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  position: "relative",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  flexShrink: 0,
-  width: 40,
-  height: 40,
-  fontFamily: theme.typography.fontFamily,
-  fontSize: theme.typography.pxToRem(20),
-  lineHeight: 1,
-  borderRadius: "50%",
-  overflow: "hidden",
-  userSelect: "none",
-  variants: [{
-    props: {
-      variant: "rounded"
-    },
-    style: {
-      borderRadius: (theme.vars || theme).shape.borderRadius
-    }
-  }, {
-    props: {
-      variant: "square"
-    },
-    style: {
-      borderRadius: 0
-    }
-  }, {
-    props: {
-      colorDefault: true
-    },
-    style: {
-      color: (theme.vars || theme).palette.background.default,
-      ...theme.vars ? {
-        backgroundColor: theme.vars.palette.Avatar.defaultBg
-      } : {
-        backgroundColor: theme.palette.grey[400],
-        ...theme.applyStyles("dark", {
-          backgroundColor: theme.palette.grey[600]
-        })
-      }
-    }
-  }]
-})));
-const AvatarImg = styled("img", {
-  name: "MuiAvatar",
-  slot: "Img"
-})({
-  width: "100%",
-  height: "100%",
-  textAlign: "center",
-  // Handle non-square image.
-  objectFit: "cover",
-  // Hide alt text.
-  color: "transparent",
-  // Hide the image broken icon, only works on Chrome.
-  textIndent: 1e4
-});
-const AvatarFallback = styled(Person, {
-  name: "MuiAvatar",
-  slot: "Fallback"
-})({
-  width: "75%",
-  height: "75%"
-});
-function useLoaded({
-  crossOrigin,
-  referrerPolicy,
-  src,
-  srcSet
-}) {
-  const [loaded, setLoaded] = reactExports.useState(false);
-  reactExports.useEffect(() => {
-    if (!src && !srcSet) {
-      return void 0;
-    }
-    setLoaded(false);
-    let active = true;
-    const image = new Image();
-    image.onload = () => {
-      if (!active) {
-        return;
-      }
-      setLoaded("loaded");
-    };
-    image.onerror = () => {
-      if (!active) {
-        return;
-      }
-      setLoaded("error");
-    };
-    image.crossOrigin = crossOrigin;
-    image.referrerPolicy = referrerPolicy;
-    image.src = src;
-    if (srcSet) {
-      image.srcset = srcSet;
-    }
-    return () => {
-      active = false;
-    };
-  }, [crossOrigin, referrerPolicy, src, srcSet]);
-  return loaded;
-}
-const Avatar = /* @__PURE__ */ reactExports.forwardRef(function Avatar2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAvatar"
-  });
-  const {
-    alt,
-    children: childrenProp,
-    className,
-    component = "div",
-    slots = {},
-    slotProps = {},
-    imgProps,
-    sizes,
-    src,
-    srcSet,
-    variant = "circular",
-    ...other
-  } = props;
-  let children = null;
-  const ownerState = {
-    ...props,
-    component,
-    variant
-  };
-  const loaded = useLoaded({
-    ...imgProps,
-    ...typeof slotProps.img === "function" ? slotProps.img(ownerState) : slotProps.img,
-    src,
-    srcSet
-  });
-  const hasImg = src || srcSet;
-  const hasImgNotFailing = hasImg && loaded !== "error";
-  ownerState.colorDefault = !hasImgNotFailing;
-  delete ownerState.ownerState;
-  const classes = useUtilityClasses$5(ownerState);
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    ref,
-    className: clsx(classes.root, className),
-    elementType: AvatarRoot,
-    externalForwardedProps: {
-      slots,
-      slotProps,
-      component,
-      ...other
-    },
-    ownerState
-  });
-  const [ImgSlot, imgSlotProps] = useSlot("img", {
-    className: classes.img,
-    elementType: AvatarImg,
-    externalForwardedProps: {
-      slots,
-      slotProps: {
-        img: {
-          ...imgProps,
-          ...slotProps.img
-        }
-      }
-    },
-    additionalProps: {
-      alt,
-      src,
-      srcSet,
-      sizes
-    },
-    ownerState
-  });
-  const [FallbackSlot, fallbackSlotProps] = useSlot("fallback", {
-    className: classes.fallback,
-    elementType: AvatarFallback,
-    externalForwardedProps: {
-      slots,
-      slotProps
-    },
-    shouldForwardComponentProp: true,
-    ownerState
-  });
-  if (hasImgNotFailing) {
-    children = /* @__PURE__ */ jsxRuntimeExports.jsx(ImgSlot, {
-      ...imgSlotProps
-    });
-  } else if (!!childrenProp || childrenProp === 0) {
-    children = childrenProp;
-  } else if (hasImg && alt) {
-    children = alt[0];
-  } else {
-    children = /* @__PURE__ */ jsxRuntimeExports.jsx(FallbackSlot, {
-      ...fallbackSlotProps
-    });
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(RootSlot, {
-    ...rootSlotProps,
-    children
-  });
-});
-
-function mapEventPropToEvent(eventProp) {
-  return eventProp.substring(2).toLowerCase();
-}
-function clickedRootScrollbar(event, doc) {
-  return doc.documentElement.clientWidth < event.clientX || doc.documentElement.clientHeight < event.clientY;
-}
-function ClickAwayListener(props) {
-  const {
-    children,
-    disableReactTree = false,
-    mouseEvent = "onClick",
-    onClickAway,
-    touchEvent = "onTouchEnd"
-  } = props;
-  const movedRef = reactExports.useRef(false);
-  const nodeRef = reactExports.useRef(null);
-  const activatedRef = reactExports.useRef(false);
-  const syntheticEventRef = reactExports.useRef(false);
-  reactExports.useEffect(() => {
-    setTimeout(() => {
-      activatedRef.current = true;
-    }, 0);
-    return () => {
-      activatedRef.current = false;
-    };
-  }, []);
-  const handleRef = useForkRef(getReactElementRef(children), nodeRef);
-  const handleClickAway = useEventCallback((event) => {
-    const insideReactTree = syntheticEventRef.current;
-    syntheticEventRef.current = false;
-    const doc = ownerDocument(nodeRef.current);
-    if (!activatedRef.current || !nodeRef.current || "clientX" in event && clickedRootScrollbar(event, doc)) {
-      return;
-    }
-    if (movedRef.current) {
-      movedRef.current = false;
-      return;
-    }
-    let insideDOM;
-    if (event.composedPath) {
-      insideDOM = event.composedPath().includes(nodeRef.current);
-    } else {
-      insideDOM = !doc.documentElement.contains(
-        // @ts-expect-error returns `false` as intended when not dispatched from a Node
-        event.target
-      ) || nodeRef.current.contains(
-        // @ts-expect-error returns `false` as intended when not dispatched from a Node
-        event.target
-      );
-    }
-    if (!insideDOM && (disableReactTree || !insideReactTree)) {
-      onClickAway(event);
-    }
-  });
-  const createHandleSynthetic = (handlerName) => (event) => {
-    syntheticEventRef.current = true;
-    const childrenPropsHandler = children.props[handlerName];
-    if (childrenPropsHandler) {
-      childrenPropsHandler(event);
-    }
-  };
-  const childrenProps = {
-    ref: handleRef
-  };
-  if (touchEvent !== false) {
-    childrenProps[touchEvent] = createHandleSynthetic(touchEvent);
-  }
-  reactExports.useEffect(() => {
-    if (touchEvent !== false) {
-      const mappedTouchEvent = mapEventPropToEvent(touchEvent);
-      const doc = ownerDocument(nodeRef.current);
-      const handleTouchMove = () => {
-        movedRef.current = true;
-      };
-      doc.addEventListener(mappedTouchEvent, handleClickAway);
-      doc.addEventListener("touchmove", handleTouchMove);
-      return () => {
-        doc.removeEventListener(mappedTouchEvent, handleClickAway);
-        doc.removeEventListener("touchmove", handleTouchMove);
-      };
-    }
-    return void 0;
-  }, [handleClickAway, touchEvent]);
-  if (mouseEvent !== false) {
-    childrenProps[mouseEvent] = createHandleSynthetic(mouseEvent);
-  }
-  reactExports.useEffect(() => {
-    if (mouseEvent !== false) {
-      const mappedMouseEvent = mapEventPropToEvent(mouseEvent);
-      const doc = ownerDocument(nodeRef.current);
-      doc.addEventListener(mappedMouseEvent, handleClickAway);
-      return () => {
-        doc.removeEventListener(mappedMouseEvent, handleClickAway);
-      };
-    }
-    return void 0;
-  }, [handleClickAway, mouseEvent]);
-  return /* @__PURE__ */ reactExports.cloneElement(children, childrenProps);
-}
-
-const Container = createContainer({
-  createStyledComponent: styled("div", {
-    name: "MuiContainer",
-    slot: "Root",
-    overridesResolver: (props, styles) => {
-      const {
-        ownerState
-      } = props;
-      return [styles.root, styles[`maxWidth${capitalize(String(ownerState.maxWidth))}`], ownerState.fixed && styles.fixed, ownerState.disableGutters && styles.disableGutters];
-    }
-  }),
-  useThemeProps: (inProps) => useDefaultProps({
-    props: inProps,
-    name: "MuiContainer"
-  })
-});
-
-const dividerClasses = generateUtilityClasses('MuiDivider', ['root', 'absolute', 'fullWidth', 'inset', 'middle', 'flexItem', 'light', 'vertical', 'withChildren', 'withChildrenVertical', 'textAlignRight', 'textAlignLeft', 'wrapper', 'wrapperVertical']);
-
-function getFabUtilityClass(slot) {
-  return generateUtilityClass('MuiFab', slot);
-}
-const fabClasses = generateUtilityClasses('MuiFab', ['root', 'primary', 'secondary', 'extended', 'circular', 'focusVisible', 'disabled', 'colorInherit', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'info', 'error', 'warning', 'success']);
-
-const useUtilityClasses$4 = (ownerState) => {
-  const {
-    color,
-    variant,
-    classes,
-    size
-  } = ownerState;
-  const slots = {
-    root: ["root", variant, `size${capitalize(size)}`, color === "inherit" ? "colorInherit" : color]
-  };
-  const composedClasses = composeClasses(slots, getFabUtilityClass, classes);
-  return {
-    ...classes,
-    // forward the focused, disabled, etc. classes to the ButtonBase
-    ...composedClasses
-  };
-};
-const FabRoot = styled(ButtonBase, {
-  name: "MuiFab",
-  slot: "Root",
-  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[ownerState.variant], styles[`size${capitalize(ownerState.size)}`], ownerState.color === "inherit" && styles.colorInherit, styles[capitalize(ownerState.size)], styles[ownerState.color]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  ...theme.typography.button,
-  minHeight: 36,
-  transition: theme.transitions.create(["background-color", "box-shadow", "border-color"], {
-    duration: theme.transitions.duration.short
-  }),
-  borderRadius: "50%",
-  padding: 0,
-  minWidth: 0,
-  width: 56,
-  height: 56,
-  zIndex: (theme.vars || theme).zIndex.fab,
-  boxShadow: (theme.vars || theme).shadows[6],
-  "&:active": {
-    boxShadow: (theme.vars || theme).shadows[12]
-  },
-  color: theme.vars ? theme.vars.palette.grey[900] : theme.palette.getContrastText?.(theme.palette.grey[300]),
-  backgroundColor: (theme.vars || theme).palette.grey[300],
-  "&:hover": {
-    backgroundColor: (theme.vars || theme).palette.grey.A100,
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: (theme.vars || theme).palette.grey[300]
-    },
-    textDecoration: "none"
-  },
-  [`&.${fabClasses.focusVisible}`]: {
-    boxShadow: (theme.vars || theme).shadows[6]
-  },
-  variants: [{
-    props: {
-      size: "small"
-    },
-    style: {
-      width: 40,
-      height: 40
-    }
-  }, {
-    props: {
-      size: "medium"
-    },
-    style: {
-      width: 48,
-      height: 48
-    }
-  }, {
-    props: {
-      variant: "extended"
-    },
-    style: {
-      borderRadius: 48 / 2,
-      padding: "0 16px",
-      width: "auto",
-      minHeight: "auto",
-      minWidth: 48,
-      height: 48
-    }
-  }, {
-    props: {
-      variant: "extended",
-      size: "small"
-    },
-    style: {
-      width: "auto",
-      padding: "0 8px",
-      borderRadius: 34 / 2,
-      minWidth: 34,
-      height: 34
-    }
-  }, {
-    props: {
-      variant: "extended",
-      size: "medium"
-    },
-    style: {
-      width: "auto",
-      padding: "0 16px",
-      borderRadius: 40 / 2,
-      minWidth: 40,
-      height: 40
-    }
-  }, {
-    props: {
-      color: "inherit"
-    },
-    style: {
-      color: "inherit"
-    }
-  }]
-})), memoTheme(({
-  theme
-}) => ({
-  variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark", "contrastText"])).map(([color]) => ({
-    props: {
-      color
-    },
-    style: {
-      color: (theme.vars || theme).palette[color].contrastText,
-      backgroundColor: (theme.vars || theme).palette[color].main,
-      "&:hover": {
-        backgroundColor: (theme.vars || theme).palette[color].dark,
-        // Reset on touch devices, it doesn't add specificity
-        "@media (hover: none)": {
-          backgroundColor: (theme.vars || theme).palette[color].main
-        }
-      }
-    }
-  }))]
-})), memoTheme(({
-  theme
-}) => ({
-  [`&.${fabClasses.disabled}`]: {
-    color: (theme.vars || theme).palette.action.disabled,
-    boxShadow: (theme.vars || theme).shadows[0],
-    backgroundColor: (theme.vars || theme).palette.action.disabledBackground
-  }
-})));
-const Fab = /* @__PURE__ */ reactExports.forwardRef(function Fab2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiFab"
-  });
-  const {
-    children,
-    className,
-    color = "default",
-    component = "button",
-    disabled = false,
-    disableFocusRipple = false,
-    focusVisibleClassName,
-    size = "large",
-    variant = "circular",
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    color,
-    component,
-    disabled,
-    disableFocusRipple,
-    size,
-    variant
-  };
-  const classes = useUtilityClasses$4(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(FabRoot, {
-    className: clsx(classes.root, className),
-    component,
-    disabled,
-    focusRipple: !disableFocusRipple,
-    focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
-    ownerState,
-    ref,
-    ...other,
-    classes,
-    children
-  });
-});
-
-const Grid = createGrid({
-  createStyledComponent: styled("div", {
-    name: "MuiGrid",
-    slot: "Root",
-    overridesResolver: (props, styles) => {
-      const {
-        ownerState
-      } = props;
-      return [styles.root, ownerState.container && styles.container];
-    }
-  }),
-  componentName: "MuiGrid",
-  useThemeProps: (inProps) => useDefaultProps({
-    props: inProps,
-    name: "MuiGrid"
-  }),
-  useTheme
-});
-
-function getInputAdornmentUtilityClass(slot) {
-  return generateUtilityClass('MuiInputAdornment', slot);
-}
-const inputAdornmentClasses = generateUtilityClasses('MuiInputAdornment', ['root', 'filled', 'standard', 'outlined', 'positionStart', 'positionEnd', 'disablePointerEvents', 'hiddenLabel', 'sizeSmall']);
-
-var _span;
-const overridesResolver$1 = (props, styles) => {
-  const {
-    ownerState
-  } = props;
-  return [styles.root, styles[`position${capitalize(ownerState.position)}`], ownerState.disablePointerEvents === true && styles.disablePointerEvents, styles[ownerState.variant]];
-};
-const useUtilityClasses$3 = (ownerState) => {
-  const {
-    classes,
-    disablePointerEvents,
-    hiddenLabel,
-    position,
-    size,
-    variant
-  } = ownerState;
-  const slots = {
-    root: ["root", disablePointerEvents && "disablePointerEvents", position && `position${capitalize(position)}`, variant, hiddenLabel && "hiddenLabel", size && `size${capitalize(size)}`]
-  };
-  return composeClasses(slots, getInputAdornmentUtilityClass, classes);
-};
-const InputAdornmentRoot = styled("div", {
-  name: "MuiInputAdornment",
-  slot: "Root",
-  overridesResolver: overridesResolver$1
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  maxHeight: "2em",
-  alignItems: "center",
-  whiteSpace: "nowrap",
-  color: (theme.vars || theme).palette.action.active,
-  variants: [{
-    props: {
-      variant: "filled"
-    },
-    style: {
-      [`&.${inputAdornmentClasses.positionStart}&:not(.${inputAdornmentClasses.hiddenLabel})`]: {
-        marginTop: 16
-      }
-    }
-  }, {
-    props: {
-      position: "start"
-    },
-    style: {
-      marginRight: 8
-    }
-  }, {
-    props: {
-      position: "end"
-    },
-    style: {
-      marginLeft: 8
-    }
-  }, {
-    props: {
-      disablePointerEvents: true
-    },
-    style: {
-      pointerEvents: "none"
-    }
-  }]
-})));
-const InputAdornment = /* @__PURE__ */ reactExports.forwardRef(function InputAdornment2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiInputAdornment"
-  });
-  const {
-    children,
-    className,
-    component = "div",
-    disablePointerEvents = false,
-    disableTypography = false,
-    position,
-    variant: variantProp,
-    ...other
-  } = props;
-  const muiFormControl = useFormControl() || {};
-  let variant = variantProp;
-  if (variantProp && muiFormControl.variant) ;
-  if (muiFormControl && !variant) {
-    variant = muiFormControl.variant;
-  }
-  const ownerState = {
-    ...props,
-    hiddenLabel: muiFormControl.hiddenLabel,
-    size: muiFormControl.size,
-    disablePointerEvents,
-    position,
-    variant
-  };
-  const classes = useUtilityClasses$3(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(FormControlContext.Provider, {
-    value: null,
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(InputAdornmentRoot, {
-      as: component,
-      ownerState,
-      className: clsx(classes.root, className),
-      ref,
-      ...other,
-      children: typeof children === "string" && !disableTypography ? /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, {
-        color: "textSecondary",
-        children
-      }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(reactExports.Fragment, {
-        children: [position === "start" ? (
-          /* notranslate needed while Google Translate will not fix zero-width space issue */
-          _span || (_span = /* @__PURE__ */ jsxRuntimeExports.jsx("span", {
-            className: "notranslate",
-            "aria-hidden": true,
-            children: "​"
-          }))
-        ) : null, children]
-      })
-    })
-  });
-});
-
-const listItemIconClasses = generateUtilityClasses('MuiListItemIcon', ['root', 'alignItemsFlexStart']);
-
-const listItemTextClasses = generateUtilityClasses('MuiListItemText', ['root', 'multiline', 'dense', 'inset', 'primary', 'secondary']);
-
-function getMenuItemUtilityClass(slot) {
-  return generateUtilityClass('MuiMenuItem', slot);
-}
-const menuItemClasses = generateUtilityClasses('MuiMenuItem', ['root', 'focusVisible', 'dense', 'disabled', 'divider', 'gutters', 'selected']);
-
-const overridesResolver = (props, styles) => {
-  const {
-    ownerState
-  } = props;
-  return [styles.root, ownerState.dense && styles.dense, ownerState.divider && styles.divider, !ownerState.disableGutters && styles.gutters];
-};
-const useUtilityClasses$2 = (ownerState) => {
-  const {
-    disabled,
-    dense,
-    divider,
-    disableGutters,
-    selected,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", dense && "dense", disabled && "disabled", !disableGutters && "gutters", divider && "divider", selected && "selected"]
-  };
-  const composedClasses = composeClasses(slots, getMenuItemUtilityClass, classes);
-  return {
-    ...classes,
-    ...composedClasses
-  };
-};
-const MenuItemRoot = styled(ButtonBase, {
-  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
-  name: "MuiMenuItem",
-  slot: "Root",
-  overridesResolver
-})(memoTheme(({
-  theme
-}) => ({
-  ...theme.typography.body1,
-  display: "flex",
-  justifyContent: "flex-start",
-  alignItems: "center",
-  position: "relative",
-  textDecoration: "none",
-  minHeight: 48,
-  paddingTop: 6,
-  paddingBottom: 6,
-  boxSizing: "border-box",
-  whiteSpace: "nowrap",
-  "&:hover": {
-    textDecoration: "none",
-    backgroundColor: (theme.vars || theme).palette.action.hover,
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: "transparent"
-    }
-  },
-  [`&.${menuItemClasses.selected}`]: {
-    backgroundColor: theme.vars ? `rgba(${theme.vars.palette.primary.mainChannel} / ${theme.vars.palette.action.selectedOpacity})` : alpha(theme.palette.primary.main, theme.palette.action.selectedOpacity),
-    [`&.${menuItemClasses.focusVisible}`]: {
-      backgroundColor: theme.vars ? `rgba(${theme.vars.palette.primary.mainChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.focusOpacity}))` : alpha(theme.palette.primary.main, theme.palette.action.selectedOpacity + theme.palette.action.focusOpacity)
-    }
-  },
-  [`&.${menuItemClasses.selected}:hover`]: {
-    backgroundColor: theme.vars ? `rgba(${theme.vars.palette.primary.mainChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.hoverOpacity}))` : alpha(theme.palette.primary.main, theme.palette.action.selectedOpacity + theme.palette.action.hoverOpacity),
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: theme.vars ? `rgba(${theme.vars.palette.primary.mainChannel} / ${theme.vars.palette.action.selectedOpacity})` : alpha(theme.palette.primary.main, theme.palette.action.selectedOpacity)
-    }
-  },
-  [`&.${menuItemClasses.focusVisible}`]: {
-    backgroundColor: (theme.vars || theme).palette.action.focus
-  },
-  [`&.${menuItemClasses.disabled}`]: {
-    opacity: (theme.vars || theme).palette.action.disabledOpacity
-  },
-  [`& + .${dividerClasses.root}`]: {
-    marginTop: theme.spacing(1),
-    marginBottom: theme.spacing(1)
-  },
-  [`& + .${dividerClasses.inset}`]: {
-    marginLeft: 52
-  },
-  [`& .${listItemTextClasses.root}`]: {
-    marginTop: 0,
-    marginBottom: 0
-  },
-  [`& .${listItemTextClasses.inset}`]: {
-    paddingLeft: 36
-  },
-  [`& .${listItemIconClasses.root}`]: {
-    minWidth: 36
-  },
-  variants: [{
-    props: ({
-      ownerState
-    }) => !ownerState.disableGutters,
-    style: {
-      paddingLeft: 16,
-      paddingRight: 16
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.divider,
-    style: {
-      borderBottom: `1px solid ${(theme.vars || theme).palette.divider}`,
-      backgroundClip: "padding-box"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !ownerState.dense,
-    style: {
-      [theme.breakpoints.up("sm")]: {
-        minHeight: "auto"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.dense,
-    style: {
-      minHeight: 32,
-      // https://m2.material.io/components/menus#specs > Dense
-      paddingTop: 4,
-      paddingBottom: 4,
-      ...theme.typography.body2,
-      [`& .${listItemIconClasses.root} svg`]: {
-        fontSize: "1.25rem"
-      }
-    }
-  }]
-})));
-const MenuItem = /* @__PURE__ */ reactExports.forwardRef(function MenuItem2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiMenuItem"
-  });
-  const {
-    autoFocus = false,
-    component = "li",
-    dense = false,
-    divider = false,
-    disableGutters = false,
-    focusVisibleClassName,
-    role = "menuitem",
-    tabIndex: tabIndexProp,
-    className,
-    ...other
-  } = props;
-  const context = reactExports.useContext(ListContext);
-  const childContext = reactExports.useMemo(() => ({
-    dense: dense || context.dense || false,
-    disableGutters
-  }), [context.dense, dense, disableGutters]);
-  const menuItemRef = reactExports.useRef(null);
-  useEnhancedEffect(() => {
-    if (autoFocus) {
-      if (menuItemRef.current) {
-        menuItemRef.current.focus();
-      }
-    }
-  }, [autoFocus]);
-  const ownerState = {
-    ...props,
-    dense: childContext.dense,
-    divider,
-    disableGutters
-  };
-  const classes = useUtilityClasses$2(props);
-  const handleRef = useForkRef(menuItemRef, ref);
-  let tabIndex;
-  if (!props.disabled) {
-    tabIndex = tabIndexProp !== void 0 ? tabIndexProp : -1;
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(ListContext.Provider, {
-    value: childContext,
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(MenuItemRoot, {
-      ref: handleRef,
-      role,
-      tabIndex,
-      component,
-      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
-      className: clsx(classes.root, className),
-      ...other,
-      ownerState,
-      classes
-    })
-  });
-});
-
-function useSnackbar(parameters = {}) {
-  const {
-    autoHideDuration = null,
-    disableWindowBlurListener = false,
-    onClose,
-    open,
-    resumeHideDuration
-  } = parameters;
-  const timerAutoHide = useTimeout();
-  reactExports.useEffect(() => {
-    if (!open) {
-      return undefined;
-    }
-
-    /**
-     * @param {KeyboardEvent} nativeEvent
-     */
-    function handleKeyDown(nativeEvent) {
-      if (!nativeEvent.defaultPrevented) {
-        if (nativeEvent.key === 'Escape') {
-          // not calling `preventDefault` since we don't know if people may ignore this event e.g. a permanently open snackbar
-          onClose?.(nativeEvent, 'escapeKeyDown');
-        }
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open, onClose]);
-  const handleClose = useEventCallback((event, reason) => {
-    onClose?.(event, reason);
-  });
-  const setAutoHideTimer = useEventCallback(autoHideDurationParam => {
-    if (!onClose || autoHideDurationParam == null) {
-      return;
-    }
-    timerAutoHide.start(autoHideDurationParam, () => {
-      handleClose(null, 'timeout');
-    });
-  });
-  reactExports.useEffect(() => {
-    if (open) {
-      setAutoHideTimer(autoHideDuration);
-    }
-    return timerAutoHide.clear;
-  }, [open, autoHideDuration, setAutoHideTimer, timerAutoHide]);
-  const handleClickAway = event => {
-    onClose?.(event, 'clickaway');
-  };
-
-  // Pause the timer when the user is interacting with the Snackbar
-  // or when the user hide the window.
-  const handlePause = timerAutoHide.clear;
-
-  // Restart the timer when the user is no longer interacting with the Snackbar
-  // or when the window is shown back.
-  const handleResume = reactExports.useCallback(() => {
-    if (autoHideDuration != null) {
-      setAutoHideTimer(resumeHideDuration != null ? resumeHideDuration : autoHideDuration * 0.5);
-    }
-  }, [autoHideDuration, resumeHideDuration, setAutoHideTimer]);
-  const createHandleBlur = otherHandlers => event => {
-    const onBlurCallback = otherHandlers.onBlur;
-    onBlurCallback?.(event);
-    handleResume();
-  };
-  const createHandleFocus = otherHandlers => event => {
-    const onFocusCallback = otherHandlers.onFocus;
-    onFocusCallback?.(event);
-    handlePause();
-  };
-  const createMouseEnter = otherHandlers => event => {
-    const onMouseEnterCallback = otherHandlers.onMouseEnter;
-    onMouseEnterCallback?.(event);
-    handlePause();
-  };
-  const createMouseLeave = otherHandlers => event => {
-    const onMouseLeaveCallback = otherHandlers.onMouseLeave;
-    onMouseLeaveCallback?.(event);
-    handleResume();
-  };
-  reactExports.useEffect(() => {
-    // TODO: window global should be refactored here
-    if (!disableWindowBlurListener && open) {
-      window.addEventListener('focus', handleResume);
-      window.addEventListener('blur', handlePause);
-      return () => {
-        window.removeEventListener('focus', handleResume);
-        window.removeEventListener('blur', handlePause);
-      };
-    }
-    return undefined;
-  }, [disableWindowBlurListener, open, handleResume, handlePause]);
-  const getRootProps = (externalProps = {}) => {
-    const externalEventHandlers = {
-      ...extractEventHandlers(parameters),
-      ...extractEventHandlers(externalProps)
-    };
-    return {
-      // ClickAwayListener adds an `onClick` prop which results in the alert not being announced.
-      // See https://github.com/mui/material-ui/issues/29080
-      role: 'presentation',
-      ...externalProps,
-      ...externalEventHandlers,
-      onBlur: createHandleBlur(externalEventHandlers),
-      onFocus: createHandleFocus(externalEventHandlers),
-      onMouseEnter: createMouseEnter(externalEventHandlers),
-      onMouseLeave: createMouseLeave(externalEventHandlers)
-    };
-  };
-  return {
-    getRootProps,
-    onClickAway: handleClickAway
-  };
-}
-
-function getSnackbarContentUtilityClass(slot) {
-  return generateUtilityClass('MuiSnackbarContent', slot);
-}
-generateUtilityClasses('MuiSnackbarContent', ['root', 'message', 'action']);
-
-const useUtilityClasses$1 = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"],
-    action: ["action"],
-    message: ["message"]
-  };
-  return composeClasses(slots, getSnackbarContentUtilityClass, classes);
-};
-const SnackbarContentRoot = styled(Paper, {
-  name: "MuiSnackbarContent",
-  slot: "Root"
-})(memoTheme(({
-  theme
-}) => {
-  const emphasis = theme.palette.mode === "light" ? 0.8 : 0.98;
-  return {
-    ...theme.typography.body2,
-    color: theme.vars ? theme.vars.palette.SnackbarContent.color : theme.palette.getContrastText(emphasize(theme.palette.background.default, emphasis)),
-    backgroundColor: theme.vars ? theme.vars.palette.SnackbarContent.bg : emphasize(theme.palette.background.default, emphasis),
-    display: "flex",
-    alignItems: "center",
-    flexWrap: "wrap",
-    padding: "6px 16px",
-    flexGrow: 1,
-    [theme.breakpoints.up("sm")]: {
-      flexGrow: "initial",
-      minWidth: 288
-    }
-  };
-}));
-const SnackbarContentMessage = styled("div", {
-  name: "MuiSnackbarContent",
-  slot: "Message"
-})({
-  padding: "8px 0"
-});
-const SnackbarContentAction = styled("div", {
-  name: "MuiSnackbarContent",
-  slot: "Action"
-})({
-  display: "flex",
-  alignItems: "center",
-  marginLeft: "auto",
-  paddingLeft: 16,
-  marginRight: -8
-});
-const SnackbarContent = /* @__PURE__ */ reactExports.forwardRef(function SnackbarContent2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiSnackbarContent"
-  });
-  const {
-    action,
-    className,
-    message,
-    role = "alert",
-    ...other
-  } = props;
-  const ownerState = props;
-  const classes = useUtilityClasses$1(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(SnackbarContentRoot, {
-    role,
-    elevation: 6,
-    className: clsx(classes.root, className),
-    ownerState,
-    ref,
-    ...other,
-    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(SnackbarContentMessage, {
-      className: classes.message,
-      ownerState,
-      children: message
-    }), action ? /* @__PURE__ */ jsxRuntimeExports.jsx(SnackbarContentAction, {
-      className: classes.action,
-      ownerState,
-      children: action
-    }) : null]
-  });
-});
-
-function getSnackbarUtilityClass(slot) {
-  return generateUtilityClass('MuiSnackbar', slot);
-}
-generateUtilityClasses('MuiSnackbar', ['root', 'anchorOriginTopCenter', 'anchorOriginBottomCenter', 'anchorOriginTopRight', 'anchorOriginBottomRight', 'anchorOriginTopLeft', 'anchorOriginBottomLeft']);
-
-const useUtilityClasses = (ownerState) => {
-  const {
-    classes,
-    anchorOrigin
-  } = ownerState;
-  const slots = {
-    root: ["root", `anchorOrigin${capitalize(anchorOrigin.vertical)}${capitalize(anchorOrigin.horizontal)}`]
-  };
-  return composeClasses(slots, getSnackbarUtilityClass, classes);
-};
-const SnackbarRoot = styled("div", {
-  name: "MuiSnackbar",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[`anchorOrigin${capitalize(ownerState.anchorOrigin.vertical)}${capitalize(ownerState.anchorOrigin.horizontal)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  zIndex: (theme.vars || theme).zIndex.snackbar,
-  position: "fixed",
-  display: "flex",
-  left: 8,
-  right: 8,
-  justifyContent: "center",
-  alignItems: "center",
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.anchorOrigin.vertical === "top",
-    style: {
-      top: 8,
-      [theme.breakpoints.up("sm")]: {
-        top: 24
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.anchorOrigin.vertical !== "top",
-    style: {
-      bottom: 8,
-      [theme.breakpoints.up("sm")]: {
-        bottom: 24
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.anchorOrigin.horizontal === "left",
-    style: {
-      justifyContent: "flex-start",
-      [theme.breakpoints.up("sm")]: {
-        left: 24,
-        right: "auto"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.anchorOrigin.horizontal === "right",
-    style: {
-      justifyContent: "flex-end",
-      [theme.breakpoints.up("sm")]: {
-        right: 24,
-        left: "auto"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.anchorOrigin.horizontal === "center",
-    style: {
-      [theme.breakpoints.up("sm")]: {
-        left: "50%",
-        right: "auto",
-        transform: "translateX(-50%)"
-      }
-    }
-  }]
-})));
-const Snackbar = /* @__PURE__ */ reactExports.forwardRef(function Snackbar2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiSnackbar"
-  });
-  const theme = useTheme();
-  const defaultTransitionDuration = {
-    enter: theme.transitions.duration.enteringScreen,
-    exit: theme.transitions.duration.leavingScreen
-  };
-  const {
-    action,
-    anchorOrigin: {
-      vertical,
-      horizontal
-    } = {
-      vertical: "bottom",
-      horizontal: "left"
-    },
-    autoHideDuration = null,
-    children,
-    className,
-    ClickAwayListenerProps: ClickAwayListenerPropsProp,
-    ContentProps: ContentPropsProp,
-    disableWindowBlurListener = false,
-    message,
-    onBlur,
-    onClose,
-    onFocus,
-    onMouseEnter,
-    onMouseLeave,
-    open,
-    resumeHideDuration,
-    slots = {},
-    slotProps = {},
-    TransitionComponent: TransitionComponentProp,
-    transitionDuration = defaultTransitionDuration,
-    TransitionProps: {
-      onEnter,
-      onExited,
-      ...TransitionPropsProp
-    } = {},
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    anchorOrigin: {
-      vertical,
-      horizontal
-    },
-    autoHideDuration,
-    disableWindowBlurListener,
-    TransitionComponent: TransitionComponentProp,
-    transitionDuration
-  };
-  const classes = useUtilityClasses(ownerState);
-  const {
-    getRootProps,
-    onClickAway
-  } = useSnackbar({
-    ...ownerState
-  });
-  const [exited, setExited] = reactExports.useState(true);
-  const handleExited = (node) => {
-    setExited(true);
-    if (onExited) {
-      onExited(node);
-    }
-  };
-  const handleEnter = (node, isAppearing) => {
-    setExited(false);
-    if (onEnter) {
-      onEnter(node, isAppearing);
-    }
-  };
-  const externalForwardedProps = {
-    slots: {
-      transition: TransitionComponentProp,
-      ...slots
-    },
-    slotProps: {
-      content: ContentPropsProp,
-      clickAwayListener: ClickAwayListenerPropsProp,
-      transition: TransitionPropsProp,
-      ...slotProps
-    }
-  };
-  const [Root, rootProps] = useSlot("root", {
-    ref,
-    className: [classes.root, className],
-    elementType: SnackbarRoot,
-    getSlotProps: getRootProps,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    ownerState
-  });
-  const [ClickAwaySlot, {
-    ownerState: clickAwayOwnerStateProp,
-    ...clickAwayListenerProps
-  }] = useSlot("clickAwayListener", {
-    elementType: ClickAwayListener,
-    externalForwardedProps,
-    getSlotProps: (handlers) => ({
-      onClickAway: (...params) => {
-        const event = params[0];
-        handlers.onClickAway?.(...params);
-        if (event?.defaultMuiPrevented) {
-          return;
-        }
-        onClickAway(...params);
-      }
-    }),
-    ownerState
-  });
-  const [ContentSlot, contentSlotProps] = useSlot("content", {
-    elementType: SnackbarContent,
-    shouldForwardComponentProp: true,
-    externalForwardedProps,
-    additionalProps: {
-      message,
-      action
-    },
-    ownerState
-  });
-  const [TransitionSlot, transitionProps] = useSlot("transition", {
-    elementType: Grow,
-    externalForwardedProps,
-    getSlotProps: (handlers) => ({
-      onEnter: (...params) => {
-        handlers.onEnter?.(...params);
-        handleEnter(...params);
-      },
-      onExited: (...params) => {
-        handlers.onExited?.(...params);
-        handleExited(...params);
-      }
-    }),
-    additionalProps: {
-      appear: true,
-      in: open,
-      timeout: transitionDuration,
-      direction: vertical === "top" ? "down" : "up"
-    },
-    ownerState
-  });
-  if (!open && exited) {
-    return null;
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(ClickAwaySlot, {
-    ...clickAwayListenerProps,
-    ...slots.clickAwayListener && {
-      ownerState: clickAwayOwnerStateProp
-    },
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root, {
-      ...rootProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionSlot, {
-        ...transitionProps,
-        children: children || /* @__PURE__ */ jsxRuntimeExports.jsx(ContentSlot, {
-          ...contentSlotProps
-        })
-      })
-    })
-  });
-});
-
-const Stack = createStack({
-  createStyledComponent: styled("div", {
-    name: "MuiStack",
-    slot: "Root"
-  }),
-  useThemeProps: (inProps) => useDefaultProps({
-    props: inProps,
-    name: "MuiStack"
-  })
-});
 
 var isCheckBoxInput = (element) => element.type === 'checkbox';
 
@@ -39581,13 +36533,27 @@ function byteArrayToBase64(bytes) {
 function shortSolanaAddress(address) {
   return address.slice(0, 4) + "..." + address.slice(-4);
 }
+function getErrorMsg(error) {
+  if (!error) return "Empty Error";
+  if (typeof error === "string") return error;
+  if (typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  if (typeof error === "object" && "toString" in error && typeof error.toString === "function") {
+    return error.toString();
+  }
+  return "UnknownError";
+}
 function isValidSolanaAddress(address) {
   try {
     const decoded = bs58.decode(address);
-    return decoded.length === 32;
+    const leng = decoded.length;
+    if (leng != 32) {
+      return `账户地址格式不正确: ${leng} != 32`;
+    }
+    return true;
   } catch (error) {
-    console.error(`Invalid Solana address(${address}): `, error);
-    return false;
+    return `账户地址格式不正确: ${getErrorMsg(error)}`;
   }
 }
 
@@ -39657,10 +36623,6 @@ function WalletDlg({
                   required: "必须填写钱包地址",
                   validate: isValidSolanaAddress
                 }),
-                onChange: (e) => {
-                  const value = e.target.value.trim();
-                  console.log("Address input changed:", value);
-                },
                 error: !!errors.address,
                 helperText: errors.address && errors.address.message
               }
@@ -39673,7 +36635,7 @@ function WalletDlg({
                 onFocus: () => {
                   const address = watch("address");
                   const name = watch("name");
-                  if (!name && address && isValidSolanaAddress(address)) {
+                  if (!name && address && isValidSolanaAddress(address) === true) {
                     setValue("name", shortSolanaAddress(address));
                   }
                 },
@@ -39809,6 +36771,1163 @@ function loopGetTransferStatus(transferID, onProgress, onStopped, interval = 1e3
   };
 }
 
+function getCollapseUtilityClass(slot) {
+  return generateUtilityClass('MuiCollapse', slot);
+}
+generateUtilityClasses('MuiCollapse', ['root', 'horizontal', 'vertical', 'entered', 'hidden', 'wrapper', 'wrapperInner']);
+
+const useUtilityClasses$c = (ownerState) => {
+  const {
+    orientation,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", `${orientation}`],
+    entered: ["entered"],
+    hidden: ["hidden"],
+    wrapper: ["wrapper", `${orientation}`],
+    wrapperInner: ["wrapperInner", `${orientation}`]
+  };
+  return composeClasses(slots, getCollapseUtilityClass, classes);
+};
+const CollapseRoot = styled("div", {
+  name: "MuiCollapse",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[ownerState.orientation], ownerState.state === "entered" && styles.entered, ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px" && styles.hidden];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  height: 0,
+  overflow: "hidden",
+  transition: theme.transitions.create("height"),
+  variants: [{
+    props: {
+      orientation: "horizontal"
+    },
+    style: {
+      height: "auto",
+      width: 0,
+      transition: theme.transitions.create("width")
+    }
+  }, {
+    props: {
+      state: "entered"
+    },
+    style: {
+      height: "auto",
+      overflow: "visible"
+    }
+  }, {
+    props: {
+      state: "entered",
+      orientation: "horizontal"
+    },
+    style: {
+      width: "auto"
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px",
+    style: {
+      visibility: "hidden"
+    }
+  }]
+})));
+const CollapseWrapper = styled("div", {
+  name: "MuiCollapse",
+  slot: "Wrapper"
+})({
+  // Hack to get children with a negative margin to not falsify the height computation.
+  display: "flex",
+  width: "100%",
+  variants: [{
+    props: {
+      orientation: "horizontal"
+    },
+    style: {
+      width: "auto",
+      height: "100%"
+    }
+  }]
+});
+const CollapseWrapperInner = styled("div", {
+  name: "MuiCollapse",
+  slot: "WrapperInner"
+})({
+  width: "100%",
+  variants: [{
+    props: {
+      orientation: "horizontal"
+    },
+    style: {
+      width: "auto",
+      height: "100%"
+    }
+  }]
+});
+const Collapse = /* @__PURE__ */ reactExports.forwardRef(function Collapse2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiCollapse"
+  });
+  const {
+    addEndListener,
+    children,
+    className,
+    collapsedSize: collapsedSizeProp = "0px",
+    component,
+    easing,
+    in: inProp,
+    onEnter,
+    onEntered,
+    onEntering,
+    onExit,
+    onExited,
+    onExiting,
+    orientation = "vertical",
+    style,
+    timeout = duration.standard,
+    // eslint-disable-next-line react/prop-types
+    TransitionComponent = Transition,
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    orientation,
+    collapsedSize: collapsedSizeProp
+  };
+  const classes = useUtilityClasses$c(ownerState);
+  const theme = useTheme();
+  const timer = useTimeout();
+  const wrapperRef = reactExports.useRef(null);
+  const autoTransitionDuration = reactExports.useRef();
+  const collapsedSize = typeof collapsedSizeProp === "number" ? `${collapsedSizeProp}px` : collapsedSizeProp;
+  const isHorizontal = orientation === "horizontal";
+  const size = isHorizontal ? "width" : "height";
+  const nodeRef = reactExports.useRef(null);
+  const handleRef = useForkRef(ref, nodeRef);
+  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
+    if (callback) {
+      const node = nodeRef.current;
+      if (maybeIsAppearing === void 0) {
+        callback(node);
+      } else {
+        callback(node, maybeIsAppearing);
+      }
+    }
+  };
+  const getWrapperSize = () => wrapperRef.current ? wrapperRef.current[isHorizontal ? "clientWidth" : "clientHeight"] : 0;
+  const handleEnter = normalizedTransitionCallback((node, isAppearing) => {
+    if (wrapperRef.current && isHorizontal) {
+      wrapperRef.current.style.position = "absolute";
+    }
+    node.style[size] = collapsedSize;
+    if (onEnter) {
+      onEnter(node, isAppearing);
+    }
+  });
+  const handleEntering = normalizedTransitionCallback((node, isAppearing) => {
+    const wrapperSize = getWrapperSize();
+    if (wrapperRef.current && isHorizontal) {
+      wrapperRef.current.style.position = "";
+    }
+    const {
+      duration: transitionDuration,
+      easing: transitionTimingFunction
+    } = getTransitionProps({
+      style,
+      timeout,
+      easing
+    }, {
+      mode: "enter"
+    });
+    if (timeout === "auto") {
+      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
+      node.style.transitionDuration = `${duration2}ms`;
+      autoTransitionDuration.current = duration2;
+    } else {
+      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
+    }
+    node.style[size] = `${wrapperSize}px`;
+    node.style.transitionTimingFunction = transitionTimingFunction;
+    if (onEntering) {
+      onEntering(node, isAppearing);
+    }
+  });
+  const handleEntered = normalizedTransitionCallback((node, isAppearing) => {
+    node.style[size] = "auto";
+    if (onEntered) {
+      onEntered(node, isAppearing);
+    }
+  });
+  const handleExit = normalizedTransitionCallback((node) => {
+    node.style[size] = `${getWrapperSize()}px`;
+    if (onExit) {
+      onExit(node);
+    }
+  });
+  const handleExited = normalizedTransitionCallback(onExited);
+  const handleExiting = normalizedTransitionCallback((node) => {
+    const wrapperSize = getWrapperSize();
+    const {
+      duration: transitionDuration,
+      easing: transitionTimingFunction
+    } = getTransitionProps({
+      style,
+      timeout,
+      easing
+    }, {
+      mode: "exit"
+    });
+    if (timeout === "auto") {
+      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
+      node.style.transitionDuration = `${duration2}ms`;
+      autoTransitionDuration.current = duration2;
+    } else {
+      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
+    }
+    node.style[size] = collapsedSize;
+    node.style.transitionTimingFunction = transitionTimingFunction;
+    if (onExiting) {
+      onExiting(node);
+    }
+  });
+  const handleAddEndListener = (next) => {
+    if (timeout === "auto") {
+      timer.start(autoTransitionDuration.current || 0, next);
+    }
+    if (addEndListener) {
+      addEndListener(nodeRef.current, next);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionComponent, {
+    in: inProp,
+    onEnter: handleEnter,
+    onEntered: handleEntered,
+    onEntering: handleEntering,
+    onExit: handleExit,
+    onExited: handleExited,
+    onExiting: handleExiting,
+    addEndListener: handleAddEndListener,
+    nodeRef,
+    timeout: timeout === "auto" ? null : timeout,
+    ...other,
+    children: (state, {
+      ownerState: incomingOwnerState,
+      ...restChildProps
+    }) => /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseRoot, {
+      as: component,
+      className: clsx(classes.root, className, {
+        "entered": classes.entered,
+        "exited": !inProp && collapsedSize === "0px" && classes.hidden
+      }[state]),
+      style: {
+        [isHorizontal ? "minWidth" : "minHeight"]: collapsedSize,
+        ...style
+      },
+      ref: handleRef,
+      ownerState: {
+        ...ownerState,
+        state
+      },
+      ...restChildProps,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapper, {
+        ownerState: {
+          ...ownerState,
+          state
+        },
+        className: classes.wrapper,
+        ref: wrapperRef,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapperInner, {
+          ownerState: {
+            ...ownerState,
+            state
+          },
+          className: classes.wrapperInner,
+          children
+        })
+      })
+    })
+  });
+});
+if (Collapse) {
+  Collapse.muiSupportAuto = true;
+}
+
+const AccordionContext = /* @__PURE__ */ reactExports.createContext({});
+
+function getAccordionUtilityClass(slot) {
+  return generateUtilityClass('MuiAccordion', slot);
+}
+const accordionClasses = generateUtilityClasses('MuiAccordion', ['root', 'heading', 'rounded', 'expanded', 'disabled', 'gutters', 'region']);
+
+const useUtilityClasses$b = (ownerState) => {
+  const {
+    classes,
+    square,
+    expanded,
+    disabled,
+    disableGutters
+  } = ownerState;
+  const slots = {
+    root: ["root", !square && "rounded", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
+    heading: ["heading"],
+    region: ["region"]
+  };
+  return composeClasses(slots, getAccordionUtilityClass, classes);
+};
+const AccordionRoot = styled(Paper, {
+  name: "MuiAccordion",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [{
+      [`& .${accordionClasses.region}`]: styles.region
+    }, styles.root, !ownerState.square && styles.rounded, !ownerState.disableGutters && styles.gutters];
+  }
+})(memoTheme(({
+  theme
+}) => {
+  const transition = {
+    duration: theme.transitions.duration.shortest
+  };
+  return {
+    position: "relative",
+    transition: theme.transitions.create(["margin"], transition),
+    overflowAnchor: "none",
+    // Keep the same scrolling position
+    "&::before": {
+      position: "absolute",
+      left: 0,
+      top: -1,
+      right: 0,
+      height: 1,
+      content: '""',
+      opacity: 1,
+      backgroundColor: (theme.vars || theme).palette.divider,
+      transition: theme.transitions.create(["opacity", "background-color"], transition)
+    },
+    "&:first-of-type": {
+      "&::before": {
+        display: "none"
+      }
+    },
+    [`&.${accordionClasses.expanded}`]: {
+      "&::before": {
+        opacity: 0
+      },
+      "&:first-of-type": {
+        marginTop: 0
+      },
+      "&:last-of-type": {
+        marginBottom: 0
+      },
+      "& + &": {
+        "&::before": {
+          display: "none"
+        }
+      }
+    },
+    [`&.${accordionClasses.disabled}`]: {
+      backgroundColor: (theme.vars || theme).palette.action.disabledBackground
+    }
+  };
+}), memoTheme(({
+  theme
+}) => ({
+  variants: [{
+    props: (props) => !props.square,
+    style: {
+      borderRadius: 0,
+      "&:first-of-type": {
+        borderTopLeftRadius: (theme.vars || theme).shape.borderRadius,
+        borderTopRightRadius: (theme.vars || theme).shape.borderRadius
+      },
+      "&:last-of-type": {
+        borderBottomLeftRadius: (theme.vars || theme).shape.borderRadius,
+        borderBottomRightRadius: (theme.vars || theme).shape.borderRadius,
+        // Fix a rendering issue on Edge
+        "@supports (-ms-ime-align: auto)": {
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0
+        }
+      }
+    }
+  }, {
+    props: (props) => !props.disableGutters,
+    style: {
+      [`&.${accordionClasses.expanded}`]: {
+        margin: "16px 0"
+      }
+    }
+  }]
+})));
+const AccordionHeading = styled("h3", {
+  name: "MuiAccordion",
+  slot: "Heading"
+})({
+  all: "unset"
+});
+const Accordion = /* @__PURE__ */ reactExports.forwardRef(function Accordion2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiAccordion"
+  });
+  const {
+    children: childrenProp,
+    className,
+    defaultExpanded = false,
+    disabled = false,
+    disableGutters = false,
+    expanded: expandedProp,
+    onChange,
+    square = false,
+    slots = {},
+    slotProps = {},
+    TransitionComponent: TransitionComponentProp,
+    TransitionProps: TransitionPropsProp,
+    ...other
+  } = props;
+  const [expanded, setExpandedState] = useControlled({
+    controlled: expandedProp,
+    default: defaultExpanded,
+    name: "Accordion",
+    state: "expanded"
+  });
+  const handleChange = reactExports.useCallback((event) => {
+    setExpandedState(!expanded);
+    if (onChange) {
+      onChange(event, !expanded);
+    }
+  }, [expanded, onChange, setExpandedState]);
+  const [summary, ...children] = reactExports.Children.toArray(childrenProp);
+  const contextValue = reactExports.useMemo(() => ({
+    expanded,
+    disabled,
+    disableGutters,
+    toggle: handleChange
+  }), [expanded, disabled, disableGutters, handleChange]);
+  const ownerState = {
+    ...props,
+    square,
+    disabled,
+    disableGutters,
+    expanded
+  };
+  const classes = useUtilityClasses$b(ownerState);
+  const backwardCompatibleSlots = {
+    transition: TransitionComponentProp,
+    ...slots
+  };
+  const backwardCompatibleSlotProps = {
+    transition: TransitionPropsProp,
+    ...slotProps
+  };
+  const externalForwardedProps = {
+    slots: backwardCompatibleSlots,
+    slotProps: backwardCompatibleSlotProps
+  };
+  const [RootSlot, rootProps] = useSlot("root", {
+    elementType: AccordionRoot,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other
+    },
+    className: clsx(classes.root, className),
+    shouldForwardComponentProp: true,
+    ownerState,
+    ref,
+    additionalProps: {
+      square
+    }
+  });
+  const [AccordionHeadingSlot, accordionProps] = useSlot("heading", {
+    elementType: AccordionHeading,
+    externalForwardedProps,
+    className: classes.heading,
+    ownerState
+  });
+  const [TransitionSlot, transitionProps] = useSlot("transition", {
+    elementType: Collapse,
+    externalForwardedProps,
+    ownerState
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
+    ...rootProps,
+    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(AccordionHeadingSlot, {
+      ...accordionProps,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionContext.Provider, {
+        value: contextValue,
+        children: summary
+      })
+    }), /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionSlot, {
+      in: expanded,
+      timeout: "auto",
+      ...transitionProps,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", {
+        "aria-labelledby": summary.props.id,
+        id: summary.props["aria-controls"],
+        role: "region",
+        className: classes.region,
+        children
+      })
+    })]
+  });
+});
+
+function getAccordionSummaryUtilityClass(slot) {
+  return generateUtilityClass('MuiAccordionSummary', slot);
+}
+const accordionSummaryClasses = generateUtilityClasses('MuiAccordionSummary', ['root', 'expanded', 'focusVisible', 'disabled', 'gutters', 'contentGutters', 'content', 'expandIconWrapper']);
+
+const useUtilityClasses$a = (ownerState) => {
+  const {
+    classes,
+    expanded,
+    disabled,
+    disableGutters
+  } = ownerState;
+  const slots = {
+    root: ["root", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
+    focusVisible: ["focusVisible"],
+    content: ["content", expanded && "expanded", !disableGutters && "contentGutters"],
+    expandIconWrapper: ["expandIconWrapper", expanded && "expanded"]
+  };
+  return composeClasses(slots, getAccordionSummaryUtilityClass, classes);
+};
+const AccordionSummaryRoot = styled(ButtonBase, {
+  name: "MuiAccordionSummary",
+  slot: "Root"
+})(memoTheme(({
+  theme
+}) => {
+  const transition = {
+    duration: theme.transitions.duration.shortest
+  };
+  return {
+    display: "flex",
+    width: "100%",
+    minHeight: 48,
+    padding: theme.spacing(0, 2),
+    transition: theme.transitions.create(["min-height", "background-color"], transition),
+    [`&.${accordionSummaryClasses.focusVisible}`]: {
+      backgroundColor: (theme.vars || theme).palette.action.focus
+    },
+    [`&.${accordionSummaryClasses.disabled}`]: {
+      opacity: (theme.vars || theme).palette.action.disabledOpacity
+    },
+    [`&:hover:not(.${accordionSummaryClasses.disabled})`]: {
+      cursor: "pointer"
+    },
+    variants: [{
+      props: (props) => !props.disableGutters,
+      style: {
+        [`&.${accordionSummaryClasses.expanded}`]: {
+          minHeight: 64
+        }
+      }
+    }]
+  };
+}));
+const AccordionSummaryContent = styled("span", {
+  name: "MuiAccordionSummary",
+  slot: "Content"
+})(memoTheme(({
+  theme
+}) => ({
+  display: "flex",
+  textAlign: "start",
+  flexGrow: 1,
+  margin: "12px 0",
+  variants: [{
+    props: (props) => !props.disableGutters,
+    style: {
+      transition: theme.transitions.create(["margin"], {
+        duration: theme.transitions.duration.shortest
+      }),
+      [`&.${accordionSummaryClasses.expanded}`]: {
+        margin: "20px 0"
+      }
+    }
+  }]
+})));
+const AccordionSummaryExpandIconWrapper = styled("span", {
+  name: "MuiAccordionSummary",
+  slot: "ExpandIconWrapper"
+})(memoTheme(({
+  theme
+}) => ({
+  display: "flex",
+  color: (theme.vars || theme).palette.action.active,
+  transform: "rotate(0deg)",
+  transition: theme.transitions.create("transform", {
+    duration: theme.transitions.duration.shortest
+  }),
+  [`&.${accordionSummaryClasses.expanded}`]: {
+    transform: "rotate(180deg)"
+  }
+})));
+const AccordionSummary = /* @__PURE__ */ reactExports.forwardRef(function AccordionSummary2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiAccordionSummary"
+  });
+  const {
+    children,
+    className,
+    expandIcon,
+    focusVisibleClassName,
+    onClick,
+    slots,
+    slotProps,
+    ...other
+  } = props;
+  const {
+    disabled = false,
+    disableGutters,
+    expanded,
+    toggle
+  } = reactExports.useContext(AccordionContext);
+  const handleChange = (event) => {
+    if (toggle) {
+      toggle(event);
+    }
+    if (onClick) {
+      onClick(event);
+    }
+  };
+  const ownerState = {
+    ...props,
+    expanded,
+    disabled,
+    disableGutters
+  };
+  const classes = useUtilityClasses$a(ownerState);
+  const externalForwardedProps = {
+    slots,
+    slotProps
+  };
+  const [RootSlot, rootSlotProps] = useSlot("root", {
+    ref,
+    shouldForwardComponentProp: true,
+    className: clsx(classes.root, className),
+    elementType: AccordionSummaryRoot,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other
+    },
+    ownerState,
+    additionalProps: {
+      focusRipple: false,
+      disableRipple: true,
+      disabled,
+      "aria-expanded": expanded,
+      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName)
+    },
+    getSlotProps: (handlers) => ({
+      ...handlers,
+      onClick: (event) => {
+        handlers.onClick?.(event);
+        handleChange(event);
+      }
+    })
+  });
+  const [ContentSlot, contentSlotProps] = useSlot("content", {
+    className: classes.content,
+    elementType: AccordionSummaryContent,
+    externalForwardedProps,
+    ownerState
+  });
+  const [ExpandIconWrapperSlot, expandIconWrapperSlotProps] = useSlot("expandIconWrapper", {
+    className: classes.expandIconWrapper,
+    elementType: AccordionSummaryExpandIconWrapper,
+    externalForwardedProps,
+    ownerState
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
+    ...rootSlotProps,
+    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(ContentSlot, {
+      ...contentSlotProps,
+      children
+    }), expandIcon && /* @__PURE__ */ jsxRuntimeExports.jsx(ExpandIconWrapperSlot, {
+      ...expandIconWrapperSlotProps,
+      children: expandIcon
+    })]
+  });
+});
+
+function getAccordionDetailsUtilityClass(slot) {
+  return generateUtilityClass('MuiAccordionDetails', slot);
+}
+generateUtilityClasses('MuiAccordionDetails', ['root']);
+
+const useUtilityClasses$9 = (ownerState) => {
+  const {
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root"]
+  };
+  return composeClasses(slots, getAccordionDetailsUtilityClass, classes);
+};
+const AccordionDetailsRoot = styled("div", {
+  name: "MuiAccordionDetails",
+  slot: "Root"
+})(memoTheme(({
+  theme
+}) => ({
+  padding: theme.spacing(1, 2, 2)
+})));
+const AccordionDetails = /* @__PURE__ */ reactExports.forwardRef(function AccordionDetails2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiAccordionDetails"
+  });
+  const {
+    className,
+    ...other
+  } = props;
+  const ownerState = props;
+  const classes = useUtilityClasses$9(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionDetailsRoot, {
+    className: clsx(classes.root, className),
+    ref,
+    ownerState,
+    ...other
+  });
+});
+
+const Stack = createStack({
+  createStyledComponent: styled("div", {
+    name: "MuiStack",
+    slot: "Root"
+  }),
+  useThemeProps: (inProps) => useDefaultProps({
+    props: inProps,
+    name: "MuiStack"
+  })
+});
+
+function getIconButtonUtilityClass(slot) {
+  return generateUtilityClass('MuiIconButton', slot);
+}
+const iconButtonClasses = generateUtilityClasses('MuiIconButton', ['root', 'disabled', 'colorInherit', 'colorPrimary', 'colorSecondary', 'colorError', 'colorInfo', 'colorSuccess', 'colorWarning', 'edgeStart', 'edgeEnd', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'loading', 'loadingIndicator', 'loadingWrapper']);
+
+const useUtilityClasses$8 = (ownerState) => {
+  const {
+    classes,
+    disabled,
+    color,
+    edge,
+    size,
+    loading
+  } = ownerState;
+  const slots = {
+    root: ["root", loading && "loading", disabled && "disabled", color !== "default" && `color${capitalize(color)}`, edge && `edge${capitalize(edge)}`, `size${capitalize(size)}`],
+    loadingIndicator: ["loadingIndicator"],
+    loadingWrapper: ["loadingWrapper"]
+  };
+  return composeClasses(slots, getIconButtonUtilityClass, classes);
+};
+const IconButtonRoot = styled(ButtonBase, {
+  name: "MuiIconButton",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, ownerState.loading && styles.loading, ownerState.color !== "default" && styles[`color${capitalize(ownerState.color)}`], ownerState.edge && styles[`edge${capitalize(ownerState.edge)}`], styles[`size${capitalize(ownerState.size)}`]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  textAlign: "center",
+  flex: "0 0 auto",
+  fontSize: theme.typography.pxToRem(24),
+  padding: 8,
+  borderRadius: "50%",
+  color: (theme.vars || theme).palette.action.active,
+  transition: theme.transitions.create("background-color", {
+    duration: theme.transitions.duration.shortest
+  }),
+  variants: [{
+    props: (props) => !props.disableRipple,
+    style: {
+      "--IconButton-hoverBg": theme.vars ? `rgba(${theme.vars.palette.action.activeChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha(theme.palette.action.active, theme.palette.action.hoverOpacity),
+      "&:hover": {
+        backgroundColor: "var(--IconButton-hoverBg)",
+        // Reset on touch devices, it doesn't add specificity
+        "@media (hover: none)": {
+          backgroundColor: "transparent"
+        }
+      }
+    }
+  }, {
+    props: {
+      edge: "start"
+    },
+    style: {
+      marginLeft: -12
+    }
+  }, {
+    props: {
+      edge: "start",
+      size: "small"
+    },
+    style: {
+      marginLeft: -3
+    }
+  }, {
+    props: {
+      edge: "end"
+    },
+    style: {
+      marginRight: -12
+    }
+  }, {
+    props: {
+      edge: "end",
+      size: "small"
+    },
+    style: {
+      marginRight: -3
+    }
+  }]
+})), memoTheme(({
+  theme
+}) => ({
+  variants: [{
+    props: {
+      color: "inherit"
+    },
+    style: {
+      color: "inherit"
+    }
+  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      color: (theme.vars || theme).palette[color].main
+    }
+  })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      "--IconButton-hoverBg": theme.vars ? `rgba(${(theme.vars || theme).palette[color].mainChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha((theme.vars || theme).palette[color].main, theme.palette.action.hoverOpacity)
+    }
+  })), {
+    props: {
+      size: "small"
+    },
+    style: {
+      padding: 5,
+      fontSize: theme.typography.pxToRem(18)
+    }
+  }, {
+    props: {
+      size: "large"
+    },
+    style: {
+      padding: 12,
+      fontSize: theme.typography.pxToRem(28)
+    }
+  }],
+  [`&.${iconButtonClasses.disabled}`]: {
+    backgroundColor: "transparent",
+    color: (theme.vars || theme).palette.action.disabled
+  },
+  [`&.${iconButtonClasses.loading}`]: {
+    color: "transparent"
+  }
+})));
+const IconButtonLoadingIndicator = styled("span", {
+  name: "MuiIconButton",
+  slot: "LoadingIndicator"
+})(({
+  theme
+}) => ({
+  display: "none",
+  position: "absolute",
+  visibility: "visible",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  color: (theme.vars || theme).palette.action.disabled,
+  variants: [{
+    props: {
+      loading: true
+    },
+    style: {
+      display: "flex"
+    }
+  }]
+}));
+const IconButton = /* @__PURE__ */ reactExports.forwardRef(function IconButton2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiIconButton"
+  });
+  const {
+    edge = false,
+    children,
+    className,
+    color = "default",
+    disabled = false,
+    disableFocusRipple = false,
+    size = "medium",
+    id: idProp,
+    loading = null,
+    loadingIndicator: loadingIndicatorProp,
+    ...other
+  } = props;
+  const loadingId = useId(idProp);
+  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgress, {
+    "aria-labelledby": loadingId,
+    color: "inherit",
+    size: 16
+  });
+  const ownerState = {
+    ...props,
+    edge,
+    color,
+    disabled,
+    disableFocusRipple,
+    loading,
+    loadingIndicator,
+    size
+  };
+  const classes = useUtilityClasses$8(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(IconButtonRoot, {
+    id: loading ? loadingId : idProp,
+    className: clsx(classes.root, className),
+    centerRipple: true,
+    focusRipple: !disableFocusRipple,
+    disabled: disabled || loading,
+    ref,
+    ...other,
+    ownerState,
+    children: [typeof loading === "boolean" && // use plain HTML span to minimize the runtime overhead
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", {
+      className: classes.loadingWrapper,
+      style: {
+        display: "contents"
+      },
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButtonLoadingIndicator, {
+        className: classes.loadingIndicator,
+        ownerState,
+        children: loading && loadingIndicator
+      })
+    }), children]
+  });
+});
+
+const dividerClasses = generateUtilityClasses('MuiDivider', ['root', 'absolute', 'fullWidth', 'inset', 'middle', 'flexItem', 'light', 'vertical', 'withChildren', 'withChildrenVertical', 'textAlignRight', 'textAlignLeft', 'wrapper', 'wrapperVertical']);
+
+const listItemIconClasses = generateUtilityClasses('MuiListItemIcon', ['root', 'alignItemsFlexStart']);
+
+const listItemTextClasses = generateUtilityClasses('MuiListItemText', ['root', 'multiline', 'dense', 'inset', 'primary', 'secondary']);
+
+function getMenuItemUtilityClass(slot) {
+  return generateUtilityClass('MuiMenuItem', slot);
+}
+const menuItemClasses = generateUtilityClasses('MuiMenuItem', ['root', 'focusVisible', 'dense', 'disabled', 'divider', 'gutters', 'selected']);
+
+const overridesResolver$1 = (props, styles) => {
+  const {
+    ownerState
+  } = props;
+  return [styles.root, ownerState.dense && styles.dense, ownerState.divider && styles.divider, !ownerState.disableGutters && styles.gutters];
+};
+const useUtilityClasses$7 = (ownerState) => {
+  const {
+    disabled,
+    dense,
+    divider,
+    disableGutters,
+    selected,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", dense && "dense", disabled && "disabled", !disableGutters && "gutters", divider && "divider", selected && "selected"]
+  };
+  const composedClasses = composeClasses(slots, getMenuItemUtilityClass, classes);
+  return {
+    ...classes,
+    ...composedClasses
+  };
+};
+const MenuItemRoot = styled(ButtonBase, {
+  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
+  name: "MuiMenuItem",
+  slot: "Root",
+  overridesResolver: overridesResolver$1
+})(memoTheme(({
+  theme
+}) => ({
+  ...theme.typography.body1,
+  display: "flex",
+  justifyContent: "flex-start",
+  alignItems: "center",
+  position: "relative",
+  textDecoration: "none",
+  minHeight: 48,
+  paddingTop: 6,
+  paddingBottom: 6,
+  boxSizing: "border-box",
+  whiteSpace: "nowrap",
+  "&:hover": {
+    textDecoration: "none",
+    backgroundColor: (theme.vars || theme).palette.action.hover,
+    // Reset on touch devices, it doesn't add specificity
+    "@media (hover: none)": {
+      backgroundColor: "transparent"
+    }
+  },
+  [`&.${menuItemClasses.selected}`]: {
+    backgroundColor: theme.vars ? `rgba(${theme.vars.palette.primary.mainChannel} / ${theme.vars.palette.action.selectedOpacity})` : alpha(theme.palette.primary.main, theme.palette.action.selectedOpacity),
+    [`&.${menuItemClasses.focusVisible}`]: {
+      backgroundColor: theme.vars ? `rgba(${theme.vars.palette.primary.mainChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.focusOpacity}))` : alpha(theme.palette.primary.main, theme.palette.action.selectedOpacity + theme.palette.action.focusOpacity)
+    }
+  },
+  [`&.${menuItemClasses.selected}:hover`]: {
+    backgroundColor: theme.vars ? `rgba(${theme.vars.palette.primary.mainChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.hoverOpacity}))` : alpha(theme.palette.primary.main, theme.palette.action.selectedOpacity + theme.palette.action.hoverOpacity),
+    // Reset on touch devices, it doesn't add specificity
+    "@media (hover: none)": {
+      backgroundColor: theme.vars ? `rgba(${theme.vars.palette.primary.mainChannel} / ${theme.vars.palette.action.selectedOpacity})` : alpha(theme.palette.primary.main, theme.palette.action.selectedOpacity)
+    }
+  },
+  [`&.${menuItemClasses.focusVisible}`]: {
+    backgroundColor: (theme.vars || theme).palette.action.focus
+  },
+  [`&.${menuItemClasses.disabled}`]: {
+    opacity: (theme.vars || theme).palette.action.disabledOpacity
+  },
+  [`& + .${dividerClasses.root}`]: {
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(1)
+  },
+  [`& + .${dividerClasses.inset}`]: {
+    marginLeft: 52
+  },
+  [`& .${listItemTextClasses.root}`]: {
+    marginTop: 0,
+    marginBottom: 0
+  },
+  [`& .${listItemTextClasses.inset}`]: {
+    paddingLeft: 36
+  },
+  [`& .${listItemIconClasses.root}`]: {
+    minWidth: 36
+  },
+  variants: [{
+    props: ({
+      ownerState
+    }) => !ownerState.disableGutters,
+    style: {
+      paddingLeft: 16,
+      paddingRight: 16
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.divider,
+    style: {
+      borderBottom: `1px solid ${(theme.vars || theme).palette.divider}`,
+      backgroundClip: "padding-box"
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => !ownerState.dense,
+    style: {
+      [theme.breakpoints.up("sm")]: {
+        minHeight: "auto"
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.dense,
+    style: {
+      minHeight: 32,
+      // https://m2.material.io/components/menus#specs > Dense
+      paddingTop: 4,
+      paddingBottom: 4,
+      ...theme.typography.body2,
+      [`& .${listItemIconClasses.root} svg`]: {
+        fontSize: "1.25rem"
+      }
+    }
+  }]
+})));
+const MenuItem = /* @__PURE__ */ reactExports.forwardRef(function MenuItem2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiMenuItem"
+  });
+  const {
+    autoFocus = false,
+    component = "li",
+    dense = false,
+    divider = false,
+    disableGutters = false,
+    focusVisibleClassName,
+    role = "menuitem",
+    tabIndex: tabIndexProp,
+    className,
+    ...other
+  } = props;
+  const context = reactExports.useContext(ListContext);
+  const childContext = reactExports.useMemo(() => ({
+    dense: dense || context.dense || false,
+    disableGutters
+  }), [context.dense, dense, disableGutters]);
+  const menuItemRef = reactExports.useRef(null);
+  useEnhancedEffect(() => {
+    if (autoFocus) {
+      if (menuItemRef.current) {
+        menuItemRef.current.focus();
+      }
+    }
+  }, [autoFocus]);
+  const ownerState = {
+    ...props,
+    dense: childContext.dense,
+    divider,
+    disableGutters
+  };
+  const classes = useUtilityClasses$7(props);
+  const handleRef = useForkRef(menuItemRef, ref);
+  let tabIndex;
+  if (!props.disabled) {
+    tabIndex = tabIndexProp !== void 0 ? tabIndexProp : -1;
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ListContext.Provider, {
+    value: childContext,
+    children: /* @__PURE__ */ jsxRuntimeExports.jsx(MenuItemRoot, {
+      ref: handleRef,
+      role,
+      tabIndex,
+      component,
+      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
+      className: clsx(classes.root, className),
+      ...other,
+      ownerState,
+      classes
+    })
+  });
+});
+
 function TransferDlg({
   fromAddress,
   fromName,
@@ -39936,15 +38055,989 @@ function TransferDlg({
   ] });
 }
 
-const ContentCopy = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 16H8V7h11z"
+function getAlertUtilityClass(slot) {
+  return generateUtilityClass('MuiAlert', slot);
+}
+const alertClasses = generateUtilityClasses('MuiAlert', ['root', 'action', 'icon', 'message', 'filled', 'colorSuccess', 'colorInfo', 'colorWarning', 'colorError', 'filledSuccess', 'filledInfo', 'filledWarning', 'filledError', 'outlined', 'outlinedSuccess', 'outlinedInfo', 'outlinedWarning', 'outlinedError', 'standard', 'standardSuccess', 'standardInfo', 'standardWarning', 'standardError']);
+
+const SuccessOutlinedIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4C12.76,4 13.5,4.11 14.2, 4.31L15.77,2.74C14.61,2.26 13.34,2 12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0, 0 22,12M7.91,10.08L6.5,11.5L11,16L21,6L19.59,4.58L11,13.17L7.91,10.08Z"
 }));
+
+const ReportProblemOutlinedIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"
+}));
+
+const ErrorOutlineIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"
+}));
+
+const InfoOutlinedIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20, 12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10, 10 0 0,0 12,2M11,17H13V11H11V17Z"
+}));
+
+const ClearIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+}));
+
+const useUtilityClasses$6 = (ownerState) => {
+  const {
+    variant,
+    color,
+    severity,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", `color${capitalize(color || severity)}`, `${variant}${capitalize(color || severity)}`, `${variant}`],
+    icon: ["icon"],
+    message: ["message"],
+    action: ["action"]
+  };
+  return composeClasses(slots, getAlertUtilityClass, classes);
+};
+const AlertRoot = styled(Paper, {
+  name: "MuiAlert",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[ownerState.variant], styles[`${ownerState.variant}${capitalize(ownerState.color || ownerState.severity)}`]];
+  }
+})(memoTheme(({
+  theme
+}) => {
+  const getColor = theme.palette.mode === "light" ? darken : lighten;
+  const getBackgroundColor = theme.palette.mode === "light" ? lighten : darken;
+  return {
+    ...theme.typography.body2,
+    backgroundColor: "transparent",
+    display: "flex",
+    padding: "6px 16px",
+    variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color]) => ({
+      props: {
+        colorSeverity: color,
+        variant: "standard"
+      },
+      style: {
+        color: theme.vars ? theme.vars.palette.Alert[`${color}Color`] : getColor(theme.palette[color].light, 0.6),
+        backgroundColor: theme.vars ? theme.vars.palette.Alert[`${color}StandardBg`] : getBackgroundColor(theme.palette[color].light, 0.9),
+        [`& .${alertClasses.icon}`]: theme.vars ? {
+          color: theme.vars.palette.Alert[`${color}IconColor`]
+        } : {
+          color: theme.palette[color].main
+        }
+      }
+    })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["light"])).map(([color]) => ({
+      props: {
+        colorSeverity: color,
+        variant: "outlined"
+      },
+      style: {
+        color: theme.vars ? theme.vars.palette.Alert[`${color}Color`] : getColor(theme.palette[color].light, 0.6),
+        border: `1px solid ${(theme.vars || theme).palette[color].light}`,
+        [`& .${alertClasses.icon}`]: theme.vars ? {
+          color: theme.vars.palette.Alert[`${color}IconColor`]
+        } : {
+          color: theme.palette[color].main
+        }
+      }
+    })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color]) => ({
+      props: {
+        colorSeverity: color,
+        variant: "filled"
+      },
+      style: {
+        fontWeight: theme.typography.fontWeightMedium,
+        ...theme.vars ? {
+          color: theme.vars.palette.Alert[`${color}FilledColor`],
+          backgroundColor: theme.vars.palette.Alert[`${color}FilledBg`]
+        } : {
+          backgroundColor: theme.palette.mode === "dark" ? theme.palette[color].dark : theme.palette[color].main,
+          color: theme.palette.getContrastText(theme.palette[color].main)
+        }
+      }
+    }))]
+  };
+}));
+const AlertIcon = styled("div", {
+  name: "MuiAlert",
+  slot: "Icon"
+})({
+  marginRight: 12,
+  padding: "7px 0",
+  display: "flex",
+  fontSize: 22,
+  opacity: 0.9
+});
+const AlertMessage = styled("div", {
+  name: "MuiAlert",
+  slot: "Message"
+})({
+  padding: "8px 0",
+  minWidth: 0,
+  overflow: "auto"
+});
+const AlertAction = styled("div", {
+  name: "MuiAlert",
+  slot: "Action"
+})({
+  display: "flex",
+  alignItems: "flex-start",
+  padding: "4px 0 0 16px",
+  marginLeft: "auto",
+  marginRight: -8
+});
+const defaultIconMapping = {
+  success: /* @__PURE__ */ jsxRuntimeExports.jsx(SuccessOutlinedIcon, {
+    fontSize: "inherit"
+  }),
+  warning: /* @__PURE__ */ jsxRuntimeExports.jsx(ReportProblemOutlinedIcon, {
+    fontSize: "inherit"
+  }),
+  error: /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorOutlineIcon, {
+    fontSize: "inherit"
+  }),
+  info: /* @__PURE__ */ jsxRuntimeExports.jsx(InfoOutlinedIcon, {
+    fontSize: "inherit"
+  })
+};
+const Alert = /* @__PURE__ */ reactExports.forwardRef(function Alert2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiAlert"
+  });
+  const {
+    action,
+    children,
+    className,
+    closeText = "Close",
+    color,
+    components = {},
+    componentsProps = {},
+    icon,
+    iconMapping = defaultIconMapping,
+    onClose,
+    role = "alert",
+    severity = "success",
+    slotProps = {},
+    slots = {},
+    variant = "standard",
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    color,
+    severity,
+    variant,
+    colorSeverity: color || severity
+  };
+  const classes = useUtilityClasses$6(ownerState);
+  const externalForwardedProps = {
+    slots: {
+      closeButton: components.CloseButton,
+      closeIcon: components.CloseIcon,
+      ...slots
+    },
+    slotProps: {
+      ...componentsProps,
+      ...slotProps
+    }
+  };
+  const [RootSlot, rootSlotProps] = useSlot("root", {
+    ref,
+    shouldForwardComponentProp: true,
+    className: clsx(classes.root, className),
+    elementType: AlertRoot,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other
+    },
+    ownerState,
+    additionalProps: {
+      role,
+      elevation: 0
+    }
+  });
+  const [IconSlot, iconSlotProps] = useSlot("icon", {
+    className: classes.icon,
+    elementType: AlertIcon,
+    externalForwardedProps,
+    ownerState
+  });
+  const [MessageSlot, messageSlotProps] = useSlot("message", {
+    className: classes.message,
+    elementType: AlertMessage,
+    externalForwardedProps,
+    ownerState
+  });
+  const [ActionSlot, actionSlotProps] = useSlot("action", {
+    className: classes.action,
+    elementType: AlertAction,
+    externalForwardedProps,
+    ownerState
+  });
+  const [CloseButtonSlot, closeButtonProps] = useSlot("closeButton", {
+    elementType: IconButton,
+    externalForwardedProps,
+    ownerState
+  });
+  const [CloseIconSlot, closeIconProps] = useSlot("closeIcon", {
+    elementType: ClearIcon,
+    externalForwardedProps,
+    ownerState
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
+    ...rootSlotProps,
+    children: [icon !== false ? /* @__PURE__ */ jsxRuntimeExports.jsx(IconSlot, {
+      ...iconSlotProps,
+      children: icon || iconMapping[severity] || defaultIconMapping[severity]
+    }) : null, /* @__PURE__ */ jsxRuntimeExports.jsx(MessageSlot, {
+      ...messageSlotProps,
+      children
+    }), action != null ? /* @__PURE__ */ jsxRuntimeExports.jsx(ActionSlot, {
+      ...actionSlotProps,
+      children: action
+    }) : null, action == null && onClose ? /* @__PURE__ */ jsxRuntimeExports.jsx(ActionSlot, {
+      ...actionSlotProps,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CloseButtonSlot, {
+        size: "small",
+        "aria-label": closeText,
+        title: closeText,
+        color: "inherit",
+        onClick: onClose,
+        ...closeButtonProps,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CloseIconSlot, {
+          fontSize: "small",
+          ...closeIconProps
+        })
+      })
+    }) : null]
+  });
+});
+
+const CancelIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+}));
+
+function getChipUtilityClass(slot) {
+  return generateUtilityClass('MuiChip', slot);
+}
+const chipClasses = generateUtilityClasses('MuiChip', ['root', 'sizeSmall', 'sizeMedium', 'colorDefault', 'colorError', 'colorInfo', 'colorPrimary', 'colorSecondary', 'colorSuccess', 'colorWarning', 'disabled', 'clickable', 'clickableColorPrimary', 'clickableColorSecondary', 'deletable', 'deletableColorPrimary', 'deletableColorSecondary', 'outlined', 'filled', 'outlinedPrimary', 'outlinedSecondary', 'filledPrimary', 'filledSecondary', 'avatar', 'avatarSmall', 'avatarMedium', 'avatarColorPrimary', 'avatarColorSecondary', 'icon', 'iconSmall', 'iconMedium', 'iconColorPrimary', 'iconColorSecondary', 'label', 'labelSmall', 'labelMedium', 'deleteIcon', 'deleteIconSmall', 'deleteIconMedium', 'deleteIconColorPrimary', 'deleteIconColorSecondary', 'deleteIconOutlinedColorPrimary', 'deleteIconOutlinedColorSecondary', 'deleteIconFilledColorPrimary', 'deleteIconFilledColorSecondary', 'focusVisible']);
+
+const useUtilityClasses$5 = (ownerState) => {
+  const {
+    classes,
+    disabled,
+    size,
+    color,
+    iconColor,
+    onDelete,
+    clickable,
+    variant
+  } = ownerState;
+  const slots = {
+    root: ["root", variant, disabled && "disabled", `size${capitalize(size)}`, `color${capitalize(color)}`, clickable && "clickable", clickable && `clickableColor${capitalize(color)}`, onDelete && "deletable", onDelete && `deletableColor${capitalize(color)}`, `${variant}${capitalize(color)}`],
+    label: ["label", `label${capitalize(size)}`],
+    avatar: ["avatar", `avatar${capitalize(size)}`, `avatarColor${capitalize(color)}`],
+    icon: ["icon", `icon${capitalize(size)}`, `iconColor${capitalize(iconColor)}`],
+    deleteIcon: ["deleteIcon", `deleteIcon${capitalize(size)}`, `deleteIconColor${capitalize(color)}`, `deleteIcon${capitalize(variant)}Color${capitalize(color)}`]
+  };
+  return composeClasses(slots, getChipUtilityClass, classes);
+};
+const ChipRoot = styled("div", {
+  name: "MuiChip",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    const {
+      color,
+      iconColor,
+      clickable,
+      onDelete,
+      size,
+      variant
+    } = ownerState;
+    return [{
+      [`& .${chipClasses.avatar}`]: styles.avatar
+    }, {
+      [`& .${chipClasses.avatar}`]: styles[`avatar${capitalize(size)}`]
+    }, {
+      [`& .${chipClasses.avatar}`]: styles[`avatarColor${capitalize(color)}`]
+    }, {
+      [`& .${chipClasses.icon}`]: styles.icon
+    }, {
+      [`& .${chipClasses.icon}`]: styles[`icon${capitalize(size)}`]
+    }, {
+      [`& .${chipClasses.icon}`]: styles[`iconColor${capitalize(iconColor)}`]
+    }, {
+      [`& .${chipClasses.deleteIcon}`]: styles.deleteIcon
+    }, {
+      [`& .${chipClasses.deleteIcon}`]: styles[`deleteIcon${capitalize(size)}`]
+    }, {
+      [`& .${chipClasses.deleteIcon}`]: styles[`deleteIconColor${capitalize(color)}`]
+    }, {
+      [`& .${chipClasses.deleteIcon}`]: styles[`deleteIcon${capitalize(variant)}Color${capitalize(color)}`]
+    }, styles.root, styles[`size${capitalize(size)}`], styles[`color${capitalize(color)}`], clickable && styles.clickable, clickable && color !== "default" && styles[`clickableColor${capitalize(color)})`], onDelete && styles.deletable, onDelete && color !== "default" && styles[`deletableColor${capitalize(color)}`], styles[variant], styles[`${variant}${capitalize(color)}`]];
+  }
+})(memoTheme(({
+  theme
+}) => {
+  const textColor = theme.palette.mode === "light" ? theme.palette.grey[700] : theme.palette.grey[300];
+  return {
+    maxWidth: "100%",
+    fontFamily: theme.typography.fontFamily,
+    fontSize: theme.typography.pxToRem(13),
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 32,
+    lineHeight: 1.5,
+    color: (theme.vars || theme).palette.text.primary,
+    backgroundColor: (theme.vars || theme).palette.action.selected,
+    borderRadius: 32 / 2,
+    whiteSpace: "nowrap",
+    transition: theme.transitions.create(["background-color", "box-shadow"]),
+    // reset cursor explicitly in case ButtonBase is used
+    cursor: "unset",
+    // We disable the focus ring for mouse, touch and keyboard users.
+    outline: 0,
+    textDecoration: "none",
+    border: 0,
+    // Remove `button` border
+    padding: 0,
+    // Remove `button` padding
+    verticalAlign: "middle",
+    boxSizing: "border-box",
+    [`&.${chipClasses.disabled}`]: {
+      opacity: (theme.vars || theme).palette.action.disabledOpacity,
+      pointerEvents: "none"
+    },
+    [`& .${chipClasses.avatar}`]: {
+      marginLeft: 5,
+      marginRight: -6,
+      width: 24,
+      height: 24,
+      color: theme.vars ? theme.vars.palette.Chip.defaultAvatarColor : textColor,
+      fontSize: theme.typography.pxToRem(12)
+    },
+    [`& .${chipClasses.avatarColorPrimary}`]: {
+      color: (theme.vars || theme).palette.primary.contrastText,
+      backgroundColor: (theme.vars || theme).palette.primary.dark
+    },
+    [`& .${chipClasses.avatarColorSecondary}`]: {
+      color: (theme.vars || theme).palette.secondary.contrastText,
+      backgroundColor: (theme.vars || theme).palette.secondary.dark
+    },
+    [`& .${chipClasses.avatarSmall}`]: {
+      marginLeft: 4,
+      marginRight: -4,
+      width: 18,
+      height: 18,
+      fontSize: theme.typography.pxToRem(10)
+    },
+    [`& .${chipClasses.icon}`]: {
+      marginLeft: 5,
+      marginRight: -6
+    },
+    [`& .${chipClasses.deleteIcon}`]: {
+      WebkitTapHighlightColor: "transparent",
+      color: theme.vars ? `rgba(${theme.vars.palette.text.primaryChannel} / 0.26)` : alpha(theme.palette.text.primary, 0.26),
+      fontSize: 22,
+      cursor: "pointer",
+      margin: "0 5px 0 -6px",
+      "&:hover": {
+        color: theme.vars ? `rgba(${theme.vars.palette.text.primaryChannel} / 0.4)` : alpha(theme.palette.text.primary, 0.4)
+      }
+    },
+    variants: [{
+      props: {
+        size: "small"
+      },
+      style: {
+        height: 24,
+        [`& .${chipClasses.icon}`]: {
+          fontSize: 18,
+          marginLeft: 4,
+          marginRight: -4
+        },
+        [`& .${chipClasses.deleteIcon}`]: {
+          fontSize: 16,
+          marginRight: 4,
+          marginLeft: -4
+        }
+      }
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["contrastText"])).map(([color]) => {
+      return {
+        props: {
+          color
+        },
+        style: {
+          backgroundColor: (theme.vars || theme).palette[color].main,
+          color: (theme.vars || theme).palette[color].contrastText,
+          [`& .${chipClasses.deleteIcon}`]: {
+            color: theme.vars ? `rgba(${theme.vars.palette[color].contrastTextChannel} / 0.7)` : alpha(theme.palette[color].contrastText, 0.7),
+            "&:hover, &:active": {
+              color: (theme.vars || theme).palette[color].contrastText
+            }
+          }
+        }
+      };
+    }), {
+      props: (props) => props.iconColor === props.color,
+      style: {
+        [`& .${chipClasses.icon}`]: {
+          color: theme.vars ? theme.vars.palette.Chip.defaultIconColor : textColor
+        }
+      }
+    }, {
+      props: (props) => props.iconColor === props.color && props.color !== "default",
+      style: {
+        [`& .${chipClasses.icon}`]: {
+          color: "inherit"
+        }
+      }
+    }, {
+      props: {
+        onDelete: true
+      },
+      style: {
+        [`&.${chipClasses.focusVisible}`]: {
+          backgroundColor: theme.vars ? `rgba(${theme.vars.palette.action.selectedChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.focusOpacity}))` : alpha(theme.palette.action.selected, theme.palette.action.selectedOpacity + theme.palette.action.focusOpacity)
+        }
+      }
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color]) => {
+      return {
+        props: {
+          color,
+          onDelete: true
+        },
+        style: {
+          [`&.${chipClasses.focusVisible}`]: {
+            background: (theme.vars || theme).palette[color].dark
+          }
+        }
+      };
+    }), {
+      props: {
+        clickable: true
+      },
+      style: {
+        userSelect: "none",
+        WebkitTapHighlightColor: "transparent",
+        cursor: "pointer",
+        "&:hover": {
+          backgroundColor: theme.vars ? `rgba(${theme.vars.palette.action.selectedChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.hoverOpacity}))` : alpha(theme.palette.action.selected, theme.palette.action.selectedOpacity + theme.palette.action.hoverOpacity)
+        },
+        [`&.${chipClasses.focusVisible}`]: {
+          backgroundColor: theme.vars ? `rgba(${theme.vars.palette.action.selectedChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.focusOpacity}))` : alpha(theme.palette.action.selected, theme.palette.action.selectedOpacity + theme.palette.action.focusOpacity)
+        },
+        "&:active": {
+          boxShadow: (theme.vars || theme).shadows[1]
+        }
+      }
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color]) => ({
+      props: {
+        color,
+        clickable: true
+      },
+      style: {
+        [`&:hover, &.${chipClasses.focusVisible}`]: {
+          backgroundColor: (theme.vars || theme).palette[color].dark
+        }
+      }
+    })), {
+      props: {
+        variant: "outlined"
+      },
+      style: {
+        backgroundColor: "transparent",
+        border: theme.vars ? `1px solid ${theme.vars.palette.Chip.defaultBorder}` : `1px solid ${theme.palette.mode === "light" ? theme.palette.grey[400] : theme.palette.grey[700]}`,
+        [`&.${chipClasses.clickable}:hover`]: {
+          backgroundColor: (theme.vars || theme).palette.action.hover
+        },
+        [`&.${chipClasses.focusVisible}`]: {
+          backgroundColor: (theme.vars || theme).palette.action.focus
+        },
+        [`& .${chipClasses.avatar}`]: {
+          marginLeft: 4
+        },
+        [`& .${chipClasses.avatarSmall}`]: {
+          marginLeft: 2
+        },
+        [`& .${chipClasses.icon}`]: {
+          marginLeft: 4
+        },
+        [`& .${chipClasses.iconSmall}`]: {
+          marginLeft: 2
+        },
+        [`& .${chipClasses.deleteIcon}`]: {
+          marginRight: 5
+        },
+        [`& .${chipClasses.deleteIconSmall}`]: {
+          marginRight: 3
+        }
+      }
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
+      props: {
+        variant: "outlined",
+        color
+      },
+      style: {
+        color: (theme.vars || theme).palette[color].main,
+        border: `1px solid ${theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / 0.7)` : alpha(theme.palette[color].main, 0.7)}`,
+        [`&.${chipClasses.clickable}:hover`]: {
+          backgroundColor: theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha(theme.palette[color].main, theme.palette.action.hoverOpacity)
+        },
+        [`&.${chipClasses.focusVisible}`]: {
+          backgroundColor: theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / ${theme.vars.palette.action.focusOpacity})` : alpha(theme.palette[color].main, theme.palette.action.focusOpacity)
+        },
+        [`& .${chipClasses.deleteIcon}`]: {
+          color: theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / 0.7)` : alpha(theme.palette[color].main, 0.7),
+          "&:hover, &:active": {
+            color: (theme.vars || theme).palette[color].main
+          }
+        }
+      }
+    }))]
+  };
+}));
+const ChipLabel = styled("span", {
+  name: "MuiChip",
+  slot: "Label",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    const {
+      size
+    } = ownerState;
+    return [styles.label, styles[`label${capitalize(size)}`]];
+  }
+})({
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  paddingLeft: 12,
+  paddingRight: 12,
+  whiteSpace: "nowrap",
+  variants: [{
+    props: {
+      variant: "outlined"
+    },
+    style: {
+      paddingLeft: 11,
+      paddingRight: 11
+    }
+  }, {
+    props: {
+      size: "small"
+    },
+    style: {
+      paddingLeft: 8,
+      paddingRight: 8
+    }
+  }, {
+    props: {
+      size: "small",
+      variant: "outlined"
+    },
+    style: {
+      paddingLeft: 7,
+      paddingRight: 7
+    }
+  }]
+});
+function isDeleteKeyboardEvent(keyboardEvent) {
+  return keyboardEvent.key === "Backspace" || keyboardEvent.key === "Delete";
+}
+const Chip = /* @__PURE__ */ reactExports.forwardRef(function Chip2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiChip"
+  });
+  const {
+    avatar: avatarProp,
+    className,
+    clickable: clickableProp,
+    color = "default",
+    component: ComponentProp,
+    deleteIcon: deleteIconProp,
+    disabled = false,
+    icon: iconProp,
+    label,
+    onClick,
+    onDelete,
+    onKeyDown,
+    onKeyUp,
+    size = "medium",
+    variant = "filled",
+    tabIndex,
+    skipFocusWhenDisabled = false,
+    // TODO v6: Rename to `focusableWhenDisabled`.
+    slots = {},
+    slotProps = {},
+    ...other
+  } = props;
+  const chipRef = reactExports.useRef(null);
+  const handleRef = useForkRef(chipRef, ref);
+  const handleDeleteIconClick = (event) => {
+    event.stopPropagation();
+    if (onDelete) {
+      onDelete(event);
+    }
+  };
+  const handleKeyDown = (event) => {
+    if (event.currentTarget === event.target && isDeleteKeyboardEvent(event)) {
+      event.preventDefault();
+    }
+    if (onKeyDown) {
+      onKeyDown(event);
+    }
+  };
+  const handleKeyUp = (event) => {
+    if (event.currentTarget === event.target) {
+      if (onDelete && isDeleteKeyboardEvent(event)) {
+        onDelete(event);
+      }
+    }
+    if (onKeyUp) {
+      onKeyUp(event);
+    }
+  };
+  const clickable = clickableProp !== false && onClick ? true : clickableProp;
+  const component = clickable || onDelete ? ButtonBase : ComponentProp || "div";
+  const ownerState = {
+    ...props,
+    component,
+    disabled,
+    size,
+    color,
+    iconColor: /* @__PURE__ */ reactExports.isValidElement(iconProp) ? iconProp.props.color || color : color,
+    onDelete: !!onDelete,
+    clickable,
+    variant
+  };
+  const classes = useUtilityClasses$5(ownerState);
+  const moreProps = component === ButtonBase ? {
+    component: ComponentProp || "div",
+    focusVisibleClassName: classes.focusVisible,
+    ...onDelete && {
+      disableRipple: true
+    }
+  } : {};
+  let deleteIcon = null;
+  if (onDelete) {
+    deleteIcon = deleteIconProp && /* @__PURE__ */ reactExports.isValidElement(deleteIconProp) ? /* @__PURE__ */ reactExports.cloneElement(deleteIconProp, {
+      className: clsx(deleteIconProp.props.className, classes.deleteIcon),
+      onClick: handleDeleteIconClick
+    }) : /* @__PURE__ */ jsxRuntimeExports.jsx(CancelIcon, {
+      className: classes.deleteIcon,
+      onClick: handleDeleteIconClick
+    });
+  }
+  let avatar = null;
+  if (avatarProp && /* @__PURE__ */ reactExports.isValidElement(avatarProp)) {
+    avatar = /* @__PURE__ */ reactExports.cloneElement(avatarProp, {
+      className: clsx(classes.avatar, avatarProp.props.className)
+    });
+  }
+  let icon = null;
+  if (iconProp && /* @__PURE__ */ reactExports.isValidElement(iconProp)) {
+    icon = /* @__PURE__ */ reactExports.cloneElement(iconProp, {
+      className: clsx(classes.icon, iconProp.props.className)
+    });
+  }
+  const externalForwardedProps = {
+    slots,
+    slotProps
+  };
+  const [RootSlot, rootProps] = useSlot("root", {
+    elementType: ChipRoot,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other
+    },
+    ownerState,
+    // The `component` prop is preserved because `Chip` relies on it for internal logic. If `shouldForwardComponentProp` were `false`, `useSlot` would remove the `component` prop, potentially breaking the component's behavior.
+    shouldForwardComponentProp: true,
+    ref: handleRef,
+    className: clsx(classes.root, className),
+    additionalProps: {
+      disabled: clickable && disabled ? true : void 0,
+      tabIndex: skipFocusWhenDisabled && disabled ? -1 : tabIndex,
+      ...moreProps
+    },
+    getSlotProps: (handlers) => ({
+      ...handlers,
+      onClick: (event) => {
+        handlers.onClick?.(event);
+        onClick?.(event);
+      },
+      onKeyDown: (event) => {
+        handlers.onKeyDown?.(event);
+        handleKeyDown?.(event);
+      },
+      onKeyUp: (event) => {
+        handlers.onKeyUp?.(event);
+        handleKeyUp?.(event);
+      }
+    })
+  });
+  const [LabelSlot, labelProps] = useSlot("label", {
+    elementType: ChipLabel,
+    externalForwardedProps,
+    ownerState,
+    className: classes.label
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
+    as: component,
+    ...rootProps,
+    children: [avatar || icon, /* @__PURE__ */ jsxRuntimeExports.jsx(LabelSlot, {
+      ...labelProps,
+      children: label
+    }), deleteIcon]
+  });
+});
 
 const RefreshIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
   d: "M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"
 }));
 
-const rotate360deg = "rotate360deg 0.5s linear infinite";
+const Person = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+}));
+
+function getAvatarUtilityClass(slot) {
+  return generateUtilityClass('MuiAvatar', slot);
+}
+generateUtilityClasses('MuiAvatar', ['root', 'colorDefault', 'circular', 'rounded', 'square', 'img', 'fallback']);
+
+const useUtilityClasses$4 = (ownerState) => {
+  const {
+    classes,
+    variant,
+    colorDefault
+  } = ownerState;
+  const slots = {
+    root: ["root", variant, colorDefault && "colorDefault"],
+    img: ["img"],
+    fallback: ["fallback"]
+  };
+  return composeClasses(slots, getAvatarUtilityClass, classes);
+};
+const AvatarRoot = styled("div", {
+  name: "MuiAvatar",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[ownerState.variant], ownerState.colorDefault && styles.colorDefault];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  position: "relative",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
+  width: 40,
+  height: 40,
+  fontFamily: theme.typography.fontFamily,
+  fontSize: theme.typography.pxToRem(20),
+  lineHeight: 1,
+  borderRadius: "50%",
+  overflow: "hidden",
+  userSelect: "none",
+  variants: [{
+    props: {
+      variant: "rounded"
+    },
+    style: {
+      borderRadius: (theme.vars || theme).shape.borderRadius
+    }
+  }, {
+    props: {
+      variant: "square"
+    },
+    style: {
+      borderRadius: 0
+    }
+  }, {
+    props: {
+      colorDefault: true
+    },
+    style: {
+      color: (theme.vars || theme).palette.background.default,
+      ...theme.vars ? {
+        backgroundColor: theme.vars.palette.Avatar.defaultBg
+      } : {
+        backgroundColor: theme.palette.grey[400],
+        ...theme.applyStyles("dark", {
+          backgroundColor: theme.palette.grey[600]
+        })
+      }
+    }
+  }]
+})));
+const AvatarImg = styled("img", {
+  name: "MuiAvatar",
+  slot: "Img"
+})({
+  width: "100%",
+  height: "100%",
+  textAlign: "center",
+  // Handle non-square image.
+  objectFit: "cover",
+  // Hide alt text.
+  color: "transparent",
+  // Hide the image broken icon, only works on Chrome.
+  textIndent: 1e4
+});
+const AvatarFallback = styled(Person, {
+  name: "MuiAvatar",
+  slot: "Fallback"
+})({
+  width: "75%",
+  height: "75%"
+});
+function useLoaded({
+  crossOrigin,
+  referrerPolicy,
+  src,
+  srcSet
+}) {
+  const [loaded, setLoaded] = reactExports.useState(false);
+  reactExports.useEffect(() => {
+    if (!src && !srcSet) {
+      return void 0;
+    }
+    setLoaded(false);
+    let active = true;
+    const image = new Image();
+    image.onload = () => {
+      if (!active) {
+        return;
+      }
+      setLoaded("loaded");
+    };
+    image.onerror = () => {
+      if (!active) {
+        return;
+      }
+      setLoaded("error");
+    };
+    image.crossOrigin = crossOrigin;
+    image.referrerPolicy = referrerPolicy;
+    image.src = src;
+    if (srcSet) {
+      image.srcset = srcSet;
+    }
+    return () => {
+      active = false;
+    };
+  }, [crossOrigin, referrerPolicy, src, srcSet]);
+  return loaded;
+}
+const Avatar = /* @__PURE__ */ reactExports.forwardRef(function Avatar2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiAvatar"
+  });
+  const {
+    alt,
+    children: childrenProp,
+    className,
+    component = "div",
+    slots = {},
+    slotProps = {},
+    imgProps,
+    sizes,
+    src,
+    srcSet,
+    variant = "circular",
+    ...other
+  } = props;
+  let children = null;
+  const ownerState = {
+    ...props,
+    component,
+    variant
+  };
+  const loaded = useLoaded({
+    ...imgProps,
+    ...typeof slotProps.img === "function" ? slotProps.img(ownerState) : slotProps.img,
+    src,
+    srcSet
+  });
+  const hasImg = src || srcSet;
+  const hasImgNotFailing = hasImg && loaded !== "error";
+  ownerState.colorDefault = !hasImgNotFailing;
+  delete ownerState.ownerState;
+  const classes = useUtilityClasses$4(ownerState);
+  const [RootSlot, rootSlotProps] = useSlot("root", {
+    ref,
+    className: clsx(classes.root, className),
+    elementType: AvatarRoot,
+    externalForwardedProps: {
+      slots,
+      slotProps,
+      component,
+      ...other
+    },
+    ownerState
+  });
+  const [ImgSlot, imgSlotProps] = useSlot("img", {
+    className: classes.img,
+    elementType: AvatarImg,
+    externalForwardedProps: {
+      slots,
+      slotProps: {
+        img: {
+          ...imgProps,
+          ...slotProps.img
+        }
+      }
+    },
+    additionalProps: {
+      alt,
+      src,
+      srcSet,
+      sizes
+    },
+    ownerState
+  });
+  const [FallbackSlot, fallbackSlotProps] = useSlot("fallback", {
+    className: classes.fallback,
+    elementType: AvatarFallback,
+    externalForwardedProps: {
+      slots,
+      slotProps
+    },
+    shouldForwardComponentProp: true,
+    ownerState
+  });
+  if (hasImgNotFailing) {
+    children = /* @__PURE__ */ jsxRuntimeExports.jsx(ImgSlot, {
+      ...imgSlotProps
+    });
+  } else if (!!childrenProp || childrenProp === 0) {
+    children = childrenProp;
+  } else if (hasImg && alt) {
+    children = alt[0];
+  } else {
+    children = /* @__PURE__ */ jsxRuntimeExports.jsx(FallbackSlot, {
+      ...fallbackSlotProps
+    });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(RootSlot, {
+    ...rootSlotProps,
+    children
+  });
+});
 
 const EditIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
   d: "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z"
@@ -39985,8 +39078,8 @@ function TitleActions(props) {
 function Wallet({ address, name }) {
   const { dispatch } = reactExports.useContext(WalletsCtx);
   const confirm = useConfirm();
-  const [loading, setLoading] = reactExports.useState(true);
-  const [refreshing, setRefreshing] = reactExports.useState(false);
+  const [accountLoading, setAccountLoading] = reactExports.useState(true);
+  const [balanceLoading, setBalanceLoading] = reactExports.useState(false);
   const [transferring, setTransferring] = reactExports.useState(false);
   const [transferID, setTransferID] = reactExports.useState("");
   const [owner, setOwner] = reactExports.useState("");
@@ -39995,14 +39088,15 @@ function Wallet({ address, name }) {
   const [startTransferFailedMessage, setStartTransferFailedMessage] = reactExports.useState("");
   const [transferSuccess, setTransferSuccess] = reactExports.useState(false);
   const isNoneAccount = owner === "";
-  const handleRefresh = reactExports.useCallback(async () => {
-    setRefreshing(true);
+  const loadBalance = reactExports.useCallback(async () => {
+    setBalanceLoading(true);
     const balance2 = await getBalance(address, { encoding: "base64" });
     const sol = balance2 / 1e9;
     setBalance(sol.toString());
-    setRefreshing(false);
+    setBalanceLoading(false);
   }, [address]);
-  reactExports.useEffect(() => {
+  const loadAccount = reactExports.useCallback(async () => {
+    setAccountLoading(true);
     getAccountInfo(address, { encoding: "base64" }).then(
       (data) => {
         if (data) {
@@ -40017,9 +39111,12 @@ function Wallet({ address, name }) {
         console.error("Error fetching wallet data:", error);
       }
     ).finally(() => {
-      setLoading(false);
+      setAccountLoading(false);
     });
   }, [address]);
+  reactExports.useEffect(() => {
+    loadAccount();
+  }, [address, loadAccount]);
   reactExports.useEffect(() => {
     if (transferID) {
       setTransferring(true);
@@ -40031,7 +39128,7 @@ function Wallet({ address, name }) {
         (error) => {
           setTransferring(false);
           if (!error) {
-            handleRefresh();
+            loadBalance();
             setTransferSuccess(true);
           } else {
             console.error(
@@ -40041,7 +39138,7 @@ function Wallet({ address, name }) {
         }
       );
     }
-  }, [transferID, handleRefresh]);
+  }, [transferID, loadBalance]);
   async function handleDelete() {
     const { confirmed } = await confirm({
       title: "删除钱包",
@@ -40089,57 +39186,77 @@ function Wallet({ address, name }) {
         }
       }
     ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(AccordionDetails, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Chip,
-        {
-          label: shortSolanaAddress(address),
-          variant: "outlined",
-          color: "success",
-          avatar: /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { children: "A" }),
-          onDelete: () => {
-          },
-          deleteIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(ContentCopy, {})
-        }
-      ),
-      loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "加载中..." }) : isNoneAccount ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "red" }, children: "未找到账户信息" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Chip,
-          {
-            label: balance,
-            variant: "outlined",
-            color: "success",
-            avatar: /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { children: "B" }),
-            onDelete: () => {
-              if (!refreshing) handleRefresh();
-            },
-            deleteIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(
-              RefreshIcon,
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      AccordionDetails,
+      {
+        sx: { display: "flex", flexDirection: "column", alignItems: "center" },
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Chip,
+            {
+              label: shortSolanaAddress(address),
+              variant: "outlined",
+              color: "success"
+            }
+          ),
+          accountLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+            CircularProgress,
+            {
+              sx: { color: "primary.main", marginTop: 4, marginBottom: 2 }
+            }
+          ) : isNoneAccount ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Typography,
               {
-                sx: { animation: refreshing ? rotate360deg : void 0 }
+                variant: "h6",
+                color: "error",
+                sx: { marginTop: 4, marginBottom: 4 },
+                children: "未找到账户信息"
               }
-            )
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          TransferDlg,
-          {
-            fromAddress: address,
-            fromName: name,
-            onResult: handleTransfer,
-            renderOpenBtn: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Button,
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { onClick: loadAccount, color: "primary", children: /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshIcon, {}) })
+          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Chip,
               {
+                label: balance,
                 variant: "outlined",
-                onClick: triggerOpen,
-                id: "transfer-btn",
-                children: transferring ? /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgress, { size: 24, sx: { marginLeft: 2 } }) : "转账"
+                color: "primary",
+                sx: { marginTop: 4, marginBottom: 2 },
+                avatar: /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { children: "SOL" }),
+                onDelete: () => {
+                  if (!balanceLoading) loadBalance();
+                },
+                deleteIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  RefreshIcon,
+                  {
+                    sx: { animation: balanceLoading ? rotate360deg : void 0 }
+                  }
+                )
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              TransferDlg,
+              {
+                fromAddress: address,
+                fromName: name,
+                onResult: handleTransfer,
+                renderOpenBtn: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Button,
+                  {
+                    variant: "outlined",
+                    onClick: triggerOpen,
+                    id: "transfer-btn",
+                    disabled: transferring || balanceLoading,
+                    children: "转账"
+                  }
+                )
               }
             )
-          }
-        )
-      ] })
-    ] }),
+          ] })
+        ]
+      }
+    ),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Collapse, { in: startTransferSuccess, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       Alert,
       {
@@ -40160,6 +39277,25 @@ function Wallet({ address, name }) {
   ] }, address);
 }
 
+const Grid = createGrid({
+  createStyledComponent: styled("div", {
+    name: "MuiGrid",
+    slot: "Root",
+    overridesResolver: (props, styles) => {
+      const {
+        ownerState
+      } = props;
+      return [styles.root, ownerState.container && styles.container];
+    }
+  }),
+  componentName: "MuiGrid",
+  useThemeProps: (inProps) => useDefaultProps({
+    props: inProps,
+    name: "MuiGrid"
+  }),
+  useTheme
+});
+
 function WalletList() {
   const { wallets } = reactExports.useContext(WalletsCtx);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
@@ -40174,6 +39310,131 @@ function WalletList() {
     ) }, wallet.address)) })
   ] });
 }
+
+function getInputAdornmentUtilityClass(slot) {
+  return generateUtilityClass('MuiInputAdornment', slot);
+}
+const inputAdornmentClasses = generateUtilityClasses('MuiInputAdornment', ['root', 'filled', 'standard', 'outlined', 'positionStart', 'positionEnd', 'disablePointerEvents', 'hiddenLabel', 'sizeSmall']);
+
+var _span;
+const overridesResolver = (props, styles) => {
+  const {
+    ownerState
+  } = props;
+  return [styles.root, styles[`position${capitalize(ownerState.position)}`], ownerState.disablePointerEvents === true && styles.disablePointerEvents, styles[ownerState.variant]];
+};
+const useUtilityClasses$3 = (ownerState) => {
+  const {
+    classes,
+    disablePointerEvents,
+    hiddenLabel,
+    position,
+    size,
+    variant
+  } = ownerState;
+  const slots = {
+    root: ["root", disablePointerEvents && "disablePointerEvents", position && `position${capitalize(position)}`, variant, hiddenLabel && "hiddenLabel", size && `size${capitalize(size)}`]
+  };
+  return composeClasses(slots, getInputAdornmentUtilityClass, classes);
+};
+const InputAdornmentRoot = styled("div", {
+  name: "MuiInputAdornment",
+  slot: "Root",
+  overridesResolver
+})(memoTheme(({
+  theme
+}) => ({
+  display: "flex",
+  maxHeight: "2em",
+  alignItems: "center",
+  whiteSpace: "nowrap",
+  color: (theme.vars || theme).palette.action.active,
+  variants: [{
+    props: {
+      variant: "filled"
+    },
+    style: {
+      [`&.${inputAdornmentClasses.positionStart}&:not(.${inputAdornmentClasses.hiddenLabel})`]: {
+        marginTop: 16
+      }
+    }
+  }, {
+    props: {
+      position: "start"
+    },
+    style: {
+      marginRight: 8
+    }
+  }, {
+    props: {
+      position: "end"
+    },
+    style: {
+      marginLeft: 8
+    }
+  }, {
+    props: {
+      disablePointerEvents: true
+    },
+    style: {
+      pointerEvents: "none"
+    }
+  }]
+})));
+const InputAdornment = /* @__PURE__ */ reactExports.forwardRef(function InputAdornment2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiInputAdornment"
+  });
+  const {
+    children,
+    className,
+    component = "div",
+    disablePointerEvents = false,
+    disableTypography = false,
+    position,
+    variant: variantProp,
+    ...other
+  } = props;
+  const muiFormControl = useFormControl() || {};
+  let variant = variantProp;
+  if (variantProp && muiFormControl.variant) ;
+  if (muiFormControl && !variant) {
+    variant = muiFormControl.variant;
+  }
+  const ownerState = {
+    ...props,
+    hiddenLabel: muiFormControl.hiddenLabel,
+    size: muiFormControl.size,
+    disablePointerEvents,
+    position,
+    variant
+  };
+  const classes = useUtilityClasses$3(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(FormControlContext.Provider, {
+    value: null,
+    children: /* @__PURE__ */ jsxRuntimeExports.jsx(InputAdornmentRoot, {
+      as: component,
+      ownerState,
+      className: clsx(classes.root, className),
+      ref,
+      ...other,
+      children: typeof children === "string" && !disableTypography ? /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, {
+        color: "textSecondary",
+        children
+      }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(reactExports.Fragment, {
+        children: [position === "start" ? (
+          /* notranslate needed while Google Translate will not fix zero-width space issue */
+          _span || (_span = /* @__PURE__ */ jsxRuntimeExports.jsx("span", {
+            className: "notranslate",
+            "aria-hidden": true,
+            children: "​"
+          }))
+        ) : null, children]
+      })
+    })
+  });
+});
 
 const Visibility = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
   d: "M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5M12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5m0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"
@@ -40536,9 +39797,774 @@ function XinyinDlg({
   ] });
 }
 
-const AddIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"
+function mapEventPropToEvent(eventProp) {
+  return eventProp.substring(2).toLowerCase();
+}
+function clickedRootScrollbar(event, doc) {
+  return doc.documentElement.clientWidth < event.clientX || doc.documentElement.clientHeight < event.clientY;
+}
+function ClickAwayListener(props) {
+  const {
+    children,
+    disableReactTree = false,
+    mouseEvent = "onClick",
+    onClickAway,
+    touchEvent = "onTouchEnd"
+  } = props;
+  const movedRef = reactExports.useRef(false);
+  const nodeRef = reactExports.useRef(null);
+  const activatedRef = reactExports.useRef(false);
+  const syntheticEventRef = reactExports.useRef(false);
+  reactExports.useEffect(() => {
+    setTimeout(() => {
+      activatedRef.current = true;
+    }, 0);
+    return () => {
+      activatedRef.current = false;
+    };
+  }, []);
+  const handleRef = useForkRef(getReactElementRef(children), nodeRef);
+  const handleClickAway = useEventCallback((event) => {
+    const insideReactTree = syntheticEventRef.current;
+    syntheticEventRef.current = false;
+    const doc = ownerDocument(nodeRef.current);
+    if (!activatedRef.current || !nodeRef.current || "clientX" in event && clickedRootScrollbar(event, doc)) {
+      return;
+    }
+    if (movedRef.current) {
+      movedRef.current = false;
+      return;
+    }
+    let insideDOM;
+    if (event.composedPath) {
+      insideDOM = event.composedPath().includes(nodeRef.current);
+    } else {
+      insideDOM = !doc.documentElement.contains(
+        // @ts-expect-error returns `false` as intended when not dispatched from a Node
+        event.target
+      ) || nodeRef.current.contains(
+        // @ts-expect-error returns `false` as intended when not dispatched from a Node
+        event.target
+      );
+    }
+    if (!insideDOM && (disableReactTree || !insideReactTree)) {
+      onClickAway(event);
+    }
+  });
+  const createHandleSynthetic = (handlerName) => (event) => {
+    syntheticEventRef.current = true;
+    const childrenPropsHandler = children.props[handlerName];
+    if (childrenPropsHandler) {
+      childrenPropsHandler(event);
+    }
+  };
+  const childrenProps = {
+    ref: handleRef
+  };
+  if (touchEvent !== false) {
+    childrenProps[touchEvent] = createHandleSynthetic(touchEvent);
+  }
+  reactExports.useEffect(() => {
+    if (touchEvent !== false) {
+      const mappedTouchEvent = mapEventPropToEvent(touchEvent);
+      const doc = ownerDocument(nodeRef.current);
+      const handleTouchMove = () => {
+        movedRef.current = true;
+      };
+      doc.addEventListener(mappedTouchEvent, handleClickAway);
+      doc.addEventListener("touchmove", handleTouchMove);
+      return () => {
+        doc.removeEventListener(mappedTouchEvent, handleClickAway);
+        doc.removeEventListener("touchmove", handleTouchMove);
+      };
+    }
+    return void 0;
+  }, [handleClickAway, touchEvent]);
+  if (mouseEvent !== false) {
+    childrenProps[mouseEvent] = createHandleSynthetic(mouseEvent);
+  }
+  reactExports.useEffect(() => {
+    if (mouseEvent !== false) {
+      const mappedMouseEvent = mapEventPropToEvent(mouseEvent);
+      const doc = ownerDocument(nodeRef.current);
+      doc.addEventListener(mappedMouseEvent, handleClickAway);
+      return () => {
+        doc.removeEventListener(mappedMouseEvent, handleClickAway);
+      };
+    }
+    return void 0;
+  }, [handleClickAway, mouseEvent]);
+  return /* @__PURE__ */ reactExports.cloneElement(children, childrenProps);
+}
+
+const Container = createContainer({
+  createStyledComponent: styled("div", {
+    name: "MuiContainer",
+    slot: "Root",
+    overridesResolver: (props, styles) => {
+      const {
+        ownerState
+      } = props;
+      return [styles.root, styles[`maxWidth${capitalize(String(ownerState.maxWidth))}`], ownerState.fixed && styles.fixed, ownerState.disableGutters && styles.disableGutters];
+    }
+  }),
+  useThemeProps: (inProps) => useDefaultProps({
+    props: inProps,
+    name: "MuiContainer"
+  })
+});
+
+function getFabUtilityClass(slot) {
+  return generateUtilityClass('MuiFab', slot);
+}
+const fabClasses = generateUtilityClasses('MuiFab', ['root', 'primary', 'secondary', 'extended', 'circular', 'focusVisible', 'disabled', 'colorInherit', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'info', 'error', 'warning', 'success']);
+
+const useUtilityClasses$2 = (ownerState) => {
+  const {
+    color,
+    variant,
+    classes,
+    size
+  } = ownerState;
+  const slots = {
+    root: ["root", variant, `size${capitalize(size)}`, color === "inherit" ? "colorInherit" : color]
+  };
+  const composedClasses = composeClasses(slots, getFabUtilityClass, classes);
+  return {
+    ...classes,
+    // forward the focused, disabled, etc. classes to the ButtonBase
+    ...composedClasses
+  };
+};
+const FabRoot = styled(ButtonBase, {
+  name: "MuiFab",
+  slot: "Root",
+  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[ownerState.variant], styles[`size${capitalize(ownerState.size)}`], ownerState.color === "inherit" && styles.colorInherit, styles[capitalize(ownerState.size)], styles[ownerState.color]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  ...theme.typography.button,
+  minHeight: 36,
+  transition: theme.transitions.create(["background-color", "box-shadow", "border-color"], {
+    duration: theme.transitions.duration.short
+  }),
+  borderRadius: "50%",
+  padding: 0,
+  minWidth: 0,
+  width: 56,
+  height: 56,
+  zIndex: (theme.vars || theme).zIndex.fab,
+  boxShadow: (theme.vars || theme).shadows[6],
+  "&:active": {
+    boxShadow: (theme.vars || theme).shadows[12]
+  },
+  color: theme.vars ? theme.vars.palette.grey[900] : theme.palette.getContrastText?.(theme.palette.grey[300]),
+  backgroundColor: (theme.vars || theme).palette.grey[300],
+  "&:hover": {
+    backgroundColor: (theme.vars || theme).palette.grey.A100,
+    // Reset on touch devices, it doesn't add specificity
+    "@media (hover: none)": {
+      backgroundColor: (theme.vars || theme).palette.grey[300]
+    },
+    textDecoration: "none"
+  },
+  [`&.${fabClasses.focusVisible}`]: {
+    boxShadow: (theme.vars || theme).shadows[6]
+  },
+  variants: [{
+    props: {
+      size: "small"
+    },
+    style: {
+      width: 40,
+      height: 40
+    }
+  }, {
+    props: {
+      size: "medium"
+    },
+    style: {
+      width: 48,
+      height: 48
+    }
+  }, {
+    props: {
+      variant: "extended"
+    },
+    style: {
+      borderRadius: 48 / 2,
+      padding: "0 16px",
+      width: "auto",
+      minHeight: "auto",
+      minWidth: 48,
+      height: 48
+    }
+  }, {
+    props: {
+      variant: "extended",
+      size: "small"
+    },
+    style: {
+      width: "auto",
+      padding: "0 8px",
+      borderRadius: 34 / 2,
+      minWidth: 34,
+      height: 34
+    }
+  }, {
+    props: {
+      variant: "extended",
+      size: "medium"
+    },
+    style: {
+      width: "auto",
+      padding: "0 16px",
+      borderRadius: 40 / 2,
+      minWidth: 40,
+      height: 40
+    }
+  }, {
+    props: {
+      color: "inherit"
+    },
+    style: {
+      color: "inherit"
+    }
+  }]
+})), memoTheme(({
+  theme
+}) => ({
+  variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark", "contrastText"])).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      color: (theme.vars || theme).palette[color].contrastText,
+      backgroundColor: (theme.vars || theme).palette[color].main,
+      "&:hover": {
+        backgroundColor: (theme.vars || theme).palette[color].dark,
+        // Reset on touch devices, it doesn't add specificity
+        "@media (hover: none)": {
+          backgroundColor: (theme.vars || theme).palette[color].main
+        }
+      }
+    }
+  }))]
+})), memoTheme(({
+  theme
+}) => ({
+  [`&.${fabClasses.disabled}`]: {
+    color: (theme.vars || theme).palette.action.disabled,
+    boxShadow: (theme.vars || theme).shadows[0],
+    backgroundColor: (theme.vars || theme).palette.action.disabledBackground
+  }
+})));
+const Fab = /* @__PURE__ */ reactExports.forwardRef(function Fab2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiFab"
+  });
+  const {
+    children,
+    className,
+    color = "default",
+    component = "button",
+    disabled = false,
+    disableFocusRipple = false,
+    focusVisibleClassName,
+    size = "large",
+    variant = "circular",
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    color,
+    component,
+    disabled,
+    disableFocusRipple,
+    size,
+    variant
+  };
+  const classes = useUtilityClasses$2(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(FabRoot, {
+    className: clsx(classes.root, className),
+    component,
+    disabled,
+    focusRipple: !disableFocusRipple,
+    focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
+    ownerState,
+    ref,
+    ...other,
+    classes,
+    children
+  });
+});
+
+function useSnackbar(parameters = {}) {
+  const {
+    autoHideDuration = null,
+    disableWindowBlurListener = false,
+    onClose,
+    open,
+    resumeHideDuration
+  } = parameters;
+  const timerAutoHide = useTimeout();
+  reactExports.useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    /**
+     * @param {KeyboardEvent} nativeEvent
+     */
+    function handleKeyDown(nativeEvent) {
+      if (!nativeEvent.defaultPrevented) {
+        if (nativeEvent.key === 'Escape') {
+          // not calling `preventDefault` since we don't know if people may ignore this event e.g. a permanently open snackbar
+          onClose?.(nativeEvent, 'escapeKeyDown');
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, onClose]);
+  const handleClose = useEventCallback((event, reason) => {
+    onClose?.(event, reason);
+  });
+  const setAutoHideTimer = useEventCallback(autoHideDurationParam => {
+    if (!onClose || autoHideDurationParam == null) {
+      return;
+    }
+    timerAutoHide.start(autoHideDurationParam, () => {
+      handleClose(null, 'timeout');
+    });
+  });
+  reactExports.useEffect(() => {
+    if (open) {
+      setAutoHideTimer(autoHideDuration);
+    }
+    return timerAutoHide.clear;
+  }, [open, autoHideDuration, setAutoHideTimer, timerAutoHide]);
+  const handleClickAway = event => {
+    onClose?.(event, 'clickaway');
+  };
+
+  // Pause the timer when the user is interacting with the Snackbar
+  // or when the user hide the window.
+  const handlePause = timerAutoHide.clear;
+
+  // Restart the timer when the user is no longer interacting with the Snackbar
+  // or when the window is shown back.
+  const handleResume = reactExports.useCallback(() => {
+    if (autoHideDuration != null) {
+      setAutoHideTimer(resumeHideDuration != null ? resumeHideDuration : autoHideDuration * 0.5);
+    }
+  }, [autoHideDuration, resumeHideDuration, setAutoHideTimer]);
+  const createHandleBlur = otherHandlers => event => {
+    const onBlurCallback = otherHandlers.onBlur;
+    onBlurCallback?.(event);
+    handleResume();
+  };
+  const createHandleFocus = otherHandlers => event => {
+    const onFocusCallback = otherHandlers.onFocus;
+    onFocusCallback?.(event);
+    handlePause();
+  };
+  const createMouseEnter = otherHandlers => event => {
+    const onMouseEnterCallback = otherHandlers.onMouseEnter;
+    onMouseEnterCallback?.(event);
+    handlePause();
+  };
+  const createMouseLeave = otherHandlers => event => {
+    const onMouseLeaveCallback = otherHandlers.onMouseLeave;
+    onMouseLeaveCallback?.(event);
+    handleResume();
+  };
+  reactExports.useEffect(() => {
+    // TODO: window global should be refactored here
+    if (!disableWindowBlurListener && open) {
+      window.addEventListener('focus', handleResume);
+      window.addEventListener('blur', handlePause);
+      return () => {
+        window.removeEventListener('focus', handleResume);
+        window.removeEventListener('blur', handlePause);
+      };
+    }
+    return undefined;
+  }, [disableWindowBlurListener, open, handleResume, handlePause]);
+  const getRootProps = (externalProps = {}) => {
+    const externalEventHandlers = {
+      ...extractEventHandlers(parameters),
+      ...extractEventHandlers(externalProps)
+    };
+    return {
+      // ClickAwayListener adds an `onClick` prop which results in the alert not being announced.
+      // See https://github.com/mui/material-ui/issues/29080
+      role: 'presentation',
+      ...externalProps,
+      ...externalEventHandlers,
+      onBlur: createHandleBlur(externalEventHandlers),
+      onFocus: createHandleFocus(externalEventHandlers),
+      onMouseEnter: createMouseEnter(externalEventHandlers),
+      onMouseLeave: createMouseLeave(externalEventHandlers)
+    };
+  };
+  return {
+    getRootProps,
+    onClickAway: handleClickAway
+  };
+}
+
+function getSnackbarContentUtilityClass(slot) {
+  return generateUtilityClass('MuiSnackbarContent', slot);
+}
+generateUtilityClasses('MuiSnackbarContent', ['root', 'message', 'action']);
+
+const useUtilityClasses$1 = (ownerState) => {
+  const {
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root"],
+    action: ["action"],
+    message: ["message"]
+  };
+  return composeClasses(slots, getSnackbarContentUtilityClass, classes);
+};
+const SnackbarContentRoot = styled(Paper, {
+  name: "MuiSnackbarContent",
+  slot: "Root"
+})(memoTheme(({
+  theme
+}) => {
+  const emphasis = theme.palette.mode === "light" ? 0.8 : 0.98;
+  return {
+    ...theme.typography.body2,
+    color: theme.vars ? theme.vars.palette.SnackbarContent.color : theme.palette.getContrastText(emphasize(theme.palette.background.default, emphasis)),
+    backgroundColor: theme.vars ? theme.vars.palette.SnackbarContent.bg : emphasize(theme.palette.background.default, emphasis),
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    padding: "6px 16px",
+    flexGrow: 1,
+    [theme.breakpoints.up("sm")]: {
+      flexGrow: "initial",
+      minWidth: 288
+    }
+  };
 }));
+const SnackbarContentMessage = styled("div", {
+  name: "MuiSnackbarContent",
+  slot: "Message"
+})({
+  padding: "8px 0"
+});
+const SnackbarContentAction = styled("div", {
+  name: "MuiSnackbarContent",
+  slot: "Action"
+})({
+  display: "flex",
+  alignItems: "center",
+  marginLeft: "auto",
+  paddingLeft: 16,
+  marginRight: -8
+});
+const SnackbarContent = /* @__PURE__ */ reactExports.forwardRef(function SnackbarContent2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiSnackbarContent"
+  });
+  const {
+    action,
+    className,
+    message,
+    role = "alert",
+    ...other
+  } = props;
+  const ownerState = props;
+  const classes = useUtilityClasses$1(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(SnackbarContentRoot, {
+    role,
+    elevation: 6,
+    className: clsx(classes.root, className),
+    ownerState,
+    ref,
+    ...other,
+    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(SnackbarContentMessage, {
+      className: classes.message,
+      ownerState,
+      children: message
+    }), action ? /* @__PURE__ */ jsxRuntimeExports.jsx(SnackbarContentAction, {
+      className: classes.action,
+      ownerState,
+      children: action
+    }) : null]
+  });
+});
+
+function getSnackbarUtilityClass(slot) {
+  return generateUtilityClass('MuiSnackbar', slot);
+}
+generateUtilityClasses('MuiSnackbar', ['root', 'anchorOriginTopCenter', 'anchorOriginBottomCenter', 'anchorOriginTopRight', 'anchorOriginBottomRight', 'anchorOriginTopLeft', 'anchorOriginBottomLeft']);
+
+const useUtilityClasses = (ownerState) => {
+  const {
+    classes,
+    anchorOrigin
+  } = ownerState;
+  const slots = {
+    root: ["root", `anchorOrigin${capitalize(anchorOrigin.vertical)}${capitalize(anchorOrigin.horizontal)}`]
+  };
+  return composeClasses(slots, getSnackbarUtilityClass, classes);
+};
+const SnackbarRoot = styled("div", {
+  name: "MuiSnackbar",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[`anchorOrigin${capitalize(ownerState.anchorOrigin.vertical)}${capitalize(ownerState.anchorOrigin.horizontal)}`]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  zIndex: (theme.vars || theme).zIndex.snackbar,
+  position: "fixed",
+  display: "flex",
+  left: 8,
+  right: 8,
+  justifyContent: "center",
+  alignItems: "center",
+  variants: [{
+    props: ({
+      ownerState
+    }) => ownerState.anchorOrigin.vertical === "top",
+    style: {
+      top: 8,
+      [theme.breakpoints.up("sm")]: {
+        top: 24
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.anchorOrigin.vertical !== "top",
+    style: {
+      bottom: 8,
+      [theme.breakpoints.up("sm")]: {
+        bottom: 24
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.anchorOrigin.horizontal === "left",
+    style: {
+      justifyContent: "flex-start",
+      [theme.breakpoints.up("sm")]: {
+        left: 24,
+        right: "auto"
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.anchorOrigin.horizontal === "right",
+    style: {
+      justifyContent: "flex-end",
+      [theme.breakpoints.up("sm")]: {
+        right: 24,
+        left: "auto"
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.anchorOrigin.horizontal === "center",
+    style: {
+      [theme.breakpoints.up("sm")]: {
+        left: "50%",
+        right: "auto",
+        transform: "translateX(-50%)"
+      }
+    }
+  }]
+})));
+const Snackbar = /* @__PURE__ */ reactExports.forwardRef(function Snackbar2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiSnackbar"
+  });
+  const theme = useTheme();
+  const defaultTransitionDuration = {
+    enter: theme.transitions.duration.enteringScreen,
+    exit: theme.transitions.duration.leavingScreen
+  };
+  const {
+    action,
+    anchorOrigin: {
+      vertical,
+      horizontal
+    } = {
+      vertical: "bottom",
+      horizontal: "left"
+    },
+    autoHideDuration = null,
+    children,
+    className,
+    ClickAwayListenerProps: ClickAwayListenerPropsProp,
+    ContentProps: ContentPropsProp,
+    disableWindowBlurListener = false,
+    message,
+    onBlur,
+    onClose,
+    onFocus,
+    onMouseEnter,
+    onMouseLeave,
+    open,
+    resumeHideDuration,
+    slots = {},
+    slotProps = {},
+    TransitionComponent: TransitionComponentProp,
+    transitionDuration = defaultTransitionDuration,
+    TransitionProps: {
+      onEnter,
+      onExited,
+      ...TransitionPropsProp
+    } = {},
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    anchorOrigin: {
+      vertical,
+      horizontal
+    },
+    autoHideDuration,
+    disableWindowBlurListener,
+    TransitionComponent: TransitionComponentProp,
+    transitionDuration
+  };
+  const classes = useUtilityClasses(ownerState);
+  const {
+    getRootProps,
+    onClickAway
+  } = useSnackbar({
+    ...ownerState
+  });
+  const [exited, setExited] = reactExports.useState(true);
+  const handleExited = (node) => {
+    setExited(true);
+    if (onExited) {
+      onExited(node);
+    }
+  };
+  const handleEnter = (node, isAppearing) => {
+    setExited(false);
+    if (onEnter) {
+      onEnter(node, isAppearing);
+    }
+  };
+  const externalForwardedProps = {
+    slots: {
+      transition: TransitionComponentProp,
+      ...slots
+    },
+    slotProps: {
+      content: ContentPropsProp,
+      clickAwayListener: ClickAwayListenerPropsProp,
+      transition: TransitionPropsProp,
+      ...slotProps
+    }
+  };
+  const [Root, rootProps] = useSlot("root", {
+    ref,
+    className: [classes.root, className],
+    elementType: SnackbarRoot,
+    getSlotProps: getRootProps,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other
+    },
+    ownerState
+  });
+  const [ClickAwaySlot, {
+    ownerState: clickAwayOwnerStateProp,
+    ...clickAwayListenerProps
+  }] = useSlot("clickAwayListener", {
+    elementType: ClickAwayListener,
+    externalForwardedProps,
+    getSlotProps: (handlers) => ({
+      onClickAway: (...params) => {
+        const event = params[0];
+        handlers.onClickAway?.(...params);
+        if (event?.defaultMuiPrevented) {
+          return;
+        }
+        onClickAway(...params);
+      }
+    }),
+    ownerState
+  });
+  const [ContentSlot, contentSlotProps] = useSlot("content", {
+    elementType: SnackbarContent,
+    shouldForwardComponentProp: true,
+    externalForwardedProps,
+    additionalProps: {
+      message,
+      action
+    },
+    ownerState
+  });
+  const [TransitionSlot, transitionProps] = useSlot("transition", {
+    elementType: Grow,
+    externalForwardedProps,
+    getSlotProps: (handlers) => ({
+      onEnter: (...params) => {
+        handlers.onEnter?.(...params);
+        handleEnter(...params);
+      },
+      onExited: (...params) => {
+        handlers.onExited?.(...params);
+        handleExited(...params);
+      }
+    }),
+    additionalProps: {
+      appear: true,
+      in: open,
+      timeout: transitionDuration,
+      direction: vertical === "top" ? "down" : "up"
+    },
+    ownerState
+  });
+  if (!open && exited) {
+    return null;
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ClickAwaySlot, {
+    ...clickAwayListenerProps,
+    ...slots.clickAwayListener && {
+      ownerState: clickAwayOwnerStateProp
+    },
+    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root, {
+      ...rootProps,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionSlot, {
+        ...transitionProps,
+        children: children || /* @__PURE__ */ jsxRuntimeExports.jsx(ContentSlot, {
+          ...contentSlotProps
+        })
+      })
+    })
+  });
+});
 
 const ImportWords32Icon = createSvgIcon(
   /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -40772,6 +40798,10 @@ function useRegisterSW(options = {}) {
   };
 }
 
+const AddIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"
+}));
+
 const FixedButtons = reactExports.memo(
   ({ dispatch }) => {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(WalletsCtx, { value: { dispatch }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -40865,4 +40895,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { sx: { padding: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) })
 );
-//# sourceMappingURL=index-De7GyXMd.js.map
+//# sourceMappingURL=index-CfeCdTAc.js.map

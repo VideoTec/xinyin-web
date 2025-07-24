@@ -1,22 +1,24 @@
 import { useContext, useEffect, useState, useCallback } from "react";
 import { WalletsCtx } from "./walletsCtx";
-import Accordion from "@mui/material/Accordion";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import Button from "@mui/material/Button";
+import { rotate360deg } from "./customStyle";
 import { useConfirm } from "material-ui-confirm";
 import { WalletDlg } from "./walletDlg";
 import { getAccountInfo, getBalance } from "./rpc/solanaRpc";
 import { transfer, loopGetTransferStatus } from "./rpc/transfer";
-import { CircularProgress, Collapse, IconButton, Stack } from "@mui/material";
+import { shortSolanaAddress } from "./rpc/utils";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import IconButton from "@mui/material/IconButton";
+import Collapse from "@mui/material/Collapse";
+import CircularProgress from "@mui/material/CircularProgress";
 import TransferDlg from "./transferDlg";
 import Alert from "@mui/material/Alert";
-import { shortSolanaAddress } from "./rpc/utils";
 import Chip from "@mui/material/Chip";
-import ContentCopy from "@mui/icons-material/ContentCopy";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import Avatar from "@mui/material/Avatar";
-import { rotate360deg } from "./customStyle";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Typography from "@mui/material/Typography";
@@ -168,8 +170,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   }
 
   //TODO : 发起转账，转账中，转账完成 归到一个 alert 里面
-  //TODO : 地址旁边增加复制按钮，使用合适的组件，联合展示
-  //TODO : 余额旁边增加刷新按钮，使用合适的组件，联合展示
+  //TODO : 地址点击，弹窗，显示完整地址
 
   return (
     <Accordion key={address}>
@@ -197,9 +198,6 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           label={shortSolanaAddress(address)}
           variant="outlined"
           color="success"
-          avatar={<Avatar>A</Avatar>}
-          onDelete={() => {}}
-          deleteIcon={<ContentCopy />}
         />
         {accountLoading ? (
           <CircularProgress
@@ -223,8 +221,9 @@ export function Wallet({ address, name }: { address: string; name: string }) {
             <Chip
               label={balance}
               variant="outlined"
-              color="success"
-              avatar={<Avatar>B</Avatar>}
+              color="primary"
+              sx={{ marginTop: 4, marginBottom: 2 }}
+              avatar={<Avatar>SOL</Avatar>}
               onDelete={() => {
                 if (!balanceLoading) loadBalance();
               }}
@@ -243,12 +242,9 @@ export function Wallet({ address, name }: { address: string; name: string }) {
                   variant="outlined"
                   onClick={triggerOpen}
                   id="transfer-btn"
+                  disabled={transferring || balanceLoading}
                 >
-                  {transferring ? (
-                    <CircularProgress size={24} sx={{ marginLeft: 2 }} />
-                  ) : (
-                    "转账"
-                  )}
+                  转账
                 </Button>
               )}
             />
