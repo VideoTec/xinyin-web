@@ -8,7 +8,7 @@ import { useConfirm } from "material-ui-confirm";
 import { WalletDlg } from "./walletDlg";
 import { getAccountInfo, getBalance } from "./rpc/solanaRpc";
 import { transfer, loopGetTransferStatus } from "./rpc/transfer";
-import { CircularProgress, Collapse, Stack } from "@mui/material";
+import { CircularProgress, Collapse, IconButton, Stack } from "@mui/material";
 import TransferDlg from "./transferDlg";
 import Alert from "@mui/material/Alert";
 import { shortSolanaAddress } from "./rpc/utils";
@@ -19,6 +19,7 @@ import Avatar from "@mui/material/Avatar";
 import { rotate360deg } from "./customStyle";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Typography from "@mui/material/Typography";
 
 type TitleActionsProps = {
   address: string;
@@ -60,8 +61,8 @@ function TitleActions(props: TitleActionsProps) {
 export function Wallet({ address, name }: { address: string; name: string }) {
   const { dispatch } = useContext(WalletsCtx)!;
   const confirm = useConfirm();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [accountLoading, setAccountLoading] = useState(true);
+  const [balanceLoading, setBalanceLoading] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [transferID, setTransferID] = useState("");
   const [owner, setOwner] = useState("");
@@ -73,15 +74,16 @@ export function Wallet({ address, name }: { address: string; name: string }) {
 
   const isNoneAccount = owner === "";
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
+  const loadBalance = useCallback(async () => {
+    setBalanceLoading(true);
     const balance = await getBalance(address, { encoding: "base64" });
     const sol = balance / 1e9; // Convert lamports to SOL
     setBalance(sol.toString());
-    setRefreshing(false);
+    setBalanceLoading(false);
   }, [address]);
 
-  useEffect(() => {
+  const loadAccount = useCallback(async () => {
+    setAccountLoading(true);
     getAccountInfo(address, { encoding: "base64" })
       .then(
         (data) => {
@@ -98,9 +100,13 @@ export function Wallet({ address, name }: { address: string; name: string }) {
         }
       )
       .finally(() => {
-        setLoading(false);
+        setAccountLoading(false);
       });
   }, [address]);
+
+  useEffect(() => {
+    loadAccount();
+  }, [address, loadAccount]);
 
   useEffect(() => {
     if (transferID) {
@@ -114,7 +120,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
         (error) => {
           setTransferring(false);
           if (!error) {
-            handleRefresh();
+            loadBalance();
             setTransferSuccess(true);
           } else {
             console.error(
@@ -124,7 +130,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
         }
       );
     }
-  }, [transferID, handleRefresh]);
+  }, [transferID, loadBalance]);
 
   // FIXME 显示、隐藏确认框迟钝，release 版本没有问题
   async function handleDelete() {
@@ -164,7 +170,6 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   //TODO : 发起转账，转账中，转账完成 归到一个 alert 里面
   //TODO : 地址旁边增加复制按钮，使用合适的组件，联合展示
   //TODO : 余额旁边增加刷新按钮，使用合适的组件，联合展示
-  //TODO : 未找到的账户，提供刷新重试功能
 
   return (
     <Accordion key={address}>
@@ -185,7 +190,9 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           onDelete={() => {}}
         />
       </AccordionSummary>
-      <AccordionDetails>
+      <AccordionDetails
+        sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+      >
         <Chip
           label={shortSolanaAddress(address)}
           variant="outlined"
@@ -194,10 +201,23 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           onDelete={() => {}}
           deleteIcon={<ContentCopy />}
         />
-        {loading ? (
-          <p>加载中...</p>
+        {accountLoading ? (
+          <CircularProgress
+            sx={{ color: "primary.main", marginTop: 4, marginBottom: 2 }}
+          />
         ) : isNoneAccount ? (
-          <p style={{ color: "red" }}>未找到账户信息</p>
+          <>
+            <Typography
+              variant="h6"
+              color="error"
+              sx={{ marginTop: 4, marginBottom: 4 }}
+            >
+              未找到账户信息
+            </Typography>
+            <IconButton onClick={loadAccount} color="primary">
+              <RefreshIcon />
+            </IconButton>
+          </>
         ) : (
           <>
             <Chip
@@ -206,11 +226,11 @@ export function Wallet({ address, name }: { address: string; name: string }) {
               color="success"
               avatar={<Avatar>B</Avatar>}
               onDelete={() => {
-                if (!refreshing) handleRefresh();
+                if (!balanceLoading) loadBalance();
               }}
               deleteIcon={
                 <RefreshIcon
-                  sx={{ animation: refreshing ? rotate360deg : undefined }}
+                  sx={{ animation: balanceLoading ? rotate360deg : undefined }}
                 />
               }
             />
