@@ -6,7 +6,7 @@ import { ConfirmProvider } from "material-ui-confirm";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <Container>
+    <Container sx={{ padding: 0 }}>
       <ConfirmProvider>
         <App />
       </ConfirmProvider>

@@ -26,6 +26,10 @@ import { Button, Snackbar } from "@mui/material";
 
 type WorkerStatus = "loading" | "success" | "error";
 
+// TODO : 添加错误处理逻辑，确保在 worker 初始化失败时给出友好的提示
+// TODO : fab 按钮的样式和位置可以根据设计需求进行调整
+// TODO : 添加 App Bar
+
 const FixedButtons = memo(
   ({ dispatch }: { dispatch: Dispatch<WalletDispatchAction> }) => {
     return (

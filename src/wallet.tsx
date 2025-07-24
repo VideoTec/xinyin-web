@@ -15,6 +15,11 @@ import { CircularProgress, Collapse } from "@mui/material";
 import TransferDlg from "./transferDlg";
 import Alert from "@mui/material/Alert";
 import { shortSolanaAddress } from "./rpc/utils";
+import Chip from "@mui/material/Chip";
+import ContentCopy from "@mui/icons-material/ContentCopy";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import Avatar from "@mui/material/Avatar";
+import { rotate360deg } from "./customStyle";
 
 export function Wallet({ address, name }: { address: string; name: string }) {
   const { dispatch } = useContext(WalletsCtx)!;
@@ -132,16 +137,34 @@ export function Wallet({ address, name }: { address: string; name: string }) {
         <Typography component="span">{name}</Typography>
       </AccordionSummary>
       <AccordionDetails>
-        <p style={{ wordBreak: "break-all" }}>{shortSolanaAddress(address)}</p>
+        <Chip
+          label={shortSolanaAddress(address)}
+          variant="outlined"
+          color="success"
+          avatar={<Avatar>A</Avatar>}
+          onDelete={() => {}}
+          deleteIcon={<ContentCopy />}
+        />
         {loading ? (
           <p>加载中...</p>
         ) : isNoneAccount ? (
           <p style={{ color: "red" }}>未找到账户信息</p>
         ) : (
           <>
-            <p>
-              余额: {balance} {refreshing && <CircularProgress />}
-            </p>
+            <Chip
+              label={balance}
+              variant="outlined"
+              color="success"
+              avatar={<Avatar>B</Avatar>}
+              onDelete={() => {
+                if (!refreshing) handleRefresh();
+              }}
+              deleteIcon={
+                <RefreshIcon
+                  sx={{ animation: refreshing ? rotate360deg : undefined }}
+                />
+              }
+            />
             <TransferDlg
               fromAddress={address}
               fromName={name}
