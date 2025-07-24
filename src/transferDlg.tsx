@@ -12,6 +12,7 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { FormControl, FormHelperText } from "@mui/material";
 import InputLabel from "@mui/material/InputLabel";
+import { shortSolanaAddress } from "./rpc/utils";
 
 interface TransferData {
   toAddress: string;
@@ -88,7 +89,7 @@ export default function TransferDlg({
             <TextField
               label="扣款账户"
               value={fromName}
-              helperText={fromAddress}
+              helperText={shortSolanaAddress(fromAddress)}
               disabled
               autoComplete="username"
             />
@@ -121,7 +122,9 @@ export default function TransferDlg({
                 )}
               />
               <FormHelperText>
-                {watch("toAddress") ? watch("toAddress") : "请选择收款账户"}
+                {watch("toAddress")
+                  ? shortSolanaAddress(watch("toAddress"))
+                  : "请选择收款账户"}
               </FormHelperText>
             </FormControl>
             <TextField

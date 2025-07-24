@@ -52,3 +52,18 @@ export function txMessageData(
 export function byteArrayToBase64(bytes: Uint8Array): string {
   return btoa(String.fromCharCode(...bytes));
 }
+
+export function shortSolanaAddress(address: string): string {
+  return address.slice(0, 4) + "..." + address.slice(-4);
+}
+
+import bs58 from "bs58";
+export function isValidSolanaAddress(address: string): boolean {
+  try {
+    const decoded = bs58.decode(address);
+    return decoded.length === 32;
+  } catch (error) {
+    console.error(`Invalid Solana address(${address}): `, error);
+    return false;
+  }
+}

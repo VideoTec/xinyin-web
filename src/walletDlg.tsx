@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import type { Wallet } from "./walletsData";
-// import bs58 from "bs58"; // 暂时注释，地址验证功能待完善
+import { shortSolanaAddress, isValidSolanaAddress } from "./rpc/utils";
 
 export function WalletDlg({
   initAddress = "",
@@ -31,6 +31,8 @@ export function WalletDlg({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<Wallet>({
     defaultValues: {
       address: initAddress,
@@ -39,6 +41,8 @@ export function WalletDlg({
   });
 
   const title = type === "add" ? "添加钱包" : "修改钱包";
+
+  // TODO : 这里可以添加验证逻辑，确保地址格式正确，并且 name address 没有重复
 
   function handleOpen() {
     reset({
@@ -66,18 +70,6 @@ export function WalletDlg({
     });
   };
 
-  function validateAddress() {
-    // try {
-    //   const decoded = bs58.decode(value);
-    //   if (decoded.length !== 32) {
-    //     return "钱包地址必须是 32 字节的 Base58 编码字符串";
-    //   }
-    // } catch (e) {
-    //   return "钱包地址格式不正确: " + e;
-    // }
-    return true;
-  }
-
   return (
     <>
       {children({ triggerOpen: handleOpen })}
@@ -97,14 +89,26 @@ export function WalletDlg({
               disabled={type === "modify"}
               {...register("address", {
                 required: "必须填写钱包地址",
-                validate: validateAddress,
+                validate: isValidSolanaAddress,
               })}
+              onChange={(e) => {
+                // 确保地址格式正确
+                const value = e.target.value.trim();
+                console.log("Address input changed:", value);
+              }}
               error={!!errors.address}
               helperText={errors.address && errors.address.message}
             />
             <TextField
               label="钱包名称"
               fullWidth
+              onFocus={() => {
+                const address = watch("address");
+                const name = watch("name");
+                if (!name && address && isValidSolanaAddress(address)) {
+                  setValue("name", shortSolanaAddress(address));
+                }
+              }}
               {...register("name", { required: "必须填写钱包名称" })}
               error={!!errors.name}
               helperText={errors.name && errors.name.message}

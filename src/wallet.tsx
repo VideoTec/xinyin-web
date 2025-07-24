@@ -14,6 +14,7 @@ import { transfer, loopGetTransferStatus } from "./rpc/transfer";
 import { CircularProgress, Collapse } from "@mui/material";
 import TransferDlg from "./transferDlg";
 import Alert from "@mui/material/Alert";
+import { shortSolanaAddress } from "./rpc/utils";
 
 export function Wallet({ address, name }: { address: string; name: string }) {
   const { dispatch } = useContext(WalletsCtx)!;
@@ -116,6 +117,11 @@ export function Wallet({ address, name }: { address: string; name: string }) {
       });
   }
 
+  //TODO : 发起转账，转账中，转账完成 归到一个 alert 里面
+  //TODO : 修改，删除按钮 放到 AccordionSummary 里面
+  //TODO : 地址旁边增加复制按钮，使用合适的组件，联合展示
+  //TODO : 余额旁边增加刷新按钮，使用合适的组件，联合展示
+  //TODO : 未找到的账户，提供刷新重试功能
   return (
     <Accordion key={address}>
       <AccordionSummary
@@ -126,7 +132,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
         <Typography component="span">{name}</Typography>
       </AccordionSummary>
       <AccordionDetails>
-        <p style={{ wordBreak: "break-all" }}>{address}</p>
+        <p style={{ wordBreak: "break-all" }}>{shortSolanaAddress(address)}</p>
         {loading ? (
           <p>加载中...</p>
         ) : isNoneAccount ? (
@@ -136,7 +142,6 @@ export function Wallet({ address, name }: { address: string; name: string }) {
             <p>
               余额: {balance} {refreshing && <CircularProgress />}
             </p>
-            <p>所有者: {owner}</p>
             <TransferDlg
               fromAddress={address}
               fromName={name}

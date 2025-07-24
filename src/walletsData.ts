@@ -1,18 +1,18 @@
 export interface Wallet {
-    address: string,
-    name: string
+  address: string;
+  name: string;
 }
 
 export function initWallets(): Wallet[] {
-    const wallets: Wallet[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-        const address = localStorage.key(i);
-        if (address) {
-            const name = localStorage.getItem(address) || "";
-            wallets.push({ address, name });
-        }
+  const wallets: Wallet[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const address = localStorage.key(i);
+    if (address) {
+      const name = localStorage.getItem(address) || "";
+      wallets.push({ address, name });
     }
-    return wallets;
+  }
+  return wallets;
 }
 
 export type WalletDispatchAction =
@@ -41,12 +41,12 @@ function setItemAsync(key: string, value: string) {
         localStorage.setItem(key, value);
         resolve();
       } catch (error) {
-        console.error('localStorage.setItem failed:', error);
+        console.error("localStorage.setItem failed:", error);
         resolve(); // 即使失败也要resolve，避免阻塞
       }
     };
-    
-    if (typeof requestIdleCallback !== 'undefined') {
+
+    if (typeof requestIdleCallback !== "undefined") {
       requestIdleCallback(callback);
     } else {
       setTimeout(callback, 0);
@@ -61,12 +61,12 @@ function removeItemAsync(key: string) {
         localStorage.removeItem(key);
         resolve();
       } catch (error) {
-        console.error('localStorage.removeItem failed:', error);
+        console.error("localStorage.removeItem failed:", error);
         resolve();
       }
     };
-    
-    if (typeof requestIdleCallback !== 'undefined') {
+
+    if (typeof requestIdleCallback !== "undefined") {
       requestIdleCallback(callback);
     } else {
       setTimeout(callback, 0);
@@ -81,12 +81,12 @@ function clearAsync() {
         localStorage.clear();
         resolve();
       } catch (error) {
-        console.error('localStorage.clear failed:', error);
+        console.error("localStorage.clear failed:", error);
         resolve();
       }
     };
-    
-    if (typeof requestIdleCallback !== 'undefined') {
+
+    if (typeof requestIdleCallback !== "undefined") {
       requestIdleCallback(callback);
     } else {
       setTimeout(callback, 0);
@@ -100,6 +100,7 @@ export function walletsReducer(
 ): Wallet[] {
   switch (action.type) {
     case "add": {
+      // TODO 检查钱包地址是否已存在
       const w = action.wallet;
       draft.push(w);
       // 异步更新localStorage，不阻塞UI
@@ -121,7 +122,9 @@ export function walletsReducer(
       );
       if (index !== -1) {
         draft[index] = action.wallet;
-        setItemAsync(action.wallet.address, action.wallet.name).catch(console.error);
+        setItemAsync(action.wallet.address, action.wallet.name).catch(
+          console.error
+        );
       }
       break;
     }
