@@ -70,6 +70,7 @@ export function WalletDlg({
     });
   };
 
+  // FIXME: 确保地址格式正确, 显示错误原因
   return (
     <>
       {children({ triggerOpen: handleOpen })}
@@ -78,6 +79,7 @@ export function WalletDlg({
         onClose={() => setOpen(false)}
         disableAutoFocus={false}
         disableRestoreFocus={true}
+        onClick={(e) => e.stopPropagation()} // 阻止事件冒泡
       >
         <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
         <DialogContent sx={{ paddingBottom: 0 }}>
@@ -91,11 +93,6 @@ export function WalletDlg({
                 required: "必须填写钱包地址",
                 validate: isValidSolanaAddress,
               })}
-              onChange={(e) => {
-                // 确保地址格式正确
-                const value = e.target.value.trim();
-                console.log("Address input changed:", value);
-              }}
               error={!!errors.address}
               helperText={errors.address && errors.address.message}
             />
@@ -105,7 +102,11 @@ export function WalletDlg({
               onFocus={() => {
                 const address = watch("address");
                 const name = watch("name");
-                if (!name && address && isValidSolanaAddress(address)) {
+                if (
+                  !name &&
+                  address &&
+                  isValidSolanaAddress(address) === true
+                ) {
                   setValue("name", shortSolanaAddress(address));
                 }
               }}

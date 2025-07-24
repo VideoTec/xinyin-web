@@ -21770,7 +21770,7 @@ const useThemePropsDefault$2 = (inProps) => useThemeProps({
   name: "MuiContainer",
   defaultTheme: defaultTheme$3
 });
-const useUtilityClasses$H = (ownerState, componentName) => {
+const useUtilityClasses$I = (ownerState, componentName) => {
   const getContainerUtilityClass = (slot) => {
     return generateUtilityClass(componentName, slot);
   };
@@ -21860,7 +21860,7 @@ function createContainer(options = {}) {
       fixed,
       maxWidth
     };
-    const classes = useUtilityClasses$H(ownerState, componentName);
+    const classes = useUtilityClasses$I(ownerState, componentName);
     return (
       // @ts-ignore theme is injected by the styled util
       /* @__PURE__ */ jsxRuntimeExports.jsx(ContainerRoot, {
@@ -23725,7 +23725,7 @@ const rotateAnimation = typeof circularRotateKeyframe !== "string" ? css`
 const dashAnimation = typeof circularDashKeyframe !== "string" ? css`
         animation: ${circularDashKeyframe} 1.4s ease-in-out infinite;
       ` : null;
-const useUtilityClasses$G = (ownerState) => {
+const useUtilityClasses$H = (ownerState) => {
   const {
     classes,
     variant,
@@ -23847,7 +23847,7 @@ const CircularProgress = /* @__PURE__ */ reactExports.forwardRef(function Circul
     value,
     variant
   };
-  const classes = useUtilityClasses$G(ownerState);
+  const classes = useUtilityClasses$H(ownerState);
   const circleStyle = {};
   const rootStyle = {};
   const rootProps = {};
@@ -23906,7 +23906,7 @@ const v6Colors = {
   textDisabled: true
 };
 const extendSxProp = internal_createExtendSxProp();
-const useUtilityClasses$F = (ownerState) => {
+const useUtilityClasses$G = (ownerState) => {
   const {
     align,
     gutterBottom,
@@ -24046,7 +24046,7 @@ const Typography = /* @__PURE__ */ reactExports.forwardRef(function Typography2(
     variantMapping
   };
   const Component = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
-  const classes = useUtilityClasses$F(ownerState);
+  const classes = useUtilityClasses$G(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(TypographyRoot, {
     as: Component,
     ref,
@@ -24778,7 +24778,9 @@ function walletsReducer(draft, action) {
       );
       if (index !== -1) {
         draft[index] = action.wallet;
-        setItemAsync(action.wallet.address, action.wallet.name).catch(console.error);
+        setItemAsync(action.wallet.address, action.wallet.name).catch(
+          console.error
+        );
       }
       break;
     }
@@ -25384,7 +25386,7 @@ function getSvgIconUtilityClass(slot) {
 }
 generateUtilityClasses('MuiSvgIcon', ['root', 'colorPrimary', 'colorSecondary', 'colorAction', 'colorError', 'colorDisabled', 'fontSizeInherit', 'fontSizeSmall', 'fontSizeMedium', 'fontSizeLarge']);
 
-const useUtilityClasses$E = (ownerState) => {
+const useUtilityClasses$F = (ownerState) => {
   const {
     color,
     fontSize,
@@ -25523,7 +25525,7 @@ const SvgIcon = /* @__PURE__ */ reactExports.forwardRef(function SvgIcon2(inProp
   if (!inheritViewBox) {
     more.viewBox = viewBox;
   }
-  const classes = useUtilityClasses$E(ownerState);
+  const classes = useUtilityClasses$F(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(SvgIconRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -25775,7 +25777,7 @@ function getCollapseUtilityClass(slot) {
 }
 generateUtilityClasses('MuiCollapse', ['root', 'horizontal', 'vertical', 'entered', 'hidden', 'wrapper', 'wrapperInner']);
 
-const useUtilityClasses$D = (ownerState) => {
+const useUtilityClasses$E = (ownerState) => {
   const {
     orientation,
     classes
@@ -25901,7 +25903,7 @@ const Collapse = /* @__PURE__ */ reactExports.forwardRef(function Collapse2(inPr
     orientation,
     collapsedSize: collapsedSizeProp
   };
-  const classes = useUtilityClasses$D(ownerState);
+  const classes = useUtilityClasses$E(ownerState);
   const theme = useTheme();
   const timer = useTimeout();
   const wrapperRef = reactExports.useRef(null);
@@ -26064,7 +26066,7 @@ function getPaperUtilityClass(slot) {
 }
 generateUtilityClasses('MuiPaper', ['root', 'rounded', 'outlined', 'elevation', 'elevation0', 'elevation1', 'elevation2', 'elevation3', 'elevation4', 'elevation5', 'elevation6', 'elevation7', 'elevation8', 'elevation9', 'elevation10', 'elevation11', 'elevation12', 'elevation13', 'elevation14', 'elevation15', 'elevation16', 'elevation17', 'elevation18', 'elevation19', 'elevation20', 'elevation21', 'elevation22', 'elevation23', 'elevation24']);
 
-const useUtilityClasses$C = (ownerState) => {
+const useUtilityClasses$D = (ownerState) => {
   const {
     square,
     elevation,
@@ -26136,7 +26138,7 @@ const Paper = /* @__PURE__ */ reactExports.forwardRef(function Paper2(inProps, r
     square,
     variant
   };
-  const classes = useUtilityClasses$C(ownerState);
+  const classes = useUtilityClasses$D(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(PaperRoot, {
     as: component,
     ownerState,
@@ -26407,7 +26409,7 @@ function getAccordionUtilityClass(slot) {
 }
 const accordionClasses = generateUtilityClasses('MuiAccordion', ['root', 'heading', 'rounded', 'expanded', 'disabled', 'gutters', 'region']);
 
-const useUtilityClasses$B = (ownerState) => {
+const useUtilityClasses$C = (ownerState) => {
   const {
     classes,
     square,
@@ -26562,7 +26564,7 @@ const Accordion = /* @__PURE__ */ reactExports.forwardRef(function Accordion2(in
     disableGutters,
     expanded
   };
-  const classes = useUtilityClasses$B(ownerState);
+  const classes = useUtilityClasses$C(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     ...slots
@@ -27031,7 +27033,7 @@ function getButtonBaseUtilityClass(slot) {
 }
 const buttonBaseClasses = generateUtilityClasses('MuiButtonBase', ['root', 'disabled', 'focusVisible']);
 
-const useUtilityClasses$A = (ownerState) => {
+const useUtilityClasses$B = (ownerState) => {
   const {
     disabled,
     focusVisible,
@@ -27247,7 +27249,7 @@ const ButtonBase = /* @__PURE__ */ reactExports.forwardRef(function ButtonBase2(
     tabIndex,
     focusVisible
   };
-  const classes = useUtilityClasses$A(ownerState);
+  const classes = useUtilityClasses$B(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ButtonBaseRoot, {
     as: ComponentProp,
     className: clsx(classes.root, className),
@@ -27294,7 +27296,7 @@ function getAccordionSummaryUtilityClass(slot) {
 }
 const accordionSummaryClasses = generateUtilityClasses('MuiAccordionSummary', ['root', 'expanded', 'focusVisible', 'disabled', 'gutters', 'contentGutters', 'content', 'expandIconWrapper']);
 
-const useUtilityClasses$z = (ownerState) => {
+const useUtilityClasses$A = (ownerState) => {
   const {
     classes,
     expanded,
@@ -27416,7 +27418,7 @@ const AccordionSummary = /* @__PURE__ */ reactExports.forwardRef(function Accord
     disabled,
     disableGutters
   };
-  const classes = useUtilityClasses$z(ownerState);
+  const classes = useUtilityClasses$A(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps
@@ -27475,7 +27477,7 @@ function getAccordionDetailsUtilityClass(slot) {
 }
 generateUtilityClasses('MuiAccordionDetails', ['root']);
 
-const useUtilityClasses$y = (ownerState) => {
+const useUtilityClasses$z = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -27502,69 +27504,8 @@ const AccordionDetails = /* @__PURE__ */ reactExports.forwardRef(function Accord
     ...other
   } = props;
   const ownerState = props;
-  const classes = useUtilityClasses$y(ownerState);
+  const classes = useUtilityClasses$z(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionDetailsRoot, {
-    className: clsx(classes.root, className),
-    ref,
-    ownerState,
-    ...other
-  });
-});
-
-function getAccordionActionsUtilityClass(slot) {
-  return generateUtilityClass('MuiAccordionActions', slot);
-}
-generateUtilityClasses('MuiAccordionActions', ['root', 'spacing']);
-
-const useUtilityClasses$x = (ownerState) => {
-  const {
-    classes,
-    disableSpacing
-  } = ownerState;
-  const slots = {
-    root: ["root", !disableSpacing && "spacing"]
-  };
-  return composeClasses(slots, getAccordionActionsUtilityClass, classes);
-};
-const AccordionActionsRoot = styled("div", {
-  name: "MuiAccordionActions",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, !ownerState.disableSpacing && styles.spacing];
-  }
-})({
-  display: "flex",
-  alignItems: "center",
-  padding: 8,
-  justifyContent: "flex-end",
-  variants: [{
-    props: (props) => !props.disableSpacing,
-    style: {
-      "& > :not(style) ~ :not(style)": {
-        marginLeft: 8
-      }
-    }
-  }]
-});
-const AccordionActions = /* @__PURE__ */ reactExports.forwardRef(function AccordionActions2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordionActions"
-  });
-  const {
-    className,
-    disableSpacing = false,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    disableSpacing
-  };
-  const classes = useUtilityClasses$x(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionActionsRoot, {
     className: clsx(classes.root, className),
     ref,
     ownerState,
@@ -27581,7 +27522,7 @@ const ButtonGroupContext = /* @__PURE__ */ reactExports.createContext({});
 
 const ButtonGroupButtonContext = /* @__PURE__ */ reactExports.createContext(void 0);
 
-const useUtilityClasses$w = (ownerState) => {
+const useUtilityClasses$y = (ownerState) => {
   const {
     color,
     disableElevation,
@@ -28081,7 +28022,7 @@ const Button = /* @__PURE__ */ reactExports.forwardRef(function Button2(inProps,
     type,
     variant
   };
-  const classes = useUtilityClasses$w(ownerState);
+  const classes = useUtilityClasses$y(ownerState);
   const startIcon = (startIconProp || loading && loadingPosition === "start") && /* @__PURE__ */ jsxRuntimeExports.jsx(ButtonStartIcon, {
     className: classes.startIcon,
     ownerState,
@@ -28128,10 +28069,6 @@ const Button = /* @__PURE__ */ reactExports.forwardRef(function Button2(inProps,
     children: [startIcon, loadingPosition !== "end" && loader, children, loadingPosition === "end" && loader, endIcon]
   });
 });
-
-const ArrowDownwardIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "m20 12-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8z"
-}));
 
 // A change of the browser zoom change the scrollbar size.
 // Credit https://github.com/twbs/bootstrap/blob/488fd8afc535ca3a6ad4dc581f5e89217b6a36ac/js/src/util/scrollbar.js#L14-L18
@@ -28734,7 +28671,7 @@ function getBackdropUtilityClass(slot) {
 }
 generateUtilityClasses('MuiBackdrop', ['root', 'invisible']);
 
-const useUtilityClasses$v = (ownerState) => {
+const useUtilityClasses$x = (ownerState) => {
   const {
     classes,
     invisible
@@ -28797,7 +28734,7 @@ const Backdrop = /* @__PURE__ */ reactExports.forwardRef(function Backdrop2(inPr
     component,
     invisible
   };
-  const classes = useUtilityClasses$v(ownerState);
+  const classes = useUtilityClasses$x(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     root: components.Root,
@@ -29027,7 +28964,7 @@ function getModalUtilityClass(slot) {
 }
 generateUtilityClasses('MuiModal', ['root', 'hidden', 'backdrop']);
 
-const useUtilityClasses$u = (ownerState) => {
+const useUtilityClasses$w = (ownerState) => {
   const {
     open,
     exited,
@@ -29134,7 +29071,7 @@ const Modal = /* @__PURE__ */ reactExports.forwardRef(function Modal2(inProps, r
     ...propsWithDefaults,
     exited
   };
-  const classes = useUtilityClasses$u(ownerState);
+  const classes = useUtilityClasses$w(ownerState);
   const childProps = {};
   if (children.props.tabIndex === void 0) {
     childProps.tabIndex = "-1";
@@ -29227,7 +29164,7 @@ const DialogBackdrop = styled(Backdrop, {
   // Improve scrollable dialog support.
   zIndex: -1
 });
-const useUtilityClasses$t = (ownerState) => {
+const useUtilityClasses$v = (ownerState) => {
   const {
     classes,
     scroll,
@@ -29430,7 +29367,7 @@ const Dialog = /* @__PURE__ */ reactExports.forwardRef(function Dialog2(inProps,
     maxWidth,
     scroll
   };
-  const classes = useUtilityClasses$t(ownerState);
+  const classes = useUtilityClasses$v(ownerState);
   const backdropClick = reactExports.useRef();
   const handleMouseDown = (event) => {
     backdropClick.current = event.target === event.currentTarget;
@@ -29551,7 +29488,7 @@ function getDialogActionsUtilityClass(slot) {
 }
 generateUtilityClasses('MuiDialogActions', ['root', 'spacing']);
 
-const useUtilityClasses$s = (ownerState) => {
+const useUtilityClasses$u = (ownerState) => {
   const {
     classes,
     disableSpacing
@@ -29601,7 +29538,7 @@ const DialogActions = /* @__PURE__ */ reactExports.forwardRef(function DialogAct
     ...props,
     disableSpacing
   };
-  const classes = useUtilityClasses$s(ownerState);
+  const classes = useUtilityClasses$u(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogActionsRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -29620,7 +29557,7 @@ function getDialogTitleUtilityClass(slot) {
 }
 const dialogTitleClasses = generateUtilityClasses('MuiDialogTitle', ['root']);
 
-const useUtilityClasses$r = (ownerState) => {
+const useUtilityClasses$t = (ownerState) => {
   const {
     classes,
     dividers
@@ -29681,7 +29618,7 @@ const DialogContent = /* @__PURE__ */ reactExports.forwardRef(function DialogCon
     ...props,
     dividers
   };
-  const classes = useUtilityClasses$r(ownerState);
+  const classes = useUtilityClasses$t(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -29695,7 +29632,7 @@ function getDialogContentTextUtilityClass(slot) {
 }
 generateUtilityClasses('MuiDialogContentText', ['root']);
 
-const useUtilityClasses$q = (ownerState) => {
+const useUtilityClasses$s = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -29724,7 +29661,7 @@ const DialogContentText = /* @__PURE__ */ reactExports.forwardRef(function Dialo
     className,
     ...ownerState
   } = props;
-  const classes = useUtilityClasses$q(ownerState);
+  const classes = useUtilityClasses$s(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentTextRoot, {
     component: "p",
     variant: "body1",
@@ -29737,7 +29674,7 @@ const DialogContentText = /* @__PURE__ */ reactExports.forwardRef(function Dialo
   });
 });
 
-const useUtilityClasses$p = (ownerState) => {
+const useUtilityClasses$r = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -29764,7 +29701,7 @@ const DialogTitle = /* @__PURE__ */ reactExports.forwardRef(function DialogTitle
     ...other
   } = props;
   const ownerState = props;
-  const classes = useUtilityClasses$p(ownerState);
+  const classes = useUtilityClasses$r(ownerState);
   const {
     titleId = idProp
   } = reactExports.useContext(DialogContext);
@@ -30036,7 +29973,7 @@ const inputOverridesResolver = (props, styles) => {
   } = props;
   return [styles.input, ownerState.size === "small" && styles.inputSizeSmall, ownerState.multiline && styles.inputMultiline, ownerState.type === "search" && styles.inputTypeSearch, ownerState.startAdornment && styles.inputAdornedStart, ownerState.endAdornment && styles.inputAdornedEnd, ownerState.hiddenLabel && styles.inputHiddenLabel];
 };
-const useUtilityClasses$o = (ownerState) => {
+const useUtilityClasses$q = (ownerState) => {
   const {
     classes,
     color,
@@ -30422,7 +30359,7 @@ const InputBase = /* @__PURE__ */ reactExports.forwardRef(function InputBase2(in
     startAdornment,
     type
   };
-  const classes = useUtilityClasses$o(ownerState);
+  const classes = useUtilityClasses$q(ownerState);
   const Root = slots.root || components.Root || InputBaseRoot;
   const rootProps = slotProps.root || componentsProps.root || {};
   const Input = slots.input || components.Input || InputBaseInput;
@@ -30495,7 +30432,7 @@ const inputClasses = {
   ...generateUtilityClasses('MuiInput', ['root', 'underline', 'input'])
 };
 
-const useUtilityClasses$n = (ownerState) => {
+const useUtilityClasses$p = (ownerState) => {
   const {
     classes,
     disableUnderline
@@ -30628,7 +30565,7 @@ const Input = /* @__PURE__ */ reactExports.forwardRef(function Input2(inProps, r
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$n(props);
+  const classes = useUtilityClasses$p(props);
   const ownerState = {
     disableUnderline
   };
@@ -30665,7 +30602,7 @@ const filledInputClasses = {
   ...generateUtilityClasses('MuiFilledInput', ['root', 'underline', 'input', 'adornedStart', 'adornedEnd', 'sizeSmall', 'multiline', 'hiddenLabel'])
 };
 
-const useUtilityClasses$m = (ownerState) => {
+const useUtilityClasses$o = (ownerState) => {
   const {
     classes,
     disableUnderline,
@@ -30944,7 +30881,7 @@ const FilledInput = /* @__PURE__ */ reactExports.forwardRef(function FilledInput
     multiline,
     type
   };
-  const classes = useUtilityClasses$m(props);
+  const classes = useUtilityClasses$o(props);
   const filledInputComponentsProps = {
     root: {
       ownerState
@@ -31102,7 +31039,7 @@ const outlinedInputClasses = {
   ...generateUtilityClasses('MuiOutlinedInput', ['root', 'notchedOutline', 'input'])
 };
 
-const useUtilityClasses$l = (ownerState) => {
+const useUtilityClasses$n = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -31280,7 +31217,7 @@ const OutlinedInput = /* @__PURE__ */ reactExports.forwardRef(function OutlinedI
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$l(props);
+  const classes = useUtilityClasses$n(props);
   const muiFormControl = useFormControl();
   const fcs = formControlState({
     props,
@@ -31346,7 +31283,7 @@ function getFormLabelUtilityClasses(slot) {
 }
 const formLabelClasses = generateUtilityClasses('MuiFormLabel', ['root', 'colorSecondary', 'focused', 'disabled', 'error', 'filled', 'required', 'asterisk']);
 
-const useUtilityClasses$k = (ownerState) => {
+const useUtilityClasses$m = (ownerState) => {
   const {
     classes,
     color,
@@ -31443,7 +31380,7 @@ const FormLabel = /* @__PURE__ */ reactExports.forwardRef(function FormLabel2(in
     focused: fcs.focused,
     required: fcs.required
   };
-  const classes = useUtilityClasses$k(ownerState);
+  const classes = useUtilityClasses$m(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(FormLabelRoot, {
     as: component,
     ownerState,
@@ -31464,7 +31401,7 @@ function getInputLabelUtilityClasses(slot) {
 }
 generateUtilityClasses('MuiInputLabel', ['root', 'focused', 'disabled', 'error', 'required', 'asterisk', 'formControl', 'sizeSmall', 'shrink', 'animated', 'standard', 'filled', 'outlined']);
 
-const useUtilityClasses$j = (ownerState) => {
+const useUtilityClasses$l = (ownerState) => {
   const {
     classes,
     formControl,
@@ -31653,7 +31590,7 @@ const InputLabel = /* @__PURE__ */ reactExports.forwardRef(function InputLabel2(
     required: fcs.required,
     focused: fcs.focused
   };
-  const classes = useUtilityClasses$j(ownerState);
+  const classes = useUtilityClasses$l(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(InputLabelRoot, {
     "data-shrink": shrink,
     ref,
@@ -31669,7 +31606,7 @@ function getFormControlUtilityClasses(slot) {
 }
 generateUtilityClasses('MuiFormControl', ['root', 'marginNone', 'marginNormal', 'marginDense', 'fullWidth', 'disabled']);
 
-const useUtilityClasses$i = (ownerState) => {
+const useUtilityClasses$k = (ownerState) => {
   const {
     classes,
     margin,
@@ -31759,7 +31696,7 @@ const FormControl = /* @__PURE__ */ reactExports.forwardRef(function FormControl
     size,
     variant
   };
-  const classes = useUtilityClasses$i(ownerState);
+  const classes = useUtilityClasses$k(ownerState);
   const [adornedStart, setAdornedStart] = reactExports.useState(() => {
     let initialAdornedStart = false;
     if (children) {
@@ -31846,7 +31783,7 @@ function getFormHelperTextUtilityClasses(slot) {
 const formHelperTextClasses = generateUtilityClasses('MuiFormHelperText', ['root', 'error', 'disabled', 'sizeSmall', 'sizeMedium', 'contained', 'focused', 'filled', 'required']);
 
 var _span$2;
-const useUtilityClasses$h = (ownerState) => {
+const useUtilityClasses$j = (ownerState) => {
   const {
     classes,
     contained,
@@ -31941,7 +31878,7 @@ const FormHelperText = /* @__PURE__ */ reactExports.forwardRef(function FormHelp
     required: fcs.required
   };
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$h(ownerState);
+  const classes = useUtilityClasses$j(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(FormHelperTextRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -31998,7 +31935,7 @@ function getListUtilityClass(slot) {
 }
 generateUtilityClasses('MuiList', ['root', 'padding', 'dense', 'subheader']);
 
-const useUtilityClasses$g = (ownerState) => {
+const useUtilityClasses$i = (ownerState) => {
   const {
     classes,
     disablePadding,
@@ -32064,7 +32001,7 @@ const List = /* @__PURE__ */ reactExports.forwardRef(function List2(inProps, ref
     dense,
     disablePadding
   };
-  const classes = useUtilityClasses$g(ownerState);
+  const classes = useUtilityClasses$i(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(ListContext.Provider, {
     value: context,
     children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ListRoot, {
@@ -32466,7 +32403,7 @@ function getTransformOriginValue(transformOrigin) {
 function resolveAnchorEl(anchorEl) {
   return typeof anchorEl === "function" ? anchorEl() : anchorEl;
 }
-const useUtilityClasses$f = (ownerState) => {
+const useUtilityClasses$h = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -32544,7 +32481,7 @@ const Popover = /* @__PURE__ */ reactExports.forwardRef(function Popover2(inProp
     transitionDuration: transitionDurationProp,
     TransitionProps
   };
-  const classes = useUtilityClasses$f(ownerState);
+  const classes = useUtilityClasses$h(ownerState);
   const getAnchorOffset = reactExports.useCallback(() => {
     if (anchorReference === "anchorPosition") {
       return anchorPosition;
@@ -32768,7 +32705,7 @@ const LTR_ORIGIN = {
   vertical: "top",
   horizontal: "left"
 };
-const useUtilityClasses$e = (ownerState) => {
+const useUtilityClasses$g = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -32839,7 +32776,7 @@ const Menu = /* @__PURE__ */ reactExports.forwardRef(function Menu2(inProps, ref
     TransitionProps,
     variant
   };
-  const classes = useUtilityClasses$e(ownerState);
+  const classes = useUtilityClasses$g(ownerState);
   const autoFocusItem = autoFocus && !disableAutoFocusItem && open;
   const menuListActionsRef = reactExports.useRef(null);
   const handleEntering = (element, isAppearing) => {
@@ -32960,7 +32897,7 @@ function getNativeSelectUtilityClasses(slot) {
 }
 const nativeSelectClasses = generateUtilityClasses('MuiNativeSelect', ['root', 'select', 'multiple', 'filled', 'outlined', 'standard', 'disabled', 'icon', 'iconOpen', 'iconFilled', 'iconOutlined', 'iconStandard', 'nativeInput', 'error']);
 
-const useUtilityClasses$d = (ownerState) => {
+const useUtilityClasses$f = (ownerState) => {
   const {
     classes,
     variant,
@@ -33119,7 +33056,7 @@ const NativeSelectInput = /* @__PURE__ */ reactExports.forwardRef(function Nativ
     variant,
     error
   };
-  const classes = useUtilityClasses$d(ownerState);
+  const classes = useUtilityClasses$f(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(reactExports.Fragment, {
     children: [/* @__PURE__ */ jsxRuntimeExports.jsx(NativeSelectSelect, {
       ownerState,
@@ -33208,7 +33145,7 @@ function areEqualValues(a, b) {
 function isEmpty(display) {
   return display == null || typeof display === "string" && !display.trim();
 }
-const useUtilityClasses$c = (ownerState) => {
+const useUtilityClasses$e = (ownerState) => {
   const {
     classes,
     variant,
@@ -33510,7 +33447,7 @@ const SelectInput = /* @__PURE__ */ reactExports.forwardRef(function SelectInput
     open,
     error
   };
-  const classes = useUtilityClasses$c(ownerState);
+  const classes = useUtilityClasses$e(ownerState);
   const paperProps = {
     ...MenuProps.PaperProps,
     ...MenuProps.slotProps?.paper
@@ -33610,7 +33547,7 @@ const ArrowDropDownIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path
   d: "M7 10l5 5 5-5z"
 }));
 
-const useUtilityClasses$b = (ownerState) => {
+const useUtilityClasses$d = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -33673,7 +33610,7 @@ const Select = /* @__PURE__ */ reactExports.forwardRef(function Select2(inProps,
     variant,
     classes: classesProp
   };
-  const classes = useUtilityClasses$b(ownerState);
+  const classes = useUtilityClasses$d(ownerState);
   const {
     root,
     ...restOfClasses
@@ -33750,7 +33687,7 @@ const variantComponent = {
   filled: FilledInput,
   outlined: OutlinedInput
 };
-const useUtilityClasses$a = (ownerState) => {
+const useUtilityClasses$c = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -33817,7 +33754,7 @@ const TextField = /* @__PURE__ */ reactExports.forwardRef(function TextField2(in
     select,
     variant
   };
-  const classes = useUtilityClasses$a(ownerState);
+  const classes = useUtilityClasses$c(ownerState);
   const id = useId(idOverride);
   const helperTextId = helperText && id ? `${id}-helper-text` : void 0;
   const inputLabelId = label && id ? `${id}-label` : void 0;
@@ -33945,7 +33882,7 @@ function getSwitchBaseUtilityClass(slot) {
 }
 generateUtilityClasses('PrivateSwitchBase', ['root', 'checked', 'disabled', 'input', 'edgeStart', 'edgeEnd']);
 
-const useUtilityClasses$9 = (ownerState) => {
+const useUtilityClasses$b = (ownerState) => {
   const {
     classes,
     checked,
@@ -34085,7 +34022,7 @@ const SwitchBase = /* @__PURE__ */ reactExports.forwardRef(function SwitchBase2(
     disableFocusRipple,
     edge
   };
-  const classes = useUtilityClasses$9(ownerState);
+  const classes = useUtilityClasses$b(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -34177,7 +34114,7 @@ function getCheckboxUtilityClass(slot) {
 }
 const checkboxClasses = generateUtilityClasses('MuiCheckbox', ['root', 'checked', 'disabled', 'indeterminate', 'colorPrimary', 'colorSecondary', 'sizeSmall', 'sizeMedium']);
 
-const useUtilityClasses$8 = (ownerState) => {
+const useUtilityClasses$a = (ownerState) => {
   const {
     classes,
     indeterminate,
@@ -34286,7 +34223,7 @@ const Checkbox = /* @__PURE__ */ reactExports.forwardRef(function Checkbox2(inPr
     indeterminate,
     size
   };
-  const classes = useUtilityClasses$8(ownerState);
+  const classes = useUtilityClasses$a(ownerState);
   const externalInputProps = slotProps.input ?? inputProps;
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
@@ -34327,7 +34264,7 @@ function getFormControlLabelUtilityClasses(slot) {
 }
 const formControlLabelClasses = generateUtilityClasses('MuiFormControlLabel', ['root', 'labelPlacementStart', 'labelPlacementTop', 'labelPlacementBottom', 'disabled', 'label', 'error', 'required', 'asterisk']);
 
-const useUtilityClasses$7 = (ownerState) => {
+const useUtilityClasses$9 = (ownerState) => {
   const {
     classes,
     disabled,
@@ -34462,7 +34399,7 @@ const FormControlLabel = /* @__PURE__ */ reactExports.forwardRef(function FormCo
     required,
     error: fcs.error
   };
-  const classes = useUtilityClasses$7(ownerState);
+  const classes = useUtilityClasses$9(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -34872,7 +34809,7 @@ function getIconButtonUtilityClass(slot) {
 }
 const iconButtonClasses = generateUtilityClasses('MuiIconButton', ['root', 'disabled', 'colorInherit', 'colorPrimary', 'colorSecondary', 'colorError', 'colorInfo', 'colorSuccess', 'colorWarning', 'edgeStart', 'edgeEnd', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'loading', 'loadingIndicator', 'loadingWrapper']);
 
-const useUtilityClasses$6 = (ownerState) => {
+const useUtilityClasses$8 = (ownerState) => {
   const {
     classes,
     disabled,
@@ -35057,7 +34994,7 @@ const IconButton = /* @__PURE__ */ reactExports.forwardRef(function IconButton2(
     loadingIndicator,
     size
   };
-  const classes = useUtilityClasses$6(ownerState);
+  const classes = useUtilityClasses$8(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(IconButtonRoot, {
     id: loading ? loadingId : idProp,
     className: clsx(classes.root, className),
@@ -35102,7 +35039,7 @@ const ClearIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
   d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 }));
 
-const useUtilityClasses$5 = (ownerState) => {
+const useUtilityClasses$7 = (ownerState) => {
   const {
     variant,
     color,
@@ -35254,7 +35191,7 @@ const Alert = /* @__PURE__ */ reactExports.forwardRef(function Alert2(inProps, r
     variant,
     colorSeverity: color || severity
   };
-  const classes = useUtilityClasses$5(ownerState);
+  const classes = useUtilityClasses$7(ownerState);
   const externalForwardedProps = {
     slots: {
       closeButton: components.CloseButton,
@@ -35335,6 +35272,725 @@ const Alert = /* @__PURE__ */ reactExports.forwardRef(function Alert2(inProps, r
         })
       })
     }) : null]
+  });
+});
+
+const CancelIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"
+}));
+
+function getChipUtilityClass(slot) {
+  return generateUtilityClass('MuiChip', slot);
+}
+const chipClasses = generateUtilityClasses('MuiChip', ['root', 'sizeSmall', 'sizeMedium', 'colorDefault', 'colorError', 'colorInfo', 'colorPrimary', 'colorSecondary', 'colorSuccess', 'colorWarning', 'disabled', 'clickable', 'clickableColorPrimary', 'clickableColorSecondary', 'deletable', 'deletableColorPrimary', 'deletableColorSecondary', 'outlined', 'filled', 'outlinedPrimary', 'outlinedSecondary', 'filledPrimary', 'filledSecondary', 'avatar', 'avatarSmall', 'avatarMedium', 'avatarColorPrimary', 'avatarColorSecondary', 'icon', 'iconSmall', 'iconMedium', 'iconColorPrimary', 'iconColorSecondary', 'label', 'labelSmall', 'labelMedium', 'deleteIcon', 'deleteIconSmall', 'deleteIconMedium', 'deleteIconColorPrimary', 'deleteIconColorSecondary', 'deleteIconOutlinedColorPrimary', 'deleteIconOutlinedColorSecondary', 'deleteIconFilledColorPrimary', 'deleteIconFilledColorSecondary', 'focusVisible']);
+
+const useUtilityClasses$6 = (ownerState) => {
+  const {
+    classes,
+    disabled,
+    size,
+    color,
+    iconColor,
+    onDelete,
+    clickable,
+    variant
+  } = ownerState;
+  const slots = {
+    root: ["root", variant, disabled && "disabled", `size${capitalize(size)}`, `color${capitalize(color)}`, clickable && "clickable", clickable && `clickableColor${capitalize(color)}`, onDelete && "deletable", onDelete && `deletableColor${capitalize(color)}`, `${variant}${capitalize(color)}`],
+    label: ["label", `label${capitalize(size)}`],
+    avatar: ["avatar", `avatar${capitalize(size)}`, `avatarColor${capitalize(color)}`],
+    icon: ["icon", `icon${capitalize(size)}`, `iconColor${capitalize(iconColor)}`],
+    deleteIcon: ["deleteIcon", `deleteIcon${capitalize(size)}`, `deleteIconColor${capitalize(color)}`, `deleteIcon${capitalize(variant)}Color${capitalize(color)}`]
+  };
+  return composeClasses(slots, getChipUtilityClass, classes);
+};
+const ChipRoot = styled("div", {
+  name: "MuiChip",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    const {
+      color,
+      iconColor,
+      clickable,
+      onDelete,
+      size,
+      variant
+    } = ownerState;
+    return [{
+      [`& .${chipClasses.avatar}`]: styles.avatar
+    }, {
+      [`& .${chipClasses.avatar}`]: styles[`avatar${capitalize(size)}`]
+    }, {
+      [`& .${chipClasses.avatar}`]: styles[`avatarColor${capitalize(color)}`]
+    }, {
+      [`& .${chipClasses.icon}`]: styles.icon
+    }, {
+      [`& .${chipClasses.icon}`]: styles[`icon${capitalize(size)}`]
+    }, {
+      [`& .${chipClasses.icon}`]: styles[`iconColor${capitalize(iconColor)}`]
+    }, {
+      [`& .${chipClasses.deleteIcon}`]: styles.deleteIcon
+    }, {
+      [`& .${chipClasses.deleteIcon}`]: styles[`deleteIcon${capitalize(size)}`]
+    }, {
+      [`& .${chipClasses.deleteIcon}`]: styles[`deleteIconColor${capitalize(color)}`]
+    }, {
+      [`& .${chipClasses.deleteIcon}`]: styles[`deleteIcon${capitalize(variant)}Color${capitalize(color)}`]
+    }, styles.root, styles[`size${capitalize(size)}`], styles[`color${capitalize(color)}`], clickable && styles.clickable, clickable && color !== "default" && styles[`clickableColor${capitalize(color)})`], onDelete && styles.deletable, onDelete && color !== "default" && styles[`deletableColor${capitalize(color)}`], styles[variant], styles[`${variant}${capitalize(color)}`]];
+  }
+})(memoTheme(({
+  theme
+}) => {
+  const textColor = theme.palette.mode === "light" ? theme.palette.grey[700] : theme.palette.grey[300];
+  return {
+    maxWidth: "100%",
+    fontFamily: theme.typography.fontFamily,
+    fontSize: theme.typography.pxToRem(13),
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 32,
+    lineHeight: 1.5,
+    color: (theme.vars || theme).palette.text.primary,
+    backgroundColor: (theme.vars || theme).palette.action.selected,
+    borderRadius: 32 / 2,
+    whiteSpace: "nowrap",
+    transition: theme.transitions.create(["background-color", "box-shadow"]),
+    // reset cursor explicitly in case ButtonBase is used
+    cursor: "unset",
+    // We disable the focus ring for mouse, touch and keyboard users.
+    outline: 0,
+    textDecoration: "none",
+    border: 0,
+    // Remove `button` border
+    padding: 0,
+    // Remove `button` padding
+    verticalAlign: "middle",
+    boxSizing: "border-box",
+    [`&.${chipClasses.disabled}`]: {
+      opacity: (theme.vars || theme).palette.action.disabledOpacity,
+      pointerEvents: "none"
+    },
+    [`& .${chipClasses.avatar}`]: {
+      marginLeft: 5,
+      marginRight: -6,
+      width: 24,
+      height: 24,
+      color: theme.vars ? theme.vars.palette.Chip.defaultAvatarColor : textColor,
+      fontSize: theme.typography.pxToRem(12)
+    },
+    [`& .${chipClasses.avatarColorPrimary}`]: {
+      color: (theme.vars || theme).palette.primary.contrastText,
+      backgroundColor: (theme.vars || theme).palette.primary.dark
+    },
+    [`& .${chipClasses.avatarColorSecondary}`]: {
+      color: (theme.vars || theme).palette.secondary.contrastText,
+      backgroundColor: (theme.vars || theme).palette.secondary.dark
+    },
+    [`& .${chipClasses.avatarSmall}`]: {
+      marginLeft: 4,
+      marginRight: -4,
+      width: 18,
+      height: 18,
+      fontSize: theme.typography.pxToRem(10)
+    },
+    [`& .${chipClasses.icon}`]: {
+      marginLeft: 5,
+      marginRight: -6
+    },
+    [`& .${chipClasses.deleteIcon}`]: {
+      WebkitTapHighlightColor: "transparent",
+      color: theme.vars ? `rgba(${theme.vars.palette.text.primaryChannel} / 0.26)` : alpha(theme.palette.text.primary, 0.26),
+      fontSize: 22,
+      cursor: "pointer",
+      margin: "0 5px 0 -6px",
+      "&:hover": {
+        color: theme.vars ? `rgba(${theme.vars.palette.text.primaryChannel} / 0.4)` : alpha(theme.palette.text.primary, 0.4)
+      }
+    },
+    variants: [{
+      props: {
+        size: "small"
+      },
+      style: {
+        height: 24,
+        [`& .${chipClasses.icon}`]: {
+          fontSize: 18,
+          marginLeft: 4,
+          marginRight: -4
+        },
+        [`& .${chipClasses.deleteIcon}`]: {
+          fontSize: 16,
+          marginRight: 4,
+          marginLeft: -4
+        }
+      }
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["contrastText"])).map(([color]) => {
+      return {
+        props: {
+          color
+        },
+        style: {
+          backgroundColor: (theme.vars || theme).palette[color].main,
+          color: (theme.vars || theme).palette[color].contrastText,
+          [`& .${chipClasses.deleteIcon}`]: {
+            color: theme.vars ? `rgba(${theme.vars.palette[color].contrastTextChannel} / 0.7)` : alpha(theme.palette[color].contrastText, 0.7),
+            "&:hover, &:active": {
+              color: (theme.vars || theme).palette[color].contrastText
+            }
+          }
+        }
+      };
+    }), {
+      props: (props) => props.iconColor === props.color,
+      style: {
+        [`& .${chipClasses.icon}`]: {
+          color: theme.vars ? theme.vars.palette.Chip.defaultIconColor : textColor
+        }
+      }
+    }, {
+      props: (props) => props.iconColor === props.color && props.color !== "default",
+      style: {
+        [`& .${chipClasses.icon}`]: {
+          color: "inherit"
+        }
+      }
+    }, {
+      props: {
+        onDelete: true
+      },
+      style: {
+        [`&.${chipClasses.focusVisible}`]: {
+          backgroundColor: theme.vars ? `rgba(${theme.vars.palette.action.selectedChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.focusOpacity}))` : alpha(theme.palette.action.selected, theme.palette.action.selectedOpacity + theme.palette.action.focusOpacity)
+        }
+      }
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color]) => {
+      return {
+        props: {
+          color,
+          onDelete: true
+        },
+        style: {
+          [`&.${chipClasses.focusVisible}`]: {
+            background: (theme.vars || theme).palette[color].dark
+          }
+        }
+      };
+    }), {
+      props: {
+        clickable: true
+      },
+      style: {
+        userSelect: "none",
+        WebkitTapHighlightColor: "transparent",
+        cursor: "pointer",
+        "&:hover": {
+          backgroundColor: theme.vars ? `rgba(${theme.vars.palette.action.selectedChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.hoverOpacity}))` : alpha(theme.palette.action.selected, theme.palette.action.selectedOpacity + theme.palette.action.hoverOpacity)
+        },
+        [`&.${chipClasses.focusVisible}`]: {
+          backgroundColor: theme.vars ? `rgba(${theme.vars.palette.action.selectedChannel} / calc(${theme.vars.palette.action.selectedOpacity} + ${theme.vars.palette.action.focusOpacity}))` : alpha(theme.palette.action.selected, theme.palette.action.selectedOpacity + theme.palette.action.focusOpacity)
+        },
+        "&:active": {
+          boxShadow: (theme.vars || theme).shadows[1]
+        }
+      }
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark"])).map(([color]) => ({
+      props: {
+        color,
+        clickable: true
+      },
+      style: {
+        [`&:hover, &.${chipClasses.focusVisible}`]: {
+          backgroundColor: (theme.vars || theme).palette[color].dark
+        }
+      }
+    })), {
+      props: {
+        variant: "outlined"
+      },
+      style: {
+        backgroundColor: "transparent",
+        border: theme.vars ? `1px solid ${theme.vars.palette.Chip.defaultBorder}` : `1px solid ${theme.palette.mode === "light" ? theme.palette.grey[400] : theme.palette.grey[700]}`,
+        [`&.${chipClasses.clickable}:hover`]: {
+          backgroundColor: (theme.vars || theme).palette.action.hover
+        },
+        [`&.${chipClasses.focusVisible}`]: {
+          backgroundColor: (theme.vars || theme).palette.action.focus
+        },
+        [`& .${chipClasses.avatar}`]: {
+          marginLeft: 4
+        },
+        [`& .${chipClasses.avatarSmall}`]: {
+          marginLeft: 2
+        },
+        [`& .${chipClasses.icon}`]: {
+          marginLeft: 4
+        },
+        [`& .${chipClasses.iconSmall}`]: {
+          marginLeft: 2
+        },
+        [`& .${chipClasses.deleteIcon}`]: {
+          marginRight: 5
+        },
+        [`& .${chipClasses.deleteIconSmall}`]: {
+          marginRight: 3
+        }
+      }
+    }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
+      props: {
+        variant: "outlined",
+        color
+      },
+      style: {
+        color: (theme.vars || theme).palette[color].main,
+        border: `1px solid ${theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / 0.7)` : alpha(theme.palette[color].main, 0.7)}`,
+        [`&.${chipClasses.clickable}:hover`]: {
+          backgroundColor: theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha(theme.palette[color].main, theme.palette.action.hoverOpacity)
+        },
+        [`&.${chipClasses.focusVisible}`]: {
+          backgroundColor: theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / ${theme.vars.palette.action.focusOpacity})` : alpha(theme.palette[color].main, theme.palette.action.focusOpacity)
+        },
+        [`& .${chipClasses.deleteIcon}`]: {
+          color: theme.vars ? `rgba(${theme.vars.palette[color].mainChannel} / 0.7)` : alpha(theme.palette[color].main, 0.7),
+          "&:hover, &:active": {
+            color: (theme.vars || theme).palette[color].main
+          }
+        }
+      }
+    }))]
+  };
+}));
+const ChipLabel = styled("span", {
+  name: "MuiChip",
+  slot: "Label",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    const {
+      size
+    } = ownerState;
+    return [styles.label, styles[`label${capitalize(size)}`]];
+  }
+})({
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  paddingLeft: 12,
+  paddingRight: 12,
+  whiteSpace: "nowrap",
+  variants: [{
+    props: {
+      variant: "outlined"
+    },
+    style: {
+      paddingLeft: 11,
+      paddingRight: 11
+    }
+  }, {
+    props: {
+      size: "small"
+    },
+    style: {
+      paddingLeft: 8,
+      paddingRight: 8
+    }
+  }, {
+    props: {
+      size: "small",
+      variant: "outlined"
+    },
+    style: {
+      paddingLeft: 7,
+      paddingRight: 7
+    }
+  }]
+});
+function isDeleteKeyboardEvent(keyboardEvent) {
+  return keyboardEvent.key === "Backspace" || keyboardEvent.key === "Delete";
+}
+const Chip = /* @__PURE__ */ reactExports.forwardRef(function Chip2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiChip"
+  });
+  const {
+    avatar: avatarProp,
+    className,
+    clickable: clickableProp,
+    color = "default",
+    component: ComponentProp,
+    deleteIcon: deleteIconProp,
+    disabled = false,
+    icon: iconProp,
+    label,
+    onClick,
+    onDelete,
+    onKeyDown,
+    onKeyUp,
+    size = "medium",
+    variant = "filled",
+    tabIndex,
+    skipFocusWhenDisabled = false,
+    // TODO v6: Rename to `focusableWhenDisabled`.
+    slots = {},
+    slotProps = {},
+    ...other
+  } = props;
+  const chipRef = reactExports.useRef(null);
+  const handleRef = useForkRef(chipRef, ref);
+  const handleDeleteIconClick = (event) => {
+    event.stopPropagation();
+    if (onDelete) {
+      onDelete(event);
+    }
+  };
+  const handleKeyDown = (event) => {
+    if (event.currentTarget === event.target && isDeleteKeyboardEvent(event)) {
+      event.preventDefault();
+    }
+    if (onKeyDown) {
+      onKeyDown(event);
+    }
+  };
+  const handleKeyUp = (event) => {
+    if (event.currentTarget === event.target) {
+      if (onDelete && isDeleteKeyboardEvent(event)) {
+        onDelete(event);
+      }
+    }
+    if (onKeyUp) {
+      onKeyUp(event);
+    }
+  };
+  const clickable = clickableProp !== false && onClick ? true : clickableProp;
+  const component = clickable || onDelete ? ButtonBase : ComponentProp || "div";
+  const ownerState = {
+    ...props,
+    component,
+    disabled,
+    size,
+    color,
+    iconColor: /* @__PURE__ */ reactExports.isValidElement(iconProp) ? iconProp.props.color || color : color,
+    onDelete: !!onDelete,
+    clickable,
+    variant
+  };
+  const classes = useUtilityClasses$6(ownerState);
+  const moreProps = component === ButtonBase ? {
+    component: ComponentProp || "div",
+    focusVisibleClassName: classes.focusVisible,
+    ...onDelete && {
+      disableRipple: true
+    }
+  } : {};
+  let deleteIcon = null;
+  if (onDelete) {
+    deleteIcon = deleteIconProp && /* @__PURE__ */ reactExports.isValidElement(deleteIconProp) ? /* @__PURE__ */ reactExports.cloneElement(deleteIconProp, {
+      className: clsx(deleteIconProp.props.className, classes.deleteIcon),
+      onClick: handleDeleteIconClick
+    }) : /* @__PURE__ */ jsxRuntimeExports.jsx(CancelIcon, {
+      className: classes.deleteIcon,
+      onClick: handleDeleteIconClick
+    });
+  }
+  let avatar = null;
+  if (avatarProp && /* @__PURE__ */ reactExports.isValidElement(avatarProp)) {
+    avatar = /* @__PURE__ */ reactExports.cloneElement(avatarProp, {
+      className: clsx(classes.avatar, avatarProp.props.className)
+    });
+  }
+  let icon = null;
+  if (iconProp && /* @__PURE__ */ reactExports.isValidElement(iconProp)) {
+    icon = /* @__PURE__ */ reactExports.cloneElement(iconProp, {
+      className: clsx(classes.icon, iconProp.props.className)
+    });
+  }
+  const externalForwardedProps = {
+    slots,
+    slotProps
+  };
+  const [RootSlot, rootProps] = useSlot("root", {
+    elementType: ChipRoot,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other
+    },
+    ownerState,
+    // The `component` prop is preserved because `Chip` relies on it for internal logic. If `shouldForwardComponentProp` were `false`, `useSlot` would remove the `component` prop, potentially breaking the component's behavior.
+    shouldForwardComponentProp: true,
+    ref: handleRef,
+    className: clsx(classes.root, className),
+    additionalProps: {
+      disabled: clickable && disabled ? true : void 0,
+      tabIndex: skipFocusWhenDisabled && disabled ? -1 : tabIndex,
+      ...moreProps
+    },
+    getSlotProps: (handlers) => ({
+      ...handlers,
+      onClick: (event) => {
+        handlers.onClick?.(event);
+        onClick?.(event);
+      },
+      onKeyDown: (event) => {
+        handlers.onKeyDown?.(event);
+        handleKeyDown?.(event);
+      },
+      onKeyUp: (event) => {
+        handlers.onKeyUp?.(event);
+        handleKeyUp?.(event);
+      }
+    })
+  });
+  const [LabelSlot, labelProps] = useSlot("label", {
+    elementType: ChipLabel,
+    externalForwardedProps,
+    ownerState,
+    className: classes.label
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
+    as: component,
+    ...rootProps,
+    children: [avatar || icon, /* @__PURE__ */ jsxRuntimeExports.jsx(LabelSlot, {
+      ...labelProps,
+      children: label
+    }), deleteIcon]
+  });
+});
+
+const Person = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+}));
+
+function getAvatarUtilityClass(slot) {
+  return generateUtilityClass('MuiAvatar', slot);
+}
+generateUtilityClasses('MuiAvatar', ['root', 'colorDefault', 'circular', 'rounded', 'square', 'img', 'fallback']);
+
+const useUtilityClasses$5 = (ownerState) => {
+  const {
+    classes,
+    variant,
+    colorDefault
+  } = ownerState;
+  const slots = {
+    root: ["root", variant, colorDefault && "colorDefault"],
+    img: ["img"],
+    fallback: ["fallback"]
+  };
+  return composeClasses(slots, getAvatarUtilityClass, classes);
+};
+const AvatarRoot = styled("div", {
+  name: "MuiAvatar",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[ownerState.variant], ownerState.colorDefault && styles.colorDefault];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  position: "relative",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
+  width: 40,
+  height: 40,
+  fontFamily: theme.typography.fontFamily,
+  fontSize: theme.typography.pxToRem(20),
+  lineHeight: 1,
+  borderRadius: "50%",
+  overflow: "hidden",
+  userSelect: "none",
+  variants: [{
+    props: {
+      variant: "rounded"
+    },
+    style: {
+      borderRadius: (theme.vars || theme).shape.borderRadius
+    }
+  }, {
+    props: {
+      variant: "square"
+    },
+    style: {
+      borderRadius: 0
+    }
+  }, {
+    props: {
+      colorDefault: true
+    },
+    style: {
+      color: (theme.vars || theme).palette.background.default,
+      ...theme.vars ? {
+        backgroundColor: theme.vars.palette.Avatar.defaultBg
+      } : {
+        backgroundColor: theme.palette.grey[400],
+        ...theme.applyStyles("dark", {
+          backgroundColor: theme.palette.grey[600]
+        })
+      }
+    }
+  }]
+})));
+const AvatarImg = styled("img", {
+  name: "MuiAvatar",
+  slot: "Img"
+})({
+  width: "100%",
+  height: "100%",
+  textAlign: "center",
+  // Handle non-square image.
+  objectFit: "cover",
+  // Hide alt text.
+  color: "transparent",
+  // Hide the image broken icon, only works on Chrome.
+  textIndent: 1e4
+});
+const AvatarFallback = styled(Person, {
+  name: "MuiAvatar",
+  slot: "Fallback"
+})({
+  width: "75%",
+  height: "75%"
+});
+function useLoaded({
+  crossOrigin,
+  referrerPolicy,
+  src,
+  srcSet
+}) {
+  const [loaded, setLoaded] = reactExports.useState(false);
+  reactExports.useEffect(() => {
+    if (!src && !srcSet) {
+      return void 0;
+    }
+    setLoaded(false);
+    let active = true;
+    const image = new Image();
+    image.onload = () => {
+      if (!active) {
+        return;
+      }
+      setLoaded("loaded");
+    };
+    image.onerror = () => {
+      if (!active) {
+        return;
+      }
+      setLoaded("error");
+    };
+    image.crossOrigin = crossOrigin;
+    image.referrerPolicy = referrerPolicy;
+    image.src = src;
+    if (srcSet) {
+      image.srcset = srcSet;
+    }
+    return () => {
+      active = false;
+    };
+  }, [crossOrigin, referrerPolicy, src, srcSet]);
+  return loaded;
+}
+const Avatar = /* @__PURE__ */ reactExports.forwardRef(function Avatar2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiAvatar"
+  });
+  const {
+    alt,
+    children: childrenProp,
+    className,
+    component = "div",
+    slots = {},
+    slotProps = {},
+    imgProps,
+    sizes,
+    src,
+    srcSet,
+    variant = "circular",
+    ...other
+  } = props;
+  let children = null;
+  const ownerState = {
+    ...props,
+    component,
+    variant
+  };
+  const loaded = useLoaded({
+    ...imgProps,
+    ...typeof slotProps.img === "function" ? slotProps.img(ownerState) : slotProps.img,
+    src,
+    srcSet
+  });
+  const hasImg = src || srcSet;
+  const hasImgNotFailing = hasImg && loaded !== "error";
+  ownerState.colorDefault = !hasImgNotFailing;
+  delete ownerState.ownerState;
+  const classes = useUtilityClasses$5(ownerState);
+  const [RootSlot, rootSlotProps] = useSlot("root", {
+    ref,
+    className: clsx(classes.root, className),
+    elementType: AvatarRoot,
+    externalForwardedProps: {
+      slots,
+      slotProps,
+      component,
+      ...other
+    },
+    ownerState
+  });
+  const [ImgSlot, imgSlotProps] = useSlot("img", {
+    className: classes.img,
+    elementType: AvatarImg,
+    externalForwardedProps: {
+      slots,
+      slotProps: {
+        img: {
+          ...imgProps,
+          ...slotProps.img
+        }
+      }
+    },
+    additionalProps: {
+      alt,
+      src,
+      srcSet,
+      sizes
+    },
+    ownerState
+  });
+  const [FallbackSlot, fallbackSlotProps] = useSlot("fallback", {
+    className: classes.fallback,
+    elementType: AvatarFallback,
+    externalForwardedProps: {
+      slots,
+      slotProps
+    },
+    shouldForwardComponentProp: true,
+    ownerState
+  });
+  if (hasImgNotFailing) {
+    children = /* @__PURE__ */ jsxRuntimeExports.jsx(ImgSlot, {
+      ...imgSlotProps
+    });
+  } else if (!!childrenProp || childrenProp === 0) {
+    children = childrenProp;
+  } else if (hasImg && alt) {
+    children = alt[0];
+  } else {
+    children = /* @__PURE__ */ jsxRuntimeExports.jsx(FallbackSlot, {
+      ...fallbackSlotProps
+    });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(RootSlot, {
+    ...rootSlotProps,
+    children
   });
 });
 
@@ -38754,196 +39410,6 @@ function useForm(props = {}) {
     return _formControl.current;
 }
 
-function WalletDlg({
-  initAddress = "",
-  initName = "",
-  type = "add",
-  children
-}) {
-  const [open, setOpen] = reactExports.useState(false);
-  const { dispatch } = reactExports.useContext(WalletsCtx);
-  const [isPending, startTransition] = reactExports.useTransition();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset
-  } = useForm({
-    defaultValues: {
-      address: initAddress,
-      name: initName
-    }
-  });
-  const title = type === "add" ? "添加钱包" : "修改钱包";
-  function handleOpen() {
-    reset({
-      address: initAddress,
-      name: initName
-    });
-    setOpen(true);
-  }
-  const onSubmit = (data) => {
-    setOpen(false);
-    startTransition(() => {
-      const wallet = {
-        address: data.address,
-        name: data.name
-      };
-      queueMicrotask(() => {
-        dispatch({ type, wallet });
-      });
-    });
-  };
-  function validateAddress() {
-    return true;
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    children({ triggerOpen: handleOpen }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      Dialog,
-      {
-        open,
-        onClose: () => setOpen(false),
-        disableAutoFocus: false,
-        disableRestoreFocus: true,
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { id: "alert-dialog-title", children: title }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContent, { sx: { paddingBottom: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSubmit(onSubmit), style: { paddingTop: 8 }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              TextField,
-              {
-                sx: { marginBottom: 2 },
-                fullWidth: true,
-                label: "钱包地址",
-                disabled: type === "modify",
-                ...register("address", {
-                  required: "必须填写钱包地址",
-                  validate: validateAddress
-                }),
-                error: !!errors.address,
-                helperText: errors.address && errors.address.message
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              TextField,
-              {
-                label: "钱包名称",
-                fullWidth: true,
-                ...register("name", { required: "必须填写钱包名称" }),
-                error: !!errors.name,
-                helperText: errors.name && errors.name.message
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogActions, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => setOpen(false), children: "取消" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { type: "submit", disabled: isPending, children: isPending ? "处理中..." : "确认" })
-            ] })
-          ] }) })
-        ]
-      }
-    )
-  ] });
-}
-
-function numberToLEBytes(num, byteLength = 4) {
-  const buffer = new ArrayBuffer(byteLength);
-  const view = new DataView(buffer);
-  if (byteLength === 4) {
-    view.setUint32(0, num, true);
-  } else if (byteLength === 2) {
-    view.setUint16(0, num, true);
-  } else if (byteLength === 8) {
-    view.setBigUint64(0, BigInt(num), true);
-  } else if (byteLength === 1) {
-    view.setUint8(0, num);
-  }
-  return new Uint8Array(buffer);
-}
-function objectHasKey(obj, key) {
-  return typeof obj === "object" && obj !== null && key in obj;
-}
-const SYSTEM_PROGRAM_PUBKEY = new Uint8Array(32);
-function txMessageData(from, to, transfer_lamports, blockhash) {
-  const message = [1, 0, 1];
-  message.push(3);
-  message.push(...from);
-  message.push(...to);
-  message.push(...SYSTEM_PROGRAM_PUBKEY);
-  message.push(...blockhash);
-  message.push(1);
-  message.push(2);
-  message.push(2);
-  message.push(0);
-  message.push(1);
-  message.push(12);
-  message.push(2);
-  message.push(0);
-  message.push(0);
-  message.push(0);
-  message.push(...numberToLEBytes(transfer_lamports, 8));
-  return Uint8Array.from(message);
-}
-function byteArrayToBase64(bytes) {
-  return btoa(String.fromCharCode(...bytes));
-}
-
-let JsonRpcId = 0;
-async function callSolanaRpc(method, params) {
-  const jsonrpc = {
-    jsonrpc: "2.0",
-    method,
-    params,
-    id: JsonRpcId++
-  };
-  const response = await fetch("https://api.devnet.solana.com", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(jsonrpc)
-  });
-  if (!response.ok) {
-    throw new Error(`${method} HTTP error! status: ${response.status}`);
-  }
-  const data = await response.json();
-  if (!data) {
-    throw new Error(`No data in JSON-RPC ${method} response`);
-  }
-  if (data.error) {
-    throw new Error(
-      `JSON-RPC ${method} error! code: ${data.error.code}, message: ${data.error.message}`
-    );
-  }
-  if (!data.result) {
-    throw new Error(`No result in JSON-RPC ${method} response`);
-  }
-  const result = data.result;
-  if (objectHasKey(result, "value")) {
-    return result.value;
-  }
-  return result;
-}
-
-function getAccountInfo(address, config = {}) {
-  return callSolanaRpc("getAccountInfo", [address, config]);
-}
-function getBalance(address, config = {}) {
-  return callSolanaRpc("getBalance", [address, config]);
-}
-function getLatestBlockhash(config = {}) {
-  return callSolanaRpc(
-    "getLatestBlockhash",
-    [config]
-  );
-}
-function sendTransaction(transactionData, config = {}) {
-  return callSolanaRpc("sendTransaction", [transactionData, config]);
-}
-function getSignatureStatuses(signatures, config = {}) {
-  return callSolanaRpc("getSignatureStatuses", [
-    signatures,
-    config
-  ]);
-}
-
 // base-x encoding / decoding
 // Copyright (c) 2018 base-x contributors
 // Copyright (c) 2014-2018 The Bitcoin Core developers (base58.cpp)
@@ -39071,6 +39537,219 @@ function base (ALPHABET) {
 var ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 const bs58 = base(ALPHABET);
 
+function numberToLEBytes(num, byteLength = 4) {
+  const buffer = new ArrayBuffer(byteLength);
+  const view = new DataView(buffer);
+  if (byteLength === 4) {
+    view.setUint32(0, num, true);
+  } else if (byteLength === 2) {
+    view.setUint16(0, num, true);
+  } else if (byteLength === 8) {
+    view.setBigUint64(0, BigInt(num), true);
+  } else if (byteLength === 1) {
+    view.setUint8(0, num);
+  }
+  return new Uint8Array(buffer);
+}
+function objectHasKey(obj, key) {
+  return typeof obj === "object" && obj !== null && key in obj;
+}
+const SYSTEM_PROGRAM_PUBKEY = new Uint8Array(32);
+function txMessageData(from, to, transfer_lamports, blockhash) {
+  const message = [1, 0, 1];
+  message.push(3);
+  message.push(...from);
+  message.push(...to);
+  message.push(...SYSTEM_PROGRAM_PUBKEY);
+  message.push(...blockhash);
+  message.push(1);
+  message.push(2);
+  message.push(2);
+  message.push(0);
+  message.push(1);
+  message.push(12);
+  message.push(2);
+  message.push(0);
+  message.push(0);
+  message.push(0);
+  message.push(...numberToLEBytes(transfer_lamports, 8));
+  return Uint8Array.from(message);
+}
+function byteArrayToBase64(bytes) {
+  return btoa(String.fromCharCode(...bytes));
+}
+function shortSolanaAddress(address) {
+  return address.slice(0, 4) + "..." + address.slice(-4);
+}
+function isValidSolanaAddress(address) {
+  try {
+    const decoded = bs58.decode(address);
+    return decoded.length === 32;
+  } catch (error) {
+    console.error(`Invalid Solana address(${address}): `, error);
+    return false;
+  }
+}
+
+function WalletDlg({
+  initAddress = "",
+  initName = "",
+  type = "add",
+  children
+}) {
+  const [open, setOpen] = reactExports.useState(false);
+  const { dispatch } = reactExports.useContext(WalletsCtx);
+  const [isPending, startTransition] = reactExports.useTransition();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+    setValue
+  } = useForm({
+    defaultValues: {
+      address: initAddress,
+      name: initName
+    }
+  });
+  const title = type === "add" ? "添加钱包" : "修改钱包";
+  function handleOpen() {
+    reset({
+      address: initAddress,
+      name: initName
+    });
+    setOpen(true);
+  }
+  const onSubmit = (data) => {
+    setOpen(false);
+    startTransition(() => {
+      const wallet = {
+        address: data.address,
+        name: data.name
+      };
+      queueMicrotask(() => {
+        dispatch({ type, wallet });
+      });
+    });
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    children({ triggerOpen: handleOpen }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      Dialog,
+      {
+        open,
+        onClose: () => setOpen(false),
+        disableAutoFocus: false,
+        disableRestoreFocus: true,
+        onClick: (e) => e.stopPropagation(),
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { id: "alert-dialog-title", children: title }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContent, { sx: { paddingBottom: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSubmit(onSubmit), style: { paddingTop: 8 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              TextField,
+              {
+                sx: { marginBottom: 2 },
+                fullWidth: true,
+                label: "钱包地址",
+                disabled: type === "modify",
+                ...register("address", {
+                  required: "必须填写钱包地址",
+                  validate: isValidSolanaAddress
+                }),
+                onChange: (e) => {
+                  const value = e.target.value.trim();
+                  console.log("Address input changed:", value);
+                },
+                error: !!errors.address,
+                helperText: errors.address && errors.address.message
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              TextField,
+              {
+                label: "钱包名称",
+                fullWidth: true,
+                onFocus: () => {
+                  const address = watch("address");
+                  const name = watch("name");
+                  if (!name && address && isValidSolanaAddress(address)) {
+                    setValue("name", shortSolanaAddress(address));
+                  }
+                },
+                ...register("name", { required: "必须填写钱包名称" }),
+                error: !!errors.name,
+                helperText: errors.name && errors.name.message
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogActions, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => setOpen(false), children: "取消" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { type: "submit", disabled: isPending, children: isPending ? "处理中..." : "确认" })
+            ] })
+          ] }) })
+        ]
+      }
+    )
+  ] });
+}
+
+let JsonRpcId = 0;
+async function callSolanaRpc(method, params) {
+  const jsonrpc = {
+    jsonrpc: "2.0",
+    method,
+    params,
+    id: JsonRpcId++
+  };
+  const response = await fetch("https://api.devnet.solana.com", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(jsonrpc)
+  });
+  if (!response.ok) {
+    throw new Error(`${method} HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  if (!data) {
+    throw new Error(`No data in JSON-RPC ${method} response`);
+  }
+  if (data.error) {
+    throw new Error(
+      `JSON-RPC ${method} error! code: ${data.error.code}, message: ${data.error.message}`
+    );
+  }
+  if (!data.result) {
+    throw new Error(`No result in JSON-RPC ${method} response`);
+  }
+  const result = data.result;
+  if (objectHasKey(result, "value")) {
+    return result.value;
+  }
+  return result;
+}
+
+function getAccountInfo(address, config = {}) {
+  return callSolanaRpc("getAccountInfo", [address, config]);
+}
+function getBalance(address, config = {}) {
+  return callSolanaRpc("getBalance", [address, config]);
+}
+function getLatestBlockhash(config = {}) {
+  return callSolanaRpc(
+    "getLatestBlockhash",
+    [config]
+  );
+}
+function sendTransaction(transactionData, config = {}) {
+  return callSolanaRpc("sendTransaction", [transactionData, config]);
+}
+function getSignatureStatuses(signatures, config = {}) {
+  return callSolanaRpc("getSignatureStatuses", [
+    signatures,
+    config
+  ]);
+}
+
 async function transfer(from, to, transfer_lamports, psw) {
   const { blockhash } = await getLatestBlockhash();
   const fromBytes = bs58.decode(from);
@@ -39194,7 +39873,7 @@ function TransferDlg({
                   {
                     label: "扣款账户",
                     value: fromName,
-                    helperText: fromAddress,
+                    helperText: shortSolanaAddress(fromAddress),
                     disabled: true,
                     autoComplete: "username"
                   }
@@ -39229,7 +39908,7 @@ function TransferDlg({
                       )
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(FormHelperText, { children: watch("toAddress") ? watch("toAddress") : "请选择收款账户" })
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(FormHelperText, { children: watch("toAddress") ? shortSolanaAddress(watch("toAddress")) : "请选择收款账户" })
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx(
                   TextField,
@@ -39257,6 +39936,52 @@ function TransferDlg({
   ] });
 }
 
+const ContentCopy = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 16H8V7h11z"
+}));
+
+const RefreshIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"
+}));
+
+const rotate360deg = "rotate360deg 0.5s linear infinite";
+
+const EditIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z"
+}));
+
+const DeleteIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"
+}));
+
+function TitleActions(props) {
+  const { address, name, onDelete, ...rest } = props;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Stack, { direction: "row", alignItems: "center", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(WalletDlg, { initAddress: address, initName: name, type: "modify", children: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+      EditIcon,
+      {
+        style: { marginRight: 12 },
+        ...rest,
+        className: rest.className,
+        onClick: (e) => {
+          e.stopPropagation();
+          triggerOpen();
+        }
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      DeleteIcon,
+      {
+        ...rest,
+        className: rest.className,
+        onClick: (e) => {
+          e.stopPropagation();
+          onDelete();
+        }
+      }
+    )
+  ] });
+}
 function Wallet({ address, name }) {
   const { dispatch } = reactExports.useContext(WalletsCtx);
   const confirm = useConfirm();
@@ -39320,7 +40045,9 @@ function Wallet({ address, name }) {
   async function handleDelete() {
     const { confirmed } = await confirm({
       title: "删除钱包",
-      description: `确定要删除钱包 ${name} 吗？`
+      description: `确定要删除钱包 ${name} 吗？`,
+      confirmationText: "删除",
+      cancellationText: "取消"
     });
     if (confirmed) {
       dispatch({ type: "delete", address });
@@ -39342,28 +40069,58 @@ function Wallet({ address, name }) {
     });
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Accordion, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      AccordionSummary,
+    /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionSummary, { "aria-controls": "panel1-content", id: "panel1-header", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Chip,
       {
-        expandIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowDownwardIcon, {}),
-        "aria-controls": "panel1-content",
-        id: "panel1-header",
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { component: "span", children: name })
+        sx: { width: "100%", justifyContent: "space-between" },
+        label: name,
+        avatar: /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { children: "W" }),
+        color: "primary",
+        variant: "outlined",
+        deleteIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          TitleActions,
+          {
+            name,
+            address,
+            onDelete: handleDelete
+          }
+        ),
+        onDelete: () => {
+        }
       }
-    ),
+    ) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(AccordionDetails, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { wordBreak: "break-all" }, children: address }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Chip,
+        {
+          label: shortSolanaAddress(address),
+          variant: "outlined",
+          color: "success",
+          avatar: /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { children: "A" }),
+          onDelete: () => {
+          },
+          deleteIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(ContentCopy, {})
+        }
+      ),
       loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "加载中..." }) : isNoneAccount ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "red" }, children: "未找到账户信息" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-          "余额: ",
-          balance,
-          " ",
-          refreshing && /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgress, {})
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
-          "所有者: ",
-          owner
-        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Chip,
+          {
+            label: balance,
+            variant: "outlined",
+            color: "success",
+            avatar: /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { children: "B" }),
+            onDelete: () => {
+              if (!refreshing) handleRefresh();
+            },
+            deleteIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              RefreshIcon,
+              {
+                sx: { animation: refreshing ? rotate360deg : void 0 }
+              }
+            )
+          }
+        ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           TransferDlg,
           {
@@ -39380,13 +40137,8 @@ function Wallet({ address, name }) {
               }
             )
           }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "outlined", onClick: handleRefresh, children: "刷新" })
+        )
       ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(AccordionActions, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleDelete, children: "删除" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(WalletDlg, { initAddress: address, initName: name, type: "modify", children: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: triggerOpen, children: "修改" }) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Collapse, { in: startTransferSuccess, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       Alert,
@@ -40111,6 +40863,6 @@ function App() {
 }
 
 ReactDOM$1.createRoot(document.getElementById("root")).render(
-  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) })
+  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { sx: { padding: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) })
 );
-//# sourceMappingURL=index-BTnO8zms.js.map
+//# sourceMappingURL=index-De7GyXMd.js.map

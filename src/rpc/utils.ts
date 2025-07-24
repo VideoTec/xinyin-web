@@ -57,13 +57,37 @@ export function shortSolanaAddress(address: string): string {
   return address.slice(0, 4) + "..." + address.slice(-4);
 }
 
+function getErrorMsg(error: unknown): string {
+  if (!error) return "Empty Error";
+  if (typeof error === "string") return error;
+  if (
+    typeof error === "object" &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
+    return (error as { message: string }).message;
+  }
+  if (
+    typeof error === "object" &&
+    "toString" in error &&
+    typeof error.toString === "function"
+  ) {
+    return error.toString();
+  }
+  return "UnknownError";
+}
+
 import bs58 from "bs58";
-export function isValidSolanaAddress(address: string): boolean {
+export function isValidSolanaAddress(address: string): boolean | string {
   try {
     const decoded = bs58.decode(address);
-    return decoded.length === 32;
+
+    const leng = decoded.length;
+    if (leng != 32) {
+      return `账户地址格式不正确: ${leng} != 32`;
+    }
+    return true;
   } catch (error) {
-    console.error(`Invalid Solana address(${address}): `, error);
-    return false;
+    return `账户地址格式不正确: ${getErrorMsg(error)}`;
   }
 }

@@ -2,16 +2,13 @@ import { useContext, useEffect, useState, useCallback } from "react";
 import { WalletsCtx } from "./walletsCtx";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
-import Typography from "@mui/material/Typography";
 import AccordionDetails from "@mui/material/AccordionDetails";
-import AccordionActions from "@mui/material/AccordionActions";
 import Button from "@mui/material/Button";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { useConfirm } from "material-ui-confirm";
 import { WalletDlg } from "./walletDlg";
 import { getAccountInfo, getBalance } from "./rpc/solanaRpc";
 import { transfer, loopGetTransferStatus } from "./rpc/transfer";
-import { CircularProgress, Collapse } from "@mui/material";
+import { CircularProgress, Collapse, Stack } from "@mui/material";
 import TransferDlg from "./transferDlg";
 import Alert from "@mui/material/Alert";
 import { shortSolanaAddress } from "./rpc/utils";
@@ -20,6 +17,45 @@ import ContentCopy from "@mui/icons-material/ContentCopy";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import Avatar from "@mui/material/Avatar";
 import { rotate360deg } from "./customStyle";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+
+type TitleActionsProps = {
+  address: string;
+  name: string;
+  className?: string;
+  onDelete: () => void;
+};
+
+function TitleActions(props: TitleActionsProps) {
+  const { address, name, onDelete, ...rest } = props;
+
+  return (
+    <Stack direction={"row"} alignItems={"center"}>
+      <WalletDlg initAddress={address} initName={name} type="modify">
+        {({ triggerOpen }) => (
+          <EditIcon
+            style={{ marginRight: 12 }}
+            {...rest}
+            className={rest.className}
+            onClick={(e) => {
+              e.stopPropagation();
+              triggerOpen();
+            }}
+          />
+        )}
+      </WalletDlg>
+      <DeleteIcon
+        {...rest}
+        className={rest.className}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+      />
+    </Stack>
+  );
+}
 
 export function Wallet({ address, name }: { address: string; name: string }) {
   const { dispatch } = useContext(WalletsCtx)!;
@@ -90,10 +126,13 @@ export function Wallet({ address, name }: { address: string; name: string }) {
     }
   }, [transferID, handleRefresh]);
 
+  // FIXME 显示、隐藏确认框迟钝，release 版本没有问题
   async function handleDelete() {
     const { confirmed } = await confirm({
       title: "删除钱包",
       description: `确定要删除钱包 ${name} 吗？`,
+      confirmationText: "删除",
+      cancellationText: "取消",
     });
     if (confirmed) {
       dispatch({ type: "delete", address });
@@ -123,18 +162,28 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   }
 
   //TODO : 发起转账，转账中，转账完成 归到一个 alert 里面
-  //TODO : 修改，删除按钮 放到 AccordionSummary 里面
   //TODO : 地址旁边增加复制按钮，使用合适的组件，联合展示
   //TODO : 余额旁边增加刷新按钮，使用合适的组件，联合展示
   //TODO : 未找到的账户，提供刷新重试功能
+
   return (
     <Accordion key={address}>
-      <AccordionSummary
-        expandIcon={<ArrowDownwardIcon />}
-        aria-controls="panel1-content"
-        id="panel1-header"
-      >
-        <Typography component="span">{name}</Typography>
+      <AccordionSummary aria-controls="panel1-content" id="panel1-header">
+        <Chip
+          sx={{ width: "100%", justifyContent: "space-between" }}
+          label={name}
+          avatar={<Avatar>W</Avatar>}
+          color="primary"
+          variant="outlined"
+          deleteIcon={
+            <TitleActions
+              name={name}
+              address={address}
+              onDelete={handleDelete}
+            />
+          }
+          onDelete={() => {}}
+        />
       </AccordionSummary>
       <AccordionDetails>
         <Chip
@@ -183,18 +232,9 @@ export function Wallet({ address, name }: { address: string; name: string }) {
                 </Button>
               )}
             />
-            <Button variant="outlined" onClick={handleRefresh}>
-              刷新
-            </Button>
           </>
         )}
       </AccordionDetails>
-      <AccordionActions>
-        <Button onClick={handleDelete}>删除</Button>
-        <WalletDlg initAddress={address} initName={name} type="modify">
-          {({ triggerOpen }) => <Button onClick={triggerOpen}>修改</Button>}
-        </WalletDlg>
-      </AccordionActions>
       <Collapse in={startTransferSuccess}>
         <Alert
           severity="success"
