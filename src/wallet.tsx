@@ -192,7 +192,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   }
 
   //TODO : 地址点击，弹窗，显示完整地址
-
+  //FIXME : ALERT, icon, 成功，失败两个图标
   return (
     <Accordion key={address}>
       <AccordionSummary aria-controls="panel1-content" id="panel1-header">

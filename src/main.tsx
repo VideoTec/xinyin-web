@@ -8,7 +8,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
-import { deepOrange } from "@mui/material/colors";
+import { green } from "@mui/material/colors";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -18,7 +18,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <AppBar position="static" sx={{ mb: 2 }}>
             <Toolbar>
               <Stack direction="row" alignItems="center">
-                <Avatar sx={{ bgcolor: deepOrange[500] }}>Xy</Avatar>
+                <Avatar sx={{ bgcolor: green[600] }}>Xy</Avatar>
                 <Typography variant="h6" sx={{ ml: 1 }}>
                   数字钱包
                 </Typography>

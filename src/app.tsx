@@ -20,49 +20,61 @@ import Collapse from "@mui/material/Collapse";
 import Button from "@mui/material/Button";
 import Snackbar from "@mui/material/Snackbar";
 import AddIcon from "@mui/icons-material/Add";
-import Fab from "@mui/material/Fab";
 import Stack from "@mui/material/Stack";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
+import SpeedDial from "@mui/material/SpeedDial";
+import SpeedDialAction from "@mui/material/SpeedDialAction";
+import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 
 type WorkerStatus = "loading" | "success" | "error";
 
 // TODO : 添加错误处理逻辑，确保在 worker 初始化失败时给出友好的提示
-// TODO : fab 按钮的样式和位置可以根据设计需求进行调整
-// TODO : 添加 App Bar
 
 const FixedButtons = memo(
   ({ dispatch }: { dispatch: Dispatch<WalletDispatchAction> }) => {
     return (
       <WalletsCtx value={{ dispatch }}>
-        <Stack
-          sx={{ position: "fixed", right: 32, bottom: 18, left: 32 }}
-          direction={"row"}
-          spacing={2}
+        <SpeedDial
+          ariaLabel="SpeedDial actions"
+          sx={{ position: "fixed", right: 32, bottom: 18 }}
+          icon={<SpeedDialIcon />}
+          FabProps={{ color: "primary" }}
+          direction="up"
         >
-          <XinyinDlg type="generate">
-            {({ triggerOpen }) => (
-              <Fab color="primary" onClick={triggerOpen}>
-                <GenerateWords32Icon color="action" />
-              </Fab>
-            )}
-          </XinyinDlg>
-          <XinyinDlg type="import">
-            {({ triggerOpen }) => (
-              <Fab color="primary" onClick={triggerOpen}>
-                <ImportWords32Icon />
-              </Fab>
-            )}
-          </XinyinDlg>
-          <div style={{ flex: 1 }} />
-          <WalletDlg type="add">
-            {({ triggerOpen }) => (
-              <Fab color="primary" onClick={triggerOpen}>
-                <AddIcon />
-              </Fab>
-            )}
-          </WalletDlg>
-        </Stack>
+          <SpeedDialAction
+            icon={
+              <WalletDlg type="add">
+                {({ triggerOpen }) => <AddIcon onClick={triggerOpen} />}
+              </WalletDlg>
+            }
+            slotProps={{ tooltip: { placement: "left", title: "添加钱包" } }}
+          />
+          <SpeedDialAction
+            icon={
+              <XinyinDlg type="import">
+                {({ triggerOpen }) => (
+                  <ImportWords32Icon onClick={triggerOpen} />
+                )}
+              </XinyinDlg>
+            }
+            slotProps={{
+              tooltip: { placement: "left", title: "导入助记词" },
+            }}
+          />
+          <SpeedDialAction
+            icon={
+              <XinyinDlg type="generate">
+                {({ triggerOpen }) => (
+                  <GenerateWords32Icon color="action" onClick={triggerOpen} />
+                )}
+              </XinyinDlg>
+            }
+            slotProps={{
+              tooltip: { placement: "left", title: "生成助记词" },
+            }}
+          />
+        </SpeedDial>
       </WalletsCtx>
     );
   }
