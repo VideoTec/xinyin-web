@@ -5,7 +5,7 @@ import { useConfirm } from "material-ui-confirm";
 import { WalletDlg } from "./walletDlg";
 import { getAccountInfo, getBalance } from "./rpc/solanaRpc";
 import { transfer, loopGetTransferStatus } from "./rpc/transfer";
-import { shortSolanaAddress } from "./rpc/utils";
+import { shortSolanaAddress, getErrorMsg, shortTransferID } from "./rpc/utils";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -22,6 +22,19 @@ import Avatar from "@mui/material/Avatar";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Typography from "@mui/material/Typography";
+
+enum TransferStatus {
+  /** 初始化 */
+  Init,
+  /** 正在RPC调用中，发起转账 */
+  InRPC,
+  /** 循环查询状态中，等待链上确认 */
+  LoopStatus,
+  /** 转账成功 */
+  Success,
+  /** 转账失败 */
+  Failed,
+}
 
 type TitleActionsProps = {
   address: string;
@@ -65,16 +78,16 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   const confirm = useConfirm();
   const [accountLoading, setAccountLoading] = useState(true);
   const [balanceLoading, setBalanceLoading] = useState(false);
-  const [transferring, setTransferring] = useState(false);
   const [transferID, setTransferID] = useState("");
   const [owner, setOwner] = useState("");
   const [balance, setBalance] = useState("");
-  const [startTransferSuccess, setStartTransferSuccess] = useState(false);
-  const [startTransferFailedMessage, setStartTransferFailedMessage] =
-    useState("");
-  const [transferSuccess, setTransferSuccess] = useState(false);
+  const [transferStatus, setTransferStatus] = useState(TransferStatus.Init);
+  const [transferMessage, setTransferMessage] = useState("");
 
   const isNoneAccount = owner === "";
+  const isTransferring =
+    transferStatus === TransferStatus.InRPC ||
+    transferStatus === TransferStatus.LoopStatus;
 
   const loadBalance = useCallback(async () => {
     setBalanceLoading(true);
@@ -112,21 +125,31 @@ export function Wallet({ address, name }: { address: string; name: string }) {
 
   useEffect(() => {
     if (transferID) {
-      setTransferring(true);
+      setTransferStatus(TransferStatus.LoopStatus);
+      setTransferMessage(
+        `正在查询转账状态，签名 ID: ${shortTransferID(transferID)}`
+      );
 
       return loopGetTransferStatus(
         transferID,
         (status) => {
-          console.log(`Signature (${transferID}):${status.confirmations}`);
+          setTransferMessage(
+            `转账状态: ${status.confirmationStatus}, 确认数: ${status.confirmations}`
+          );
         },
         (error) => {
-          setTransferring(false);
           if (!error) {
             loadBalance();
-            setTransferSuccess(true);
+            setTransferStatus(TransferStatus.Success);
+            setTransferMessage(
+              `转账成功，签名 ID: ${shortTransferID(transferID)}`
+            );
           } else {
-            console.error(
-              `Error fetching transfer status for ${transferID}:${error}`
+            setTransferStatus(TransferStatus.Failed);
+            setTransferMessage(
+              `查询转账状态失败，签名 ID: ${shortTransferID(
+                transferID
+              )}，错误信息: ${getErrorMsg(error)}`
             );
           }
         }
@@ -152,24 +175,21 @@ export function Wallet({ address, name }: { address: string; name: string }) {
     lamports: number,
     pwd: string
   ) {
-    setTransferring(true);
+    setTransferStatus(TransferStatus.InRPC);
+    setTransferMessage("正在发起转账，请稍候...");
     transfer(address, toAddress, lamports, pwd)
       .then((signature) => {
+        setTransferMessage(
+          `转账已发起: ${signature.slice(0, 4)}...${signature.slice(-4)}`
+        );
         setTransferID(signature);
-        setStartTransferSuccess(true);
       })
       .catch((error) => {
-        setTransferring(false);
-        let msg = "发起转账失败\n";
-        if (error instanceof Error) {
-          msg += error.message;
-        }
-        setStartTransferFailedMessage(msg);
-        console.error("Transfer failed:", error);
+        setTransferStatus(TransferStatus.Failed);
+        setTransferMessage(`发起转账失败，错误信息: ${getErrorMsg(error)}`);
       });
   }
 
-  //TODO : 发起转账，转账中，转账完成 归到一个 alert 里面
   //TODO : 地址点击，弹窗，显示完整地址
 
   return (
@@ -242,7 +262,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
                   variant="outlined"
                   onClick={triggerOpen}
                   id="transfer-btn"
-                  disabled={transferring || balanceLoading}
+                  disabled={isTransferring || balanceLoading}
                 >
                   转账
                 </Button>
@@ -251,25 +271,32 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           </>
         )}
       </AccordionDetails>
-      <Collapse in={startTransferSuccess}>
+      <Collapse in={transferStatus !== TransferStatus.Init}>
         <Alert
-          severity="success"
-          onClose={() => setStartTransferSuccess(false)}
+          severity={
+            transferStatus === TransferStatus.Failed
+              ? "error"
+              : transferStatus === TransferStatus.Success
+              ? "success"
+              : "info"
+          }
+          sx={{ margin: 2, wordBreak: "break-word" }}
+          icon={
+            <RefreshIcon
+              sx={{ animation: isTransferring ? rotate360deg : undefined }}
+            />
+          }
+          onClose={
+            isTransferring
+              ? undefined
+              : () => {
+                  setTransferStatus(TransferStatus.Init);
+                  setTransferMessage("");
+                  setTransferID("");
+                }
+          }
         >
-          成功发起转账
-        </Alert>
-      </Collapse>
-      <Collapse in={transferSuccess}>
-        <Alert severity="success" onClose={() => setTransferSuccess(false)}>
-          转账成功
-        </Alert>
-      </Collapse>
-      <Collapse in={startTransferFailedMessage !== ""}>
-        <Alert
-          severity="error"
-          onClose={() => setStartTransferFailedMessage("")}
-        >
-          {startTransferFailedMessage}
+          {transferMessage}
         </Alert>
       </Collapse>
     </Accordion>

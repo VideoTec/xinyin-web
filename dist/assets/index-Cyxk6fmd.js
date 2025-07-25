@@ -36533,6 +36533,9 @@ function byteArrayToBase64(bytes) {
 function shortSolanaAddress(address) {
   return address.slice(0, 4) + "..." + address.slice(-4);
 }
+function shortTransferID(transferID) {
+  return transferID.slice(0, 4) + "..." + transferID.slice(-4);
+}
 function getErrorMsg(error) {
   if (!error) return "Empty Error";
   if (typeof error === "string") return error;
@@ -39080,14 +39083,13 @@ function Wallet({ address, name }) {
   const confirm = useConfirm();
   const [accountLoading, setAccountLoading] = reactExports.useState(true);
   const [balanceLoading, setBalanceLoading] = reactExports.useState(false);
-  const [transferring, setTransferring] = reactExports.useState(false);
   const [transferID, setTransferID] = reactExports.useState("");
   const [owner, setOwner] = reactExports.useState("");
   const [balance, setBalance] = reactExports.useState("");
-  const [startTransferSuccess, setStartTransferSuccess] = reactExports.useState(false);
-  const [startTransferFailedMessage, setStartTransferFailedMessage] = reactExports.useState("");
-  const [transferSuccess, setTransferSuccess] = reactExports.useState(false);
+  const [transferStatus, setTransferStatus] = reactExports.useState(0 /* Init */);
+  const [transferMessage, setTransferMessage] = reactExports.useState("");
   const isNoneAccount = owner === "";
+  const isTransferring = transferStatus === 1 /* InRPC */ || transferStatus === 2 /* LoopStatus */;
   const loadBalance = reactExports.useCallback(async () => {
     setBalanceLoading(true);
     const balance2 = await getBalance(address, { encoding: "base64" });
@@ -39119,20 +39121,30 @@ function Wallet({ address, name }) {
   }, [address, loadAccount]);
   reactExports.useEffect(() => {
     if (transferID) {
-      setTransferring(true);
+      setTransferStatus(2 /* LoopStatus */);
+      setTransferMessage(
+        `正在查询转账状态，签名 ID: ${shortTransferID(transferID)}`
+      );
       return loopGetTransferStatus(
         transferID,
         (status) => {
-          console.log(`Signature (${transferID}):${status.confirmations}`);
+          setTransferMessage(
+            `转账状态: ${status.confirmationStatus}, 确认数: ${status.confirmations}`
+          );
         },
         (error) => {
-          setTransferring(false);
           if (!error) {
             loadBalance();
-            setTransferSuccess(true);
+            setTransferStatus(3 /* Success */);
+            setTransferMessage(
+              `转账成功，签名 ID: ${shortTransferID(transferID)}`
+            );
           } else {
-            console.error(
-              `Error fetching transfer status for ${transferID}:${error}`
+            setTransferStatus(4 /* Failed */);
+            setTransferMessage(
+              `查询转账状态失败，签名 ID: ${shortTransferID(
+                transferID
+              )}，错误信息: ${getErrorMsg(error)}`
             );
           }
         }
@@ -39151,18 +39163,16 @@ function Wallet({ address, name }) {
     }
   }
   async function handleTransfer(toAddress, lamports, pwd) {
-    setTransferring(true);
+    setTransferStatus(1 /* InRPC */);
+    setTransferMessage("正在发起转账，请稍候...");
     transfer(address, toAddress, lamports, pwd).then((signature) => {
+      setTransferMessage(
+        `转账已发起: ${signature.slice(0, 4)}...${signature.slice(-4)}`
+      );
       setTransferID(signature);
-      setStartTransferSuccess(true);
     }).catch((error) => {
-      setTransferring(false);
-      let msg = "发起转账失败\n";
-      if (error instanceof Error) {
-        msg += error.message;
-      }
-      setStartTransferFailedMessage(msg);
-      console.error("Transfer failed:", error);
+      setTransferStatus(4 /* Failed */);
+      setTransferMessage(`发起转账失败，错误信息: ${getErrorMsg(error)}`);
     });
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Accordion, { children: [
@@ -39247,7 +39257,7 @@ function Wallet({ address, name }) {
                     variant: "outlined",
                     onClick: triggerOpen,
                     id: "transfer-btn",
-                    disabled: transferring || balanceLoading,
+                    disabled: isTransferring || balanceLoading,
                     children: "转账"
                   }
                 )
@@ -39257,21 +39267,23 @@ function Wallet({ address, name }) {
         ]
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Collapse, { in: startTransferSuccess, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Collapse, { in: transferStatus !== 0 /* Init */, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       Alert,
       {
-        severity: "success",
-        onClose: () => setStartTransferSuccess(false),
-        children: "成功发起转账"
-      }
-    ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Collapse, { in: transferSuccess, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Alert, { severity: "success", onClose: () => setTransferSuccess(false), children: "转账成功" }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Collapse, { in: startTransferFailedMessage !== "", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Alert,
-      {
-        severity: "error",
-        onClose: () => setStartTransferFailedMessage(""),
-        children: startTransferFailedMessage
+        severity: transferStatus === 4 /* Failed */ ? "error" : transferStatus === 3 /* Success */ ? "success" : "info",
+        sx: { margin: 2, wordBreak: "break-word" },
+        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          RefreshIcon,
+          {
+            sx: { animation: isTransferring ? rotate360deg : void 0 }
+          }
+        ),
+        onClose: isTransferring ? void 0 : () => {
+          setTransferStatus(0 /* Init */);
+          setTransferMessage("");
+          setTransferID("");
+        },
+        children: transferMessage
       }
     ) })
   ] }, address);
@@ -39300,7 +39312,7 @@ function WalletList() {
   const { wallets } = reactExports.useContext(WalletsCtx);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     (!wallets || wallets.length === 0) && /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { variant: "h6", sx: { textAlign: "center" }, children: "没有可用的钱包" }),
-    wallets && wallets.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(Grid, { container: true, spacing: 1, children: wallets.map((wallet) => /* @__PURE__ */ jsxRuntimeExports.jsx(Grid, { size: { xs: 6, md: 4 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    wallets && wallets.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(Grid, { container: true, spacing: 1, children: wallets.map((wallet) => /* @__PURE__ */ jsxRuntimeExports.jsx(Grid, { size: { xs: 12, md: 4 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       Wallet,
       {
         address: wallet.address,
@@ -40895,4 +40907,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { sx: { padding: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) })
 );
-//# sourceMappingURL=index-CfeCdTAc.js.map
+//# sourceMappingURL=index-Cyxk6fmd.js.map

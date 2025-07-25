@@ -17,7 +17,7 @@ export function WalletList() {
       {wallets && wallets.length > 0 && (
         <Gride container spacing={1}>
           {wallets.map((wallet) => (
-            <Gride key={wallet.address} size={{ xs: 6, md: 4 }}>
+            <Gride key={wallet.address} size={{ xs: 12, md: 4 }}>
               <Wallet
                 address={wallet.address}
                 name={wallet.name}

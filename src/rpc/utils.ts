@@ -57,7 +57,11 @@ export function shortSolanaAddress(address: string): string {
   return address.slice(0, 4) + "..." + address.slice(-4);
 }
 
-function getErrorMsg(error: unknown): string {
+export function shortTransferID(transferID: string): string {
+  return transferID.slice(0, 4) + "..." + transferID.slice(-4);
+}
+
+export function getErrorMsg(error: unknown): string {
   if (!error) return "Empty Error";
   if (typeof error === "string") return error;
   if (
