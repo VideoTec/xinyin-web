@@ -123,6 +123,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
     loadAccount();
   }, [address, loadAccount]);
 
+  // FIXME: return 不能停止 loop
   useEffect(() => {
     if (transferID) {
       setTransferStatus(TransferStatus.LoopStatus);

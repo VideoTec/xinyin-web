@@ -22518,7 +22518,7 @@ const useThemePropsDefault$2 = (inProps) => useThemeProps({
   name: "MuiContainer",
   defaultTheme: defaultTheme$3
 });
-const useUtilityClasses$I = (ownerState, componentName) => {
+const useUtilityClasses$K = (ownerState, componentName) => {
   const getContainerUtilityClass = (slot) => {
     return generateUtilityClass(componentName, slot);
   };
@@ -22608,7 +22608,7 @@ function createContainer(options = {}) {
       fixed,
       maxWidth
     };
-    const classes = useUtilityClasses$I(ownerState, componentName);
+    const classes = useUtilityClasses$K(ownerState, componentName);
     return (
       // @ts-ignore theme is injected by the styled util
       /* @__PURE__ */ jsxRuntimeExports.jsx(ContainerRoot, {
@@ -24399,7 +24399,7 @@ function getSvgIconUtilityClass(slot) {
 }
 generateUtilityClasses('MuiSvgIcon', ['root', 'colorPrimary', 'colorSecondary', 'colorAction', 'colorError', 'colorDisabled', 'fontSizeInherit', 'fontSizeSmall', 'fontSizeMedium', 'fontSizeLarge']);
 
-const useUtilityClasses$H = (ownerState) => {
+const useUtilityClasses$J = (ownerState) => {
   const {
     color,
     fontSize,
@@ -24538,7 +24538,7 @@ const SvgIcon = /* @__PURE__ */ reactExports.forwardRef(function SvgIcon2(inProp
   if (!inheritViewBox) {
     more.viewBox = viewBox;
   }
-  const classes = useUtilityClasses$H(ownerState);
+  const classes = useUtilityClasses$J(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(SvgIconRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -25752,7 +25752,7 @@ function getButtonBaseUtilityClass(slot) {
 }
 const buttonBaseClasses = generateUtilityClasses('MuiButtonBase', ['root', 'disabled', 'focusVisible']);
 
-const useUtilityClasses$G = (ownerState) => {
+const useUtilityClasses$I = (ownerState) => {
   const {
     disabled,
     focusVisible,
@@ -25968,7 +25968,7 @@ const ButtonBase = /* @__PURE__ */ reactExports.forwardRef(function ButtonBase2(
     tabIndex,
     focusVisible
   };
-  const classes = useUtilityClasses$G(ownerState);
+  const classes = useUtilityClasses$I(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ButtonBaseRoot, {
     as: ComponentProp,
     className: clsx(classes.root, className),
@@ -26089,7 +26089,7 @@ const rotateAnimation = typeof circularRotateKeyframe !== "string" ? css`
 const dashAnimation = typeof circularDashKeyframe !== "string" ? css`
         animation: ${circularDashKeyframe} 1.4s ease-in-out infinite;
       ` : null;
-const useUtilityClasses$F = (ownerState) => {
+const useUtilityClasses$H = (ownerState) => {
   const {
     classes,
     variant,
@@ -26211,7 +26211,7 @@ const CircularProgress = /* @__PURE__ */ reactExports.forwardRef(function Circul
     value,
     variant
   };
-  const classes = useUtilityClasses$F(ownerState);
+  const classes = useUtilityClasses$H(ownerState);
   const circleStyle = {};
   const rootStyle = {};
   const rootProps = {};
@@ -26262,7 +26262,7 @@ const ButtonGroupContext = /* @__PURE__ */ reactExports.createContext({});
 
 const ButtonGroupButtonContext = /* @__PURE__ */ reactExports.createContext(void 0);
 
-const useUtilityClasses$E = (ownerState) => {
+const useUtilityClasses$G = (ownerState) => {
   const {
     color,
     disableElevation,
@@ -26762,7 +26762,7 @@ const Button = /* @__PURE__ */ reactExports.forwardRef(function Button2(inProps,
     type,
     variant
   };
-  const classes = useUtilityClasses$E(ownerState);
+  const classes = useUtilityClasses$G(ownerState);
   const startIcon = (startIconProp || loading && loadingPosition === "start") && /* @__PURE__ */ jsxRuntimeExports.jsx(ButtonStartIcon, {
     className: classes.startIcon,
     ownerState,
@@ -27667,7 +27667,7 @@ function getBackdropUtilityClass(slot) {
 }
 generateUtilityClasses('MuiBackdrop', ['root', 'invisible']);
 
-const useUtilityClasses$D = (ownerState) => {
+const useUtilityClasses$F = (ownerState) => {
   const {
     classes,
     invisible
@@ -27730,7 +27730,7 @@ const Backdrop = /* @__PURE__ */ reactExports.forwardRef(function Backdrop2(inPr
     component,
     invisible
   };
-  const classes = useUtilityClasses$D(ownerState);
+  const classes = useUtilityClasses$F(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     root: components.Root,
@@ -27960,7 +27960,7 @@ function getModalUtilityClass(slot) {
 }
 generateUtilityClasses('MuiModal', ['root', 'hidden', 'backdrop']);
 
-const useUtilityClasses$C = (ownerState) => {
+const useUtilityClasses$E = (ownerState) => {
   const {
     open,
     exited,
@@ -28067,7 +28067,7 @@ const Modal = /* @__PURE__ */ reactExports.forwardRef(function Modal2(inProps, r
     ...propsWithDefaults,
     exited
   };
-  const classes = useUtilityClasses$C(ownerState);
+  const classes = useUtilityClasses$E(ownerState);
   const childProps = {};
   if (children.props.tabIndex === void 0) {
     childProps.tabIndex = "-1";
@@ -28150,7 +28150,7 @@ function getPaperUtilityClass(slot) {
 }
 generateUtilityClasses('MuiPaper', ['root', 'rounded', 'outlined', 'elevation', 'elevation0', 'elevation1', 'elevation2', 'elevation3', 'elevation4', 'elevation5', 'elevation6', 'elevation7', 'elevation8', 'elevation9', 'elevation10', 'elevation11', 'elevation12', 'elevation13', 'elevation14', 'elevation15', 'elevation16', 'elevation17', 'elevation18', 'elevation19', 'elevation20', 'elevation21', 'elevation22', 'elevation23', 'elevation24']);
 
-const useUtilityClasses$B = (ownerState) => {
+const useUtilityClasses$D = (ownerState) => {
   const {
     square,
     elevation,
@@ -28222,7 +28222,7 @@ const Paper = /* @__PURE__ */ reactExports.forwardRef(function Paper2(inProps, r
     square,
     variant
   };
-  const classes = useUtilityClasses$B(ownerState);
+  const classes = useUtilityClasses$D(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(PaperRoot, {
     as: component,
     ownerState,
@@ -28259,7 +28259,7 @@ const DialogBackdrop = styled(Backdrop, {
   // Improve scrollable dialog support.
   zIndex: -1
 });
-const useUtilityClasses$A = (ownerState) => {
+const useUtilityClasses$C = (ownerState) => {
   const {
     classes,
     scroll,
@@ -28462,7 +28462,7 @@ const Dialog = /* @__PURE__ */ reactExports.forwardRef(function Dialog2(inProps,
     maxWidth,
     scroll
   };
-  const classes = useUtilityClasses$A(ownerState);
+  const classes = useUtilityClasses$C(ownerState);
   const backdropClick = reactExports.useRef();
   const handleMouseDown = (event) => {
     backdropClick.current = event.target === event.currentTarget;
@@ -28583,7 +28583,7 @@ function getDialogActionsUtilityClass(slot) {
 }
 generateUtilityClasses('MuiDialogActions', ['root', 'spacing']);
 
-const useUtilityClasses$z = (ownerState) => {
+const useUtilityClasses$B = (ownerState) => {
   const {
     classes,
     disableSpacing
@@ -28633,7 +28633,7 @@ const DialogActions = /* @__PURE__ */ reactExports.forwardRef(function DialogAct
     ...props,
     disableSpacing
   };
-  const classes = useUtilityClasses$z(ownerState);
+  const classes = useUtilityClasses$B(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogActionsRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -28652,7 +28652,7 @@ function getDialogTitleUtilityClass(slot) {
 }
 const dialogTitleClasses = generateUtilityClasses('MuiDialogTitle', ['root']);
 
-const useUtilityClasses$y = (ownerState) => {
+const useUtilityClasses$A = (ownerState) => {
   const {
     classes,
     dividers
@@ -28713,7 +28713,7 @@ const DialogContent = /* @__PURE__ */ reactExports.forwardRef(function DialogCon
     ...props,
     dividers
   };
-  const classes = useUtilityClasses$y(ownerState);
+  const classes = useUtilityClasses$A(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -28739,7 +28739,7 @@ const v6Colors = {
   textDisabled: true
 };
 const extendSxProp = internal_createExtendSxProp();
-const useUtilityClasses$x = (ownerState) => {
+const useUtilityClasses$z = (ownerState) => {
   const {
     align,
     gutterBottom,
@@ -28879,7 +28879,7 @@ const Typography = /* @__PURE__ */ reactExports.forwardRef(function Typography2(
     variantMapping
   };
   const Component = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
-  const classes = useUtilityClasses$x(ownerState);
+  const classes = useUtilityClasses$z(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(TypographyRoot, {
     as: Component,
     ref,
@@ -28900,7 +28900,7 @@ function getDialogContentTextUtilityClass(slot) {
 }
 generateUtilityClasses('MuiDialogContentText', ['root']);
 
-const useUtilityClasses$w = (ownerState) => {
+const useUtilityClasses$y = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -28929,7 +28929,7 @@ const DialogContentText = /* @__PURE__ */ reactExports.forwardRef(function Dialo
     className,
     ...ownerState
   } = props;
-  const classes = useUtilityClasses$w(ownerState);
+  const classes = useUtilityClasses$y(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentTextRoot, {
     component: "p",
     variant: "body1",
@@ -28942,7 +28942,7 @@ const DialogContentText = /* @__PURE__ */ reactExports.forwardRef(function Dialo
   });
 });
 
-const useUtilityClasses$v = (ownerState) => {
+const useUtilityClasses$x = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -28969,7 +28969,7 @@ const DialogTitle = /* @__PURE__ */ reactExports.forwardRef(function DialogTitle
     ...other
   } = props;
   const ownerState = props;
-  const classes = useUtilityClasses$v(ownerState);
+  const classes = useUtilityClasses$x(ownerState);
   const {
     titleId = idProp
   } = reactExports.useContext(DialogContext);
@@ -29241,7 +29241,7 @@ const inputOverridesResolver = (props, styles) => {
   } = props;
   return [styles.input, ownerState.size === "small" && styles.inputSizeSmall, ownerState.multiline && styles.inputMultiline, ownerState.type === "search" && styles.inputTypeSearch, ownerState.startAdornment && styles.inputAdornedStart, ownerState.endAdornment && styles.inputAdornedEnd, ownerState.hiddenLabel && styles.inputHiddenLabel];
 };
-const useUtilityClasses$u = (ownerState) => {
+const useUtilityClasses$w = (ownerState) => {
   const {
     classes,
     color,
@@ -29627,7 +29627,7 @@ const InputBase = /* @__PURE__ */ reactExports.forwardRef(function InputBase2(in
     startAdornment,
     type
   };
-  const classes = useUtilityClasses$u(ownerState);
+  const classes = useUtilityClasses$w(ownerState);
   const Root = slots.root || components.Root || InputBaseRoot;
   const rootProps = slotProps.root || componentsProps.root || {};
   const Input = slots.input || components.Input || InputBaseInput;
@@ -29700,7 +29700,7 @@ const inputClasses = {
   ...generateUtilityClasses('MuiInput', ['root', 'underline', 'input'])
 };
 
-const useUtilityClasses$t = (ownerState) => {
+const useUtilityClasses$v = (ownerState) => {
   const {
     classes,
     disableUnderline
@@ -29833,7 +29833,7 @@ const Input = /* @__PURE__ */ reactExports.forwardRef(function Input2(inProps, r
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$t(props);
+  const classes = useUtilityClasses$v(props);
   const ownerState = {
     disableUnderline
   };
@@ -29870,7 +29870,7 @@ const filledInputClasses = {
   ...generateUtilityClasses('MuiFilledInput', ['root', 'underline', 'input', 'adornedStart', 'adornedEnd', 'sizeSmall', 'multiline', 'hiddenLabel'])
 };
 
-const useUtilityClasses$s = (ownerState) => {
+const useUtilityClasses$u = (ownerState) => {
   const {
     classes,
     disableUnderline,
@@ -30149,7 +30149,7 @@ const FilledInput = /* @__PURE__ */ reactExports.forwardRef(function FilledInput
     multiline,
     type
   };
-  const classes = useUtilityClasses$s(props);
+  const classes = useUtilityClasses$u(props);
   const filledInputComponentsProps = {
     root: {
       ownerState
@@ -30307,7 +30307,7 @@ const outlinedInputClasses = {
   ...generateUtilityClasses('MuiOutlinedInput', ['root', 'notchedOutline', 'input'])
 };
 
-const useUtilityClasses$r = (ownerState) => {
+const useUtilityClasses$t = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -30485,7 +30485,7 @@ const OutlinedInput = /* @__PURE__ */ reactExports.forwardRef(function OutlinedI
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$r(props);
+  const classes = useUtilityClasses$t(props);
   const muiFormControl = useFormControl();
   const fcs = formControlState({
     props,
@@ -30551,7 +30551,7 @@ function getFormLabelUtilityClasses(slot) {
 }
 const formLabelClasses = generateUtilityClasses('MuiFormLabel', ['root', 'colorSecondary', 'focused', 'disabled', 'error', 'filled', 'required', 'asterisk']);
 
-const useUtilityClasses$q = (ownerState) => {
+const useUtilityClasses$s = (ownerState) => {
   const {
     classes,
     color,
@@ -30648,7 +30648,7 @@ const FormLabel = /* @__PURE__ */ reactExports.forwardRef(function FormLabel2(in
     focused: fcs.focused,
     required: fcs.required
   };
-  const classes = useUtilityClasses$q(ownerState);
+  const classes = useUtilityClasses$s(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(FormLabelRoot, {
     as: component,
     ownerState,
@@ -30669,7 +30669,7 @@ function getInputLabelUtilityClasses(slot) {
 }
 generateUtilityClasses('MuiInputLabel', ['root', 'focused', 'disabled', 'error', 'required', 'asterisk', 'formControl', 'sizeSmall', 'shrink', 'animated', 'standard', 'filled', 'outlined']);
 
-const useUtilityClasses$p = (ownerState) => {
+const useUtilityClasses$r = (ownerState) => {
   const {
     classes,
     formControl,
@@ -30858,7 +30858,7 @@ const InputLabel = /* @__PURE__ */ reactExports.forwardRef(function InputLabel2(
     required: fcs.required,
     focused: fcs.focused
   };
-  const classes = useUtilityClasses$p(ownerState);
+  const classes = useUtilityClasses$r(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(InputLabelRoot, {
     "data-shrink": shrink,
     ref,
@@ -30874,7 +30874,7 @@ function getFormControlUtilityClasses(slot) {
 }
 generateUtilityClasses('MuiFormControl', ['root', 'marginNone', 'marginNormal', 'marginDense', 'fullWidth', 'disabled']);
 
-const useUtilityClasses$o = (ownerState) => {
+const useUtilityClasses$q = (ownerState) => {
   const {
     classes,
     margin,
@@ -30964,7 +30964,7 @@ const FormControl = /* @__PURE__ */ reactExports.forwardRef(function FormControl
     size,
     variant
   };
-  const classes = useUtilityClasses$o(ownerState);
+  const classes = useUtilityClasses$q(ownerState);
   const [adornedStart, setAdornedStart] = reactExports.useState(() => {
     let initialAdornedStart = false;
     if (children) {
@@ -31051,7 +31051,7 @@ function getFormHelperTextUtilityClasses(slot) {
 const formHelperTextClasses = generateUtilityClasses('MuiFormHelperText', ['root', 'error', 'disabled', 'sizeSmall', 'sizeMedium', 'contained', 'focused', 'filled', 'required']);
 
 var _span$2;
-const useUtilityClasses$n = (ownerState) => {
+const useUtilityClasses$p = (ownerState) => {
   const {
     classes,
     contained,
@@ -31146,7 +31146,7 @@ const FormHelperText = /* @__PURE__ */ reactExports.forwardRef(function FormHelp
     required: fcs.required
   };
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$n(ownerState);
+  const classes = useUtilityClasses$p(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(FormHelperTextRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -31203,7 +31203,7 @@ function getListUtilityClass(slot) {
 }
 generateUtilityClasses('MuiList', ['root', 'padding', 'dense', 'subheader']);
 
-const useUtilityClasses$m = (ownerState) => {
+const useUtilityClasses$o = (ownerState) => {
   const {
     classes,
     disablePadding,
@@ -31269,7 +31269,7 @@ const List = /* @__PURE__ */ reactExports.forwardRef(function List2(inProps, ref
     dense,
     disablePadding
   };
-  const classes = useUtilityClasses$m(ownerState);
+  const classes = useUtilityClasses$o(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(ListContext.Provider, {
     value: context,
     children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ListRoot, {
@@ -31671,7 +31671,7 @@ function getTransformOriginValue(transformOrigin) {
 function resolveAnchorEl(anchorEl) {
   return typeof anchorEl === "function" ? anchorEl() : anchorEl;
 }
-const useUtilityClasses$l = (ownerState) => {
+const useUtilityClasses$n = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -31749,7 +31749,7 @@ const Popover = /* @__PURE__ */ reactExports.forwardRef(function Popover2(inProp
     transitionDuration: transitionDurationProp,
     TransitionProps
   };
-  const classes = useUtilityClasses$l(ownerState);
+  const classes = useUtilityClasses$n(ownerState);
   const getAnchorOffset = reactExports.useCallback(() => {
     if (anchorReference === "anchorPosition") {
       return anchorPosition;
@@ -31973,7 +31973,7 @@ const LTR_ORIGIN = {
   vertical: "top",
   horizontal: "left"
 };
-const useUtilityClasses$k = (ownerState) => {
+const useUtilityClasses$m = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -32044,7 +32044,7 @@ const Menu = /* @__PURE__ */ reactExports.forwardRef(function Menu2(inProps, ref
     TransitionProps,
     variant
   };
-  const classes = useUtilityClasses$k(ownerState);
+  const classes = useUtilityClasses$m(ownerState);
   const autoFocusItem = autoFocus && !disableAutoFocusItem && open;
   const menuListActionsRef = reactExports.useRef(null);
   const handleEntering = (element, isAppearing) => {
@@ -32165,7 +32165,7 @@ function getNativeSelectUtilityClasses(slot) {
 }
 const nativeSelectClasses = generateUtilityClasses('MuiNativeSelect', ['root', 'select', 'multiple', 'filled', 'outlined', 'standard', 'disabled', 'icon', 'iconOpen', 'iconFilled', 'iconOutlined', 'iconStandard', 'nativeInput', 'error']);
 
-const useUtilityClasses$j = (ownerState) => {
+const useUtilityClasses$l = (ownerState) => {
   const {
     classes,
     variant,
@@ -32324,7 +32324,7 @@ const NativeSelectInput = /* @__PURE__ */ reactExports.forwardRef(function Nativ
     variant,
     error
   };
-  const classes = useUtilityClasses$j(ownerState);
+  const classes = useUtilityClasses$l(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(reactExports.Fragment, {
     children: [/* @__PURE__ */ jsxRuntimeExports.jsx(NativeSelectSelect, {
       ownerState,
@@ -32413,7 +32413,7 @@ function areEqualValues(a, b) {
 function isEmpty(display) {
   return display == null || typeof display === "string" && !display.trim();
 }
-const useUtilityClasses$i = (ownerState) => {
+const useUtilityClasses$k = (ownerState) => {
   const {
     classes,
     variant,
@@ -32715,7 +32715,7 @@ const SelectInput = /* @__PURE__ */ reactExports.forwardRef(function SelectInput
     open,
     error
   };
-  const classes = useUtilityClasses$i(ownerState);
+  const classes = useUtilityClasses$k(ownerState);
   const paperProps = {
     ...MenuProps.PaperProps,
     ...MenuProps.slotProps?.paper
@@ -32815,7 +32815,7 @@ const ArrowDropDownIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path
   d: "M7 10l5 5 5-5z"
 }));
 
-const useUtilityClasses$h = (ownerState) => {
+const useUtilityClasses$j = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -32878,7 +32878,7 @@ const Select = /* @__PURE__ */ reactExports.forwardRef(function Select2(inProps,
     variant,
     classes: classesProp
   };
-  const classes = useUtilityClasses$h(ownerState);
+  const classes = useUtilityClasses$j(ownerState);
   const {
     root,
     ...restOfClasses
@@ -32955,7 +32955,7 @@ const variantComponent = {
   filled: FilledInput,
   outlined: OutlinedInput
 };
-const useUtilityClasses$g = (ownerState) => {
+const useUtilityClasses$i = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -33022,7 +33022,7 @@ const TextField = /* @__PURE__ */ reactExports.forwardRef(function TextField2(in
     select,
     variant
   };
-  const classes = useUtilityClasses$g(ownerState);
+  const classes = useUtilityClasses$i(ownerState);
   const id = useId(idOverride);
   const helperTextId = helperText && id ? `${id}-helper-text` : void 0;
   const inputLabelId = label && id ? `${id}-label` : void 0;
@@ -33150,7 +33150,7 @@ function getSwitchBaseUtilityClass(slot) {
 }
 generateUtilityClasses('PrivateSwitchBase', ['root', 'checked', 'disabled', 'input', 'edgeStart', 'edgeEnd']);
 
-const useUtilityClasses$f = (ownerState) => {
+const useUtilityClasses$h = (ownerState) => {
   const {
     classes,
     checked,
@@ -33290,7 +33290,7 @@ const SwitchBase = /* @__PURE__ */ reactExports.forwardRef(function SwitchBase2(
     disableFocusRipple,
     edge
   };
-  const classes = useUtilityClasses$f(ownerState);
+  const classes = useUtilityClasses$h(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -33382,7 +33382,7 @@ function getCheckboxUtilityClass(slot) {
 }
 const checkboxClasses = generateUtilityClasses('MuiCheckbox', ['root', 'checked', 'disabled', 'indeterminate', 'colorPrimary', 'colorSecondary', 'sizeSmall', 'sizeMedium']);
 
-const useUtilityClasses$e = (ownerState) => {
+const useUtilityClasses$g = (ownerState) => {
   const {
     classes,
     indeterminate,
@@ -33491,7 +33491,7 @@ const Checkbox = /* @__PURE__ */ reactExports.forwardRef(function Checkbox2(inPr
     indeterminate,
     size
   };
-  const classes = useUtilityClasses$e(ownerState);
+  const classes = useUtilityClasses$g(ownerState);
   const externalInputProps = slotProps.input ?? inputProps;
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
@@ -33532,7 +33532,7 @@ function getFormControlLabelUtilityClasses(slot) {
 }
 const formControlLabelClasses = generateUtilityClasses('MuiFormControlLabel', ['root', 'labelPlacementStart', 'labelPlacementTop', 'labelPlacementBottom', 'disabled', 'label', 'error', 'required', 'asterisk']);
 
-const useUtilityClasses$d = (ownerState) => {
+const useUtilityClasses$f = (ownerState) => {
   const {
     classes,
     disabled,
@@ -33667,7 +33667,7 @@ const FormControlLabel = /* @__PURE__ */ reactExports.forwardRef(function FormCo
     required,
     error: fcs.error
   };
-  const classes = useUtilityClasses$d(ownerState);
+  const classes = useUtilityClasses$f(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -36779,7 +36779,7 @@ function getCollapseUtilityClass(slot) {
 }
 generateUtilityClasses('MuiCollapse', ['root', 'horizontal', 'vertical', 'entered', 'hidden', 'wrapper', 'wrapperInner']);
 
-const useUtilityClasses$c = (ownerState) => {
+const useUtilityClasses$e = (ownerState) => {
   const {
     orientation,
     classes
@@ -36905,7 +36905,7 @@ const Collapse = /* @__PURE__ */ reactExports.forwardRef(function Collapse2(inPr
     orientation,
     collapsedSize: collapsedSizeProp
   };
-  const classes = useUtilityClasses$c(ownerState);
+  const classes = useUtilityClasses$e(ownerState);
   const theme = useTheme();
   const timer = useTimeout();
   const wrapperRef = reactExports.useRef(null);
@@ -37070,7 +37070,7 @@ function getAccordionUtilityClass(slot) {
 }
 const accordionClasses = generateUtilityClasses('MuiAccordion', ['root', 'heading', 'rounded', 'expanded', 'disabled', 'gutters', 'region']);
 
-const useUtilityClasses$b = (ownerState) => {
+const useUtilityClasses$d = (ownerState) => {
   const {
     classes,
     square,
@@ -37225,7 +37225,7 @@ const Accordion = /* @__PURE__ */ reactExports.forwardRef(function Accordion2(in
     disableGutters,
     expanded
   };
-  const classes = useUtilityClasses$b(ownerState);
+  const classes = useUtilityClasses$d(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     ...slots
@@ -37291,7 +37291,7 @@ function getAccordionSummaryUtilityClass(slot) {
 }
 const accordionSummaryClasses = generateUtilityClasses('MuiAccordionSummary', ['root', 'expanded', 'focusVisible', 'disabled', 'gutters', 'contentGutters', 'content', 'expandIconWrapper']);
 
-const useUtilityClasses$a = (ownerState) => {
+const useUtilityClasses$c = (ownerState) => {
   const {
     classes,
     expanded,
@@ -37413,7 +37413,7 @@ const AccordionSummary = /* @__PURE__ */ reactExports.forwardRef(function Accord
     disabled,
     disableGutters
   };
-  const classes = useUtilityClasses$a(ownerState);
+  const classes = useUtilityClasses$c(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps
@@ -37472,7 +37472,7 @@ function getAccordionDetailsUtilityClass(slot) {
 }
 generateUtilityClasses('MuiAccordionDetails', ['root']);
 
-const useUtilityClasses$9 = (ownerState) => {
+const useUtilityClasses$b = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -37499,7 +37499,7 @@ const AccordionDetails = /* @__PURE__ */ reactExports.forwardRef(function Accord
     ...other
   } = props;
   const ownerState = props;
-  const classes = useUtilityClasses$9(ownerState);
+  const classes = useUtilityClasses$b(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionDetailsRoot, {
     className: clsx(classes.root, className),
     ref,
@@ -37524,7 +37524,7 @@ function getIconButtonUtilityClass(slot) {
 }
 const iconButtonClasses = generateUtilityClasses('MuiIconButton', ['root', 'disabled', 'colorInherit', 'colorPrimary', 'colorSecondary', 'colorError', 'colorInfo', 'colorSuccess', 'colorWarning', 'edgeStart', 'edgeEnd', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'loading', 'loadingIndicator', 'loadingWrapper']);
 
-const useUtilityClasses$8 = (ownerState) => {
+const useUtilityClasses$a = (ownerState) => {
   const {
     classes,
     disabled,
@@ -37709,7 +37709,7 @@ const IconButton = /* @__PURE__ */ reactExports.forwardRef(function IconButton2(
     loadingIndicator,
     size
   };
-  const classes = useUtilityClasses$8(ownerState);
+  const classes = useUtilityClasses$a(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(IconButtonRoot, {
     id: loading ? loadingId : idProp,
     className: clsx(classes.root, className),
@@ -37751,7 +37751,7 @@ const overridesResolver$1 = (props, styles) => {
   } = props;
   return [styles.root, ownerState.dense && styles.dense, ownerState.divider && styles.divider, !ownerState.disableGutters && styles.gutters];
 };
-const useUtilityClasses$7 = (ownerState) => {
+const useUtilityClasses$9 = (ownerState) => {
   const {
     disabled,
     dense,
@@ -37909,7 +37909,7 @@ const MenuItem = /* @__PURE__ */ reactExports.forwardRef(function MenuItem2(inPr
     divider,
     disableGutters
   };
-  const classes = useUtilityClasses$7(props);
+  const classes = useUtilityClasses$9(props);
   const handleRef = useForkRef(menuItemRef, ref);
   let tabIndex;
   if (!props.disabled) {
@@ -38083,7 +38083,7 @@ const ClearIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
   d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 }));
 
-const useUtilityClasses$6 = (ownerState) => {
+const useUtilityClasses$8 = (ownerState) => {
   const {
     variant,
     color,
@@ -38235,7 +38235,7 @@ const Alert = /* @__PURE__ */ reactExports.forwardRef(function Alert2(inProps, r
     variant,
     colorSeverity: color || severity
   };
-  const classes = useUtilityClasses$6(ownerState);
+  const classes = useUtilityClasses$8(ownerState);
   const externalForwardedProps = {
     slots: {
       closeButton: components.CloseButton,
@@ -38328,7 +38328,7 @@ function getChipUtilityClass(slot) {
 }
 const chipClasses = generateUtilityClasses('MuiChip', ['root', 'sizeSmall', 'sizeMedium', 'colorDefault', 'colorError', 'colorInfo', 'colorPrimary', 'colorSecondary', 'colorSuccess', 'colorWarning', 'disabled', 'clickable', 'clickableColorPrimary', 'clickableColorSecondary', 'deletable', 'deletableColorPrimary', 'deletableColorSecondary', 'outlined', 'filled', 'outlinedPrimary', 'outlinedSecondary', 'filledPrimary', 'filledSecondary', 'avatar', 'avatarSmall', 'avatarMedium', 'avatarColorPrimary', 'avatarColorSecondary', 'icon', 'iconSmall', 'iconMedium', 'iconColorPrimary', 'iconColorSecondary', 'label', 'labelSmall', 'labelMedium', 'deleteIcon', 'deleteIconSmall', 'deleteIconMedium', 'deleteIconColorPrimary', 'deleteIconColorSecondary', 'deleteIconOutlinedColorPrimary', 'deleteIconOutlinedColorSecondary', 'deleteIconFilledColorPrimary', 'deleteIconFilledColorSecondary', 'focusVisible']);
 
-const useUtilityClasses$5 = (ownerState) => {
+const useUtilityClasses$7 = (ownerState) => {
   const {
     classes,
     disabled,
@@ -38722,7 +38722,7 @@ const Chip = /* @__PURE__ */ reactExports.forwardRef(function Chip2(inProps, ref
     clickable,
     variant
   };
-  const classes = useUtilityClasses$5(ownerState);
+  const classes = useUtilityClasses$7(ownerState);
   const moreProps = component === ButtonBase ? {
     component: ComponentProp || "div",
     focusVisibleClassName: classes.focusVisible,
@@ -38817,7 +38817,7 @@ function getAvatarUtilityClass(slot) {
 }
 generateUtilityClasses('MuiAvatar', ['root', 'colorDefault', 'circular', 'rounded', 'square', 'img', 'fallback']);
 
-const useUtilityClasses$4 = (ownerState) => {
+const useUtilityClasses$6 = (ownerState) => {
   const {
     classes,
     variant,
@@ -38980,7 +38980,7 @@ const Avatar = /* @__PURE__ */ reactExports.forwardRef(function Avatar2(inProps,
   const hasImgNotFailing = hasImg && loaded !== "error";
   ownerState.colorDefault = !hasImgNotFailing;
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$4(ownerState);
+  const classes = useUtilityClasses$6(ownerState);
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
     className: clsx(classes.root, className),
@@ -39335,7 +39335,7 @@ const overridesResolver = (props, styles) => {
   } = props;
   return [styles.root, styles[`position${capitalize(ownerState.position)}`], ownerState.disablePointerEvents === true && styles.disablePointerEvents, styles[ownerState.variant]];
 };
-const useUtilityClasses$3 = (ownerState) => {
+const useUtilityClasses$5 = (ownerState) => {
   const {
     classes,
     disablePointerEvents,
@@ -39422,7 +39422,7 @@ const InputAdornment = /* @__PURE__ */ reactExports.forwardRef(function InputAdo
     position,
     variant
   };
-  const classes = useUtilityClasses$3(ownerState);
+  const classes = useUtilityClasses$5(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(FormControlContext.Provider, {
     value: null,
     children: /* @__PURE__ */ jsxRuntimeExports.jsx(InputAdornmentRoot, {
@@ -39809,6 +39809,183 @@ function XinyinDlg({
   ] });
 }
 
+const deepOrange = {
+  500: '#ff5722'};
+
+function getAppBarUtilityClass(slot) {
+  return generateUtilityClass('MuiAppBar', slot);
+}
+generateUtilityClasses('MuiAppBar', ['root', 'positionFixed', 'positionAbsolute', 'positionSticky', 'positionStatic', 'positionRelative', 'colorDefault', 'colorPrimary', 'colorSecondary', 'colorInherit', 'colorTransparent', 'colorError', 'colorInfo', 'colorSuccess', 'colorWarning']);
+
+const useUtilityClasses$4 = (ownerState) => {
+  const {
+    color,
+    position,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", `color${capitalize(color)}`, `position${capitalize(position)}`]
+  };
+  return composeClasses(slots, getAppBarUtilityClass, classes);
+};
+const joinVars = (var1, var2) => var1 ? `${var1?.replace(")", "")}, ${var2})` : var2;
+const AppBarRoot = styled(Paper, {
+  name: "MuiAppBar",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[`position${capitalize(ownerState.position)}`], styles[`color${capitalize(ownerState.color)}`]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  display: "flex",
+  flexDirection: "column",
+  width: "100%",
+  boxSizing: "border-box",
+  // Prevent padding issue with the Modal and fixed positioned AppBar.
+  flexShrink: 0,
+  variants: [{
+    props: {
+      position: "fixed"
+    },
+    style: {
+      position: "fixed",
+      zIndex: (theme.vars || theme).zIndex.appBar,
+      top: 0,
+      left: "auto",
+      right: 0,
+      "@media print": {
+        // Prevent the app bar to be visible on each printed page.
+        position: "absolute"
+      }
+    }
+  }, {
+    props: {
+      position: "absolute"
+    },
+    style: {
+      position: "absolute",
+      zIndex: (theme.vars || theme).zIndex.appBar,
+      top: 0,
+      left: "auto",
+      right: 0
+    }
+  }, {
+    props: {
+      position: "sticky"
+    },
+    style: {
+      position: "sticky",
+      zIndex: (theme.vars || theme).zIndex.appBar,
+      top: 0,
+      left: "auto",
+      right: 0
+    }
+  }, {
+    props: {
+      position: "static"
+    },
+    style: {
+      position: "static"
+    }
+  }, {
+    props: {
+      position: "relative"
+    },
+    style: {
+      position: "relative"
+    }
+  }, {
+    props: {
+      color: "inherit"
+    },
+    style: {
+      "--AppBar-color": "inherit"
+    }
+  }, {
+    props: {
+      color: "default"
+    },
+    style: {
+      "--AppBar-background": theme.vars ? theme.vars.palette.AppBar.defaultBg : theme.palette.grey[100],
+      "--AppBar-color": theme.vars ? theme.vars.palette.text.primary : theme.palette.getContrastText(theme.palette.grey[100]),
+      ...theme.applyStyles("dark", {
+        "--AppBar-background": theme.vars ? theme.vars.palette.AppBar.defaultBg : theme.palette.grey[900],
+        "--AppBar-color": theme.vars ? theme.vars.palette.text.primary : theme.palette.getContrastText(theme.palette.grey[900])
+      })
+    }
+  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["contrastText"])).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      "--AppBar-background": (theme.vars ?? theme).palette[color].main,
+      "--AppBar-color": (theme.vars ?? theme).palette[color].contrastText
+    }
+  })), {
+    props: (props) => props.enableColorOnDark === true && !["inherit", "transparent"].includes(props.color),
+    style: {
+      backgroundColor: "var(--AppBar-background)",
+      color: "var(--AppBar-color)"
+    }
+  }, {
+    props: (props) => props.enableColorOnDark === false && !["inherit", "transparent"].includes(props.color),
+    style: {
+      backgroundColor: "var(--AppBar-background)",
+      color: "var(--AppBar-color)",
+      ...theme.applyStyles("dark", {
+        backgroundColor: theme.vars ? joinVars(theme.vars.palette.AppBar.darkBg, "var(--AppBar-background)") : null,
+        color: theme.vars ? joinVars(theme.vars.palette.AppBar.darkColor, "var(--AppBar-color)") : null
+      })
+    }
+  }, {
+    props: {
+      color: "transparent"
+    },
+    style: {
+      "--AppBar-background": "transparent",
+      "--AppBar-color": "inherit",
+      backgroundColor: "var(--AppBar-background)",
+      color: "var(--AppBar-color)",
+      ...theme.applyStyles("dark", {
+        backgroundImage: "none"
+      })
+    }
+  }]
+})));
+const AppBar = /* @__PURE__ */ reactExports.forwardRef(function AppBar2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiAppBar"
+  });
+  const {
+    className,
+    color = "primary",
+    enableColorOnDark = false,
+    position = "fixed",
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    color,
+    position,
+    enableColorOnDark
+  };
+  const classes = useUtilityClasses$4(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(AppBarRoot, {
+    square: true,
+    component: "header",
+    ownerState,
+    elevation: 4,
+    className: clsx(classes.root, className, position === "fixed" && "mui-fixed"),
+    ref,
+    ...other
+  });
+});
+
 function mapEventPropToEvent(eventProp) {
   return eventProp.substring(2).toLowerCase();
 }
@@ -39931,7 +40108,7 @@ function getFabUtilityClass(slot) {
 }
 const fabClasses = generateUtilityClasses('MuiFab', ['root', 'primary', 'secondary', 'extended', 'circular', 'focusVisible', 'disabled', 'colorInherit', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'info', 'error', 'warning', 'success']);
 
-const useUtilityClasses$2 = (ownerState) => {
+const useUtilityClasses$3 = (ownerState) => {
   const {
     color,
     variant,
@@ -40103,7 +40280,7 @@ const Fab = /* @__PURE__ */ reactExports.forwardRef(function Fab2(inProps, ref) 
     size,
     variant
   };
-  const classes = useUtilityClasses$2(ownerState);
+  const classes = useUtilityClasses$3(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(FabRoot, {
     className: clsx(classes.root, className),
     component,
@@ -40240,7 +40417,7 @@ function getSnackbarContentUtilityClass(slot) {
 }
 generateUtilityClasses('MuiSnackbarContent', ['root', 'message', 'action']);
 
-const useUtilityClasses$1 = (ownerState) => {
+const useUtilityClasses$2 = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -40302,7 +40479,7 @@ const SnackbarContent = /* @__PURE__ */ reactExports.forwardRef(function Snackba
     ...other
   } = props;
   const ownerState = props;
-  const classes = useUtilityClasses$1(ownerState);
+  const classes = useUtilityClasses$2(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(SnackbarContentRoot, {
     role,
     elevation: 6,
@@ -40327,7 +40504,7 @@ function getSnackbarUtilityClass(slot) {
 }
 generateUtilityClasses('MuiSnackbar', ['root', 'anchorOriginTopCenter', 'anchorOriginBottomCenter', 'anchorOriginTopRight', 'anchorOriginBottomRight', 'anchorOriginTopLeft', 'anchorOriginBottomLeft']);
 
-const useUtilityClasses = (ownerState) => {
+const useUtilityClasses$1 = (ownerState) => {
   const {
     classes,
     anchorOrigin
@@ -40466,7 +40643,7 @@ const Snackbar = /* @__PURE__ */ reactExports.forwardRef(function Snackbar2(inPr
     TransitionComponent: TransitionComponentProp,
     transitionDuration
   };
-  const classes = useUtilityClasses(ownerState);
+  const classes = useUtilityClasses$1(ownerState);
   const {
     getRootProps,
     onClickAway
@@ -40575,6 +40752,91 @@ const Snackbar = /* @__PURE__ */ reactExports.forwardRef(function Snackbar2(inPr
         })
       })
     })
+  });
+});
+
+function getToolbarUtilityClass(slot) {
+  return generateUtilityClass('MuiToolbar', slot);
+}
+generateUtilityClasses('MuiToolbar', ['root', 'gutters', 'regular', 'dense']);
+
+const useUtilityClasses = (ownerState) => {
+  const {
+    classes,
+    disableGutters,
+    variant
+  } = ownerState;
+  const slots = {
+    root: ["root", !disableGutters && "gutters", variant]
+  };
+  return composeClasses(slots, getToolbarUtilityClass, classes);
+};
+const ToolbarRoot = styled("div", {
+  name: "MuiToolbar",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, !ownerState.disableGutters && styles.gutters, styles[ownerState.variant]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  position: "relative",
+  display: "flex",
+  alignItems: "center",
+  variants: [{
+    props: ({
+      ownerState
+    }) => !ownerState.disableGutters,
+    style: {
+      paddingLeft: theme.spacing(2),
+      paddingRight: theme.spacing(2),
+      [theme.breakpoints.up("sm")]: {
+        paddingLeft: theme.spacing(3),
+        paddingRight: theme.spacing(3)
+      }
+    }
+  }, {
+    props: {
+      variant: "dense"
+    },
+    style: {
+      minHeight: 48
+    }
+  }, {
+    props: {
+      variant: "regular"
+    },
+    style: theme.mixins.toolbar
+  }]
+})));
+const Toolbar = /* @__PURE__ */ reactExports.forwardRef(function Toolbar2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiToolbar"
+  });
+  const {
+    className,
+    component = "div",
+    disableGutters = false,
+    variant = "regular",
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    component,
+    disableGutters,
+    variant
+  };
+  const classes = useUtilityClasses(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ToolbarRoot, {
+    as: component,
+    className: clsx(classes.root, className),
+    ref,
+    ownerState,
+    ...other
   });
 });
 
@@ -40905,6 +41167,12 @@ function App() {
 }
 
 ReactDOM$1.createRoot(document.getElementById("root")).render(
-  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { sx: { padding: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) })
+  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { sx: { padding: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(AppBar, { position: "static", sx: { mb: 2 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Toolbar, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Stack, { direction: "row", alignItems: "center", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { sx: { bgcolor: deepOrange[500] }, children: "Xy" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { variant: "h6", sx: { ml: 1 }, children: "数字钱包" })
+    ] }) }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(App, {})
+  ] }) }) }) })
 );
-//# sourceMappingURL=index-Cyxk6fmd.js.map
+//# sourceMappingURL=index-D0ppGV5V.js.map
