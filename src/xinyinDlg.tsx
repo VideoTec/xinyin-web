@@ -15,6 +15,7 @@ import { useContext, useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
 import { generateWords32, importWords32 } from "./xinyin/xinyinMain";
 import { useTheme } from "@mui/material/styles";
+import { isValidSolanaAddress } from "./rpc/utils";
 
 const initialWordCount = 600; // 假设初始字数为600
 const initialStartIndex = 8; // 假设初始开始序号为8
@@ -49,7 +50,7 @@ export default function XinyinDlg({
   const [generatedWords32, setGeneratedWords32] = useState<string>("");
   const [showPassword, setShowPassword] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const { dispatch } = useContext(WalletsCtx)!;
+  const { dispatch, wallets } = useContext(WalletsCtx)!;
   const {
     register,
     handleSubmit,
@@ -109,6 +110,13 @@ export default function XinyinDlg({
         data.password
       )
         .then((solanaAddress) => {
+          const w = wallets && wallets.find((w) => w.address === solanaAddress);
+          if (w) {
+            throw new Error(`已经导入这个该助记字，钱包名称是：'${w.name}'`);
+          }
+          if (!solanaAddress || !isValidSolanaAddress(solanaAddress)) {
+            throw new Error("导入心印助记字失败，未生成有效的钱包地址");
+          }
           dispatch({
             type: "add",
             wallet: {
@@ -202,6 +210,14 @@ export default function XinyinDlg({
     }
     return true;
   }
+
+  function validateWalletName(name: string): boolean | string {
+    if (wallets && wallets.some((w) => w.name === name)) {
+      return "钱包名称已存在";
+    }
+    return true;
+  }
+
   return (
     <>
       {children({ triggerOpen: handleOpen })}
@@ -305,6 +321,7 @@ export default function XinyinDlg({
                   autoComplete="username"
                   {...register("walletName", {
                     required: "必须填写钱包名称",
+                    validate: validateWalletName,
                   })}
                   error={!!errors.walletName}
                   helperText={

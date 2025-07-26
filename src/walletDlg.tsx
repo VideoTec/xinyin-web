@@ -83,7 +83,6 @@ export default function WalletDlg({
     return true;
   }
 
-  // FIXME: 确保地址格式正确, 显示错误原因
   // TODO: 地址栏，全选，复制 方案
   return (
     <>
