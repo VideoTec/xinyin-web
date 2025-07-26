@@ -2,7 +2,6 @@ import { useContext, useEffect, useState, useCallback } from "react";
 import { WalletsCtx } from "./walletsCtx";
 import { rotate360deg } from "./customStyle";
 import { useConfirm } from "material-ui-confirm";
-import { WalletDlg } from "./walletDlg";
 import { getAccountInfo, getBalance } from "./rpc/solanaRpc";
 import { transfer, loopGetTransferStatus } from "./rpc/transfer";
 import { shortSolanaAddress, getErrorMsg, shortTransferID } from "./rpc/utils";
@@ -24,6 +23,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import Typography from "@mui/material/Typography";
+import WalletDlg from "./walletDlg";
 
 enum TransferStatus {
   /** 初始化 */

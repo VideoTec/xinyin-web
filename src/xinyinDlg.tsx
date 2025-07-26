@@ -35,7 +35,7 @@ interface XinyinTxt {
   walletName: string;
 }
 
-export function XinyinDlg({
+export default function XinyinDlg({
   type,
   children,
 }: {
