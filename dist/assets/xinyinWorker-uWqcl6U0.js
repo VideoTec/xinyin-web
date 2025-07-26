@@ -459,13 +459,22 @@ function onXinYinMessage(message) {
   switch (message.code) {
     case XinYinMessageCode.GenerateWords32: {
       responseMsg.code = XinYinMessageCode.GenerateWords32Result;
+      if (
+        message.txtInHeart === undefined ||
+        message.startOf8105 === undefined ||
+        message.countFrom8105 === undefined
+      ) {
+        responseMsg.errorMessage =
+          "缺少必要的参数: txtInHeart, startOf8105, countFrom8105";
+        break;
+      }
       try {
         responseMsg.words32 = generate_xinyin_words32(
           message.txtInHeart,
           message.startOf8105,
           message.countFrom8105
         );
-      } catch (error) {
+      } catch (/** @type {any} */ error) {
         responseMsg.errorMessage = error;
       }
       break;
@@ -473,6 +482,17 @@ function onXinYinMessage(message) {
 
     case XinYinMessageCode.ImportWords32: {
       responseMsg.code = XinYinMessageCode.ImportWords32Result;
+      if (
+        message.words32 === undefined ||
+        message.txtInHeart === undefined ||
+        message.startOf8105 === undefined ||
+        message.countFrom8105 === undefined ||
+        message.passphrase === undefined
+      ) {
+        responseMsg.errorMessage =
+          "缺少必要的参数: words32, txtInHeart, startOf8105, countFrom8105, passphrase";
+        break;
+      }
       try {
         responseMsg.solanaAddress = import_xinyin_words32(
           message.words32,
@@ -481,7 +501,7 @@ function onXinYinMessage(message) {
           message.countFrom8105,
           message.passphrase
         );
-      } catch (error) {
+      } catch (/** @type {any} */ error) {
         responseMsg.errorMessage = error;
       }
       break;
@@ -489,13 +509,22 @@ function onXinYinMessage(message) {
 
     case XinYinMessageCode.SignMessage: {
       responseMsg.code = XinYinMessageCode.SignMessageResult;
+      if (
+        message.solanaAddress === undefined ||
+        message.messageUint8 === undefined ||
+        message.passphrase === undefined
+      ) {
+        responseMsg.errorMessage =
+          "缺少必要的参数: solanaAddress, messageUint8, passphrase";
+        break;
+      }
       try {
         responseMsg.signature = sign_message(
           message.solanaAddress,
           message.messageUint8,
           message.passphrase
         );
-      } catch (error) {
+      } catch (/** @type {any} */ error) {
         responseMsg.errorMessage = error;
       }
       break;
@@ -511,7 +540,7 @@ function onXinYinMessage(message) {
       responseMsg.code = XinYinMessageCode.ListSksResult;
       try {
         responseMsg.sks = loadEncryptedSks();
-      } catch (error) {
+      } catch (/** @type {any} */ error) {
         responseMsg.errorMessage = error;
       }
       break;
@@ -524,4 +553,4 @@ function onXinYinMessage(message) {
 
   self.postMessage(responseMsg);
 }
-//# sourceMappingURL=xinyinWorker-MMbEVqRc.js.map
+//# sourceMappingURL=xinyinWorker-uWqcl6U0.js.map

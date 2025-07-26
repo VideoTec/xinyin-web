@@ -5,9 +5,16 @@ import { WalletList } from "./wallets";
 import { WalletsCtx } from "./walletsCtx";
 import { useImmerReducer } from "use-immer";
 import { initWallets, walletsReducer } from "./walletsData";
-import Stack from "@mui/material/Stack";
 import CircularProgress from "@mui/material/CircularProgress";
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import Avatar from "@mui/material/Avatar";
+import Stack from "@mui/material/Stack";
+import { green } from "@mui/material/colors";
+import { IconButton } from "@mui/material";
+import { ImportWords32Icon, GenerateWords32Icon } from "./icons";
+import XinyinDlg from "./xinyinDlg";
 
 type WorkerStatus = "loading" | "success" | "error";
 
@@ -35,26 +42,46 @@ function App() {
   }, []);
 
   return (
-    <Stack alignItems="center">
-      {workerStatus === "error" && (
-        <Typography variant="h6" mt={2}>
-          初始化失败：{workerError}
-        </Typography>
-      )}
-      {workerStatus === "loading" && (
-        <>
-          <CircularProgress />
-          <Typography variant="h6" mt={2}>
-            正在初始化，请稍候...
+    <WalletsCtx value={{ wallets, dispatch }}>
+      <AppBar position="static" sx={{ mb: 2 }}>
+        <Toolbar>
+          <Avatar sx={{ bgcolor: green[600] }}>Xy</Avatar>
+          <Typography variant="h6" sx={{ ml: 1 }} flexGrow={1}>
+            数字钱包
           </Typography>
-        </>
-      )}
-      {workerStatus === "success" && (
-        <WalletsCtx value={{ wallets, dispatch }}>
-          <WalletList />
-        </WalletsCtx>
-      )}
-    </Stack>
+          <XinyinDlg type="generate">
+            {({ triggerOpen }) => (
+              <IconButton sx={{ mr: 1 }} onClick={triggerOpen}>
+                <GenerateWords32Icon />
+              </IconButton>
+            )}
+          </XinyinDlg>
+          <XinyinDlg type="import">
+            {({ triggerOpen }) => (
+              <IconButton sx={{ mr: 1 }} onClick={triggerOpen}>
+                <ImportWords32Icon />
+              </IconButton>
+            )}
+          </XinyinDlg>
+        </Toolbar>
+      </AppBar>
+      <Stack alignItems="center">
+        {workerStatus === "error" && (
+          <Typography variant="h6" mt={2}>
+            初始化失败：{workerError}
+          </Typography>
+        )}
+        {workerStatus === "loading" && (
+          <>
+            <CircularProgress />
+            <Typography variant="h6" mt={2}>
+              正在初始化，请稍候...
+            </Typography>
+          </>
+        )}
+        {workerStatus === "success" && <WalletList />}
+      </Stack>
+    </WalletsCtx>
   );
 }
 

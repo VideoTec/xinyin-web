@@ -16774,7 +16774,7 @@ let gPendingRequests = {};
 /** type { Work } */
 let xinyin_worker;
 try {
-  xinyin_worker = new Worker(new URL(/* @vite-ignore */ ""+new URL('xinyinWorker-MMbEVqRc.js', import.meta.url).href+"", import.meta.url), {
+  xinyin_worker = new Worker(new URL(/* @vite-ignore */ ""+new URL('xinyinWorker-uWqcl6U0.js', import.meta.url).href+"", import.meta.url), {
     type: "module",
     name: "xinyin-worker",
   });
@@ -17671,6 +17671,15 @@ function clearAsync() {
 function walletsReducer(draft, action) {
   switch (action.type) {
     case "add": {
+      const existingIndex = draft.findIndex(
+        (wallet) => wallet.address === action.wallet.address
+      );
+      if (existingIndex !== -1) {
+        console.warn(
+          `Wallet with address ${action.wallet.address} already exists.`
+        );
+        return draft;
+      }
       const w = action.wallet;
       draft.push(w);
       setItemAsync(w.address, w.name).catch(console.error);
@@ -19524,7 +19533,7 @@ var assign = Object.assign;
  * @param {number} length
  * @return {number}
  */
-function hash$2 (value, length) {
+function hash (value, length) {
 	return charat(value, 0) ^ 45 ? (((((((length << 2) ^ charat(value, 0)) << 2) ^ charat(value, 1)) << 2) ^ charat(value, 2)) << 2) ^ charat(value, 3) : 0
 }
 
@@ -20224,7 +20233,7 @@ var removeLabel = function removeLabel(element) {
 /* eslint-disable no-fallthrough */
 
 function prefix(value, length) {
-  switch (hash$2(value, length)) {
+  switch (hash(value, length)) {
     // color-adjust
     case 5103:
       return WEBKIT + 'print-' + value + value;
@@ -21644,7 +21653,7 @@ function createSpacing(spacingInput = 8, transform = createUnarySpacing({
  *   })
  *```
  */
-function applyStyles$2(key, styles) {
+function applyStyles(key, styles) {
   // @ts-expect-error this is 'any' type
   const theme = this;
   if (theme.vars) {
@@ -21696,7 +21705,7 @@ function createTheme$1(options = {}, ...args) {
     }
   }, other);
   muiTheme = cssContainerQueries(muiTheme);
-  muiTheme.applyStyles = applyStyles$2;
+  muiTheme.applyStyles = applyStyles;
   muiTheme = args.reduce((acc, argument) => deepmerge(acc, argument), muiTheme);
   muiTheme.unstable_sxConfig = {
     ...defaultSxConfig,
@@ -22518,7 +22527,7 @@ const useThemePropsDefault$2 = (inProps) => useThemeProps({
   name: "MuiContainer",
   defaultTheme: defaultTheme$3
 });
-const useUtilityClasses$P = (ownerState, componentName) => {
+const useUtilityClasses$K = (ownerState, componentName) => {
   const getContainerUtilityClass = (slot) => {
     return generateUtilityClass(componentName, slot);
   };
@@ -22608,7 +22617,7 @@ function createContainer(options = {}) {
       fixed,
       maxWidth
     };
-    const classes = useUtilityClasses$P(ownerState, componentName);
+    const classes = useUtilityClasses$K(ownerState, componentName);
     return (
       // @ts-ignore theme is injected by the styled util
       /* @__PURE__ */ jsxRuntimeExports.jsx(ContainerRoot, {
@@ -23514,7 +23523,7 @@ function createMixins(breakpoints, mixins) {
   };
 }
 
-function round$2(value) {
+function round(value) {
   return Math.round(value * 1e5) / 1e5;
 }
 const caseAllCaps = {
@@ -23550,7 +23559,7 @@ function createTypography(palette, typography) {
     // The letter spacing was designed for the Roboto font-family. Using the same letter-spacing
     // across font-families can cause issues with the kerning.
     ...fontFamily === defaultFontFamily ? {
-      letterSpacing: `${round$2(letterSpacing / size)}em`
+      letterSpacing: `${round(letterSpacing / size)}em`
     } : {},
     ...casing,
     ...allVariants
@@ -24400,7 +24409,7 @@ function getSvgIconUtilityClass(slot) {
 }
 generateUtilityClasses('MuiSvgIcon', ['root', 'colorPrimary', 'colorSecondary', 'colorAction', 'colorError', 'colorDisabled', 'fontSizeInherit', 'fontSizeSmall', 'fontSizeMedium', 'fontSizeLarge']);
 
-const useUtilityClasses$O = (ownerState) => {
+const useUtilityClasses$J = (ownerState) => {
   const {
     color,
     fontSize,
@@ -24539,7 +24548,7 @@ const SvgIcon = /* @__PURE__ */ reactExports.forwardRef(function SvgIcon2(inProp
   if (!inheritViewBox) {
     more.viewBox = viewBox;
   }
-  const classes = useUtilityClasses$O(ownerState);
+  const classes = useUtilityClasses$J(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(SvgIconRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -24574,7 +24583,7 @@ function createSvgIcon(path, displayName) {
 
 // Corresponds to 10 frames at 60 Hz.
 // A few bytes payload overhead when lodash/debounce is ~3 kB and debounce ~300 B.
-function debounce$1(func, wait = 166) {
+function debounce(func, wait = 166) {
   let timeout;
   function debounced(...args) {
     const later = () => {
@@ -25753,7 +25762,7 @@ function getButtonBaseUtilityClass(slot) {
 }
 const buttonBaseClasses = generateUtilityClasses('MuiButtonBase', ['root', 'disabled', 'focusVisible']);
 
-const useUtilityClasses$N = (ownerState) => {
+const useUtilityClasses$I = (ownerState) => {
   const {
     disabled,
     focusVisible,
@@ -25969,7 +25978,7 @@ const ButtonBase = /* @__PURE__ */ reactExports.forwardRef(function ButtonBase2(
     tabIndex,
     focusVisible
   };
-  const classes = useUtilityClasses$N(ownerState);
+  const classes = useUtilityClasses$I(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(ButtonBaseRoot, {
     as: ComponentProp,
     className: clsx(classes.root, className),
@@ -26090,7 +26099,7 @@ const rotateAnimation = typeof circularRotateKeyframe !== "string" ? css`
 const dashAnimation = typeof circularDashKeyframe !== "string" ? css`
         animation: ${circularDashKeyframe} 1.4s ease-in-out infinite;
       ` : null;
-const useUtilityClasses$M = (ownerState) => {
+const useUtilityClasses$H = (ownerState) => {
   const {
     classes,
     variant,
@@ -26212,7 +26221,7 @@ const CircularProgress = /* @__PURE__ */ reactExports.forwardRef(function Circul
     value,
     variant
   };
-  const classes = useUtilityClasses$M(ownerState);
+  const classes = useUtilityClasses$H(ownerState);
   const circleStyle = {};
   const rootStyle = {};
   const rootProps = {};
@@ -26263,7 +26272,7 @@ const ButtonGroupContext = /* @__PURE__ */ reactExports.createContext({});
 
 const ButtonGroupButtonContext = /* @__PURE__ */ reactExports.createContext(void 0);
 
-const useUtilityClasses$L = (ownerState) => {
+const useUtilityClasses$G = (ownerState) => {
   const {
     color,
     disableElevation,
@@ -26763,7 +26772,7 @@ const Button = /* @__PURE__ */ reactExports.forwardRef(function Button2(inProps,
     type,
     variant
   };
-  const classes = useUtilityClasses$L(ownerState);
+  const classes = useUtilityClasses$G(ownerState);
   const startIcon = (startIconProp || loading && loadingPosition === "start") && /* @__PURE__ */ jsxRuntimeExports.jsx(ButtonStartIcon, {
     className: classes.startIcon,
     ownerState,
@@ -27549,7 +27558,7 @@ function getTransitionProps(props, options) {
   };
 }
 
-const styles$3 = {
+const styles$2 = {
   entering: {
     opacity: 1
   },
@@ -27652,7 +27661,7 @@ const Fade = /* @__PURE__ */ reactExports.forwardRef(function Fade2(props, ref) 
         style: {
           opacity: 0,
           visibility: state === "exited" && !inProp ? "hidden" : void 0,
-          ...styles$3[state],
+          ...styles$2[state],
           ...style,
           ...children.props.style
         },
@@ -27668,7 +27677,7 @@ function getBackdropUtilityClass(slot) {
 }
 generateUtilityClasses('MuiBackdrop', ['root', 'invisible']);
 
-const useUtilityClasses$K = (ownerState) => {
+const useUtilityClasses$F = (ownerState) => {
   const {
     classes,
     invisible
@@ -27731,7 +27740,7 @@ const Backdrop = /* @__PURE__ */ reactExports.forwardRef(function Backdrop2(inPr
     component,
     invisible
   };
-  const classes = useUtilityClasses$K(ownerState);
+  const classes = useUtilityClasses$F(ownerState);
   const backwardCompatibleSlots = {
     transition: TransitionComponentProp,
     root: components.Root,
@@ -27961,7 +27970,7 @@ function getModalUtilityClass(slot) {
 }
 generateUtilityClasses('MuiModal', ['root', 'hidden', 'backdrop']);
 
-const useUtilityClasses$J = (ownerState) => {
+const useUtilityClasses$E = (ownerState) => {
   const {
     open,
     exited,
@@ -28068,7 +28077,7 @@ const Modal = /* @__PURE__ */ reactExports.forwardRef(function Modal2(inProps, r
     ...propsWithDefaults,
     exited
   };
-  const classes = useUtilityClasses$J(ownerState);
+  const classes = useUtilityClasses$E(ownerState);
   const childProps = {};
   if (children.props.tabIndex === void 0) {
     childProps.tabIndex = "-1";
@@ -28151,7 +28160,7 @@ function getPaperUtilityClass(slot) {
 }
 generateUtilityClasses('MuiPaper', ['root', 'rounded', 'outlined', 'elevation', 'elevation0', 'elevation1', 'elevation2', 'elevation3', 'elevation4', 'elevation5', 'elevation6', 'elevation7', 'elevation8', 'elevation9', 'elevation10', 'elevation11', 'elevation12', 'elevation13', 'elevation14', 'elevation15', 'elevation16', 'elevation17', 'elevation18', 'elevation19', 'elevation20', 'elevation21', 'elevation22', 'elevation23', 'elevation24']);
 
-const useUtilityClasses$I = (ownerState) => {
+const useUtilityClasses$D = (ownerState) => {
   const {
     square,
     elevation,
@@ -28223,7 +28232,7 @@ const Paper = /* @__PURE__ */ reactExports.forwardRef(function Paper2(inProps, r
     square,
     variant
   };
-  const classes = useUtilityClasses$I(ownerState);
+  const classes = useUtilityClasses$D(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(PaperRoot, {
     as: component,
     ownerState,
@@ -28260,7 +28269,7 @@ const DialogBackdrop = styled(Backdrop, {
   // Improve scrollable dialog support.
   zIndex: -1
 });
-const useUtilityClasses$H = (ownerState) => {
+const useUtilityClasses$C = (ownerState) => {
   const {
     classes,
     scroll,
@@ -28463,7 +28472,7 @@ const Dialog = /* @__PURE__ */ reactExports.forwardRef(function Dialog2(inProps,
     maxWidth,
     scroll
   };
-  const classes = useUtilityClasses$H(ownerState);
+  const classes = useUtilityClasses$C(ownerState);
   const backdropClick = reactExports.useRef();
   const handleMouseDown = (event) => {
     backdropClick.current = event.target === event.currentTarget;
@@ -28584,7 +28593,7 @@ function getDialogActionsUtilityClass(slot) {
 }
 generateUtilityClasses('MuiDialogActions', ['root', 'spacing']);
 
-const useUtilityClasses$G = (ownerState) => {
+const useUtilityClasses$B = (ownerState) => {
   const {
     classes,
     disableSpacing
@@ -28634,7 +28643,7 @@ const DialogActions = /* @__PURE__ */ reactExports.forwardRef(function DialogAct
     ...props,
     disableSpacing
   };
-  const classes = useUtilityClasses$G(ownerState);
+  const classes = useUtilityClasses$B(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogActionsRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -28653,7 +28662,7 @@ function getDialogTitleUtilityClass(slot) {
 }
 const dialogTitleClasses = generateUtilityClasses('MuiDialogTitle', ['root']);
 
-const useUtilityClasses$F = (ownerState) => {
+const useUtilityClasses$A = (ownerState) => {
   const {
     classes,
     dividers
@@ -28714,7 +28723,7 @@ const DialogContent = /* @__PURE__ */ reactExports.forwardRef(function DialogCon
     ...props,
     dividers
   };
-  const classes = useUtilityClasses$F(ownerState);
+  const classes = useUtilityClasses$A(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentRoot, {
     className: clsx(classes.root, className),
     ownerState,
@@ -28740,7 +28749,7 @@ const v6Colors = {
   textDisabled: true
 };
 const extendSxProp = internal_createExtendSxProp();
-const useUtilityClasses$E = (ownerState) => {
+const useUtilityClasses$z = (ownerState) => {
   const {
     align,
     gutterBottom,
@@ -28880,7 +28889,7 @@ const Typography = /* @__PURE__ */ reactExports.forwardRef(function Typography2(
     variantMapping
   };
   const Component = component || (paragraph ? "p" : variantMapping[variant] || defaultVariantMapping[variant]) || "span";
-  const classes = useUtilityClasses$E(ownerState);
+  const classes = useUtilityClasses$z(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(TypographyRoot, {
     as: Component,
     ref,
@@ -28901,7 +28910,7 @@ function getDialogContentTextUtilityClass(slot) {
 }
 generateUtilityClasses('MuiDialogContentText', ['root']);
 
-const useUtilityClasses$D = (ownerState) => {
+const useUtilityClasses$y = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -28930,7 +28939,7 @@ const DialogContentText = /* @__PURE__ */ reactExports.forwardRef(function Dialo
     className,
     ...ownerState
   } = props;
-  const classes = useUtilityClasses$D(ownerState);
+  const classes = useUtilityClasses$y(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentTextRoot, {
     component: "p",
     variant: "body1",
@@ -28943,7 +28952,7 @@ const DialogContentText = /* @__PURE__ */ reactExports.forwardRef(function Dialo
   });
 });
 
-const useUtilityClasses$C = (ownerState) => {
+const useUtilityClasses$x = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -28970,7 +28979,7 @@ const DialogTitle = /* @__PURE__ */ reactExports.forwardRef(function DialogTitle
     ...other
   } = props;
   const ownerState = props;
-  const classes = useUtilityClasses$C(ownerState);
+  const classes = useUtilityClasses$x(ownerState);
   const {
     titleId = idProp
   } = reactExports.useContext(DialogContext);
@@ -28988,7 +28997,7 @@ const DialogTitle = /* @__PURE__ */ reactExports.forwardRef(function DialogTitle
 function getStyleValue(value) {
   return parseInt(value, 10) || 0;
 }
-const styles$2 = {
+const styles$1 = {
   shadow: {
     // Visibility needed to hide the extra text area on iPads
     visibility: "hidden",
@@ -29092,7 +29101,7 @@ const TextareaAutosize = /* @__PURE__ */ reactExports.forwardRef(function Textar
   }, [calculateTextareaStyles]);
   const frameRef = reactExports.useRef(-1);
   useEnhancedEffect(() => {
-    const debouncedHandleResize = debounce$1(syncHeight);
+    const debouncedHandleResize = debounce(syncHeight);
     const textarea = textareaRef?.current;
     if (!textarea) {
       return void 0;
@@ -29155,7 +29164,7 @@ const TextareaAutosize = /* @__PURE__ */ reactExports.forwardRef(function Textar
       ref: hiddenTextareaRef,
       tabIndex: -1,
       style: {
-        ...styles$2.shadow,
+        ...styles$1.shadow,
         ...style,
         paddingTop: 0,
         paddingBottom: 0
@@ -29242,7 +29251,7 @@ const inputOverridesResolver = (props, styles) => {
   } = props;
   return [styles.input, ownerState.size === "small" && styles.inputSizeSmall, ownerState.multiline && styles.inputMultiline, ownerState.type === "search" && styles.inputTypeSearch, ownerState.startAdornment && styles.inputAdornedStart, ownerState.endAdornment && styles.inputAdornedEnd, ownerState.hiddenLabel && styles.inputHiddenLabel];
 };
-const useUtilityClasses$B = (ownerState) => {
+const useUtilityClasses$w = (ownerState) => {
   const {
     classes,
     color,
@@ -29628,7 +29637,7 @@ const InputBase = /* @__PURE__ */ reactExports.forwardRef(function InputBase2(in
     startAdornment,
     type
   };
-  const classes = useUtilityClasses$B(ownerState);
+  const classes = useUtilityClasses$w(ownerState);
   const Root = slots.root || components.Root || InputBaseRoot;
   const rootProps = slotProps.root || componentsProps.root || {};
   const Input = slots.input || components.Input || InputBaseInput;
@@ -29701,7 +29710,7 @@ const inputClasses = {
   ...generateUtilityClasses('MuiInput', ['root', 'underline', 'input'])
 };
 
-const useUtilityClasses$A = (ownerState) => {
+const useUtilityClasses$v = (ownerState) => {
   const {
     classes,
     disableUnderline
@@ -29834,7 +29843,7 @@ const Input = /* @__PURE__ */ reactExports.forwardRef(function Input2(inProps, r
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$A(props);
+  const classes = useUtilityClasses$v(props);
   const ownerState = {
     disableUnderline
   };
@@ -29871,7 +29880,7 @@ const filledInputClasses = {
   ...generateUtilityClasses('MuiFilledInput', ['root', 'underline', 'input', 'adornedStart', 'adornedEnd', 'sizeSmall', 'multiline', 'hiddenLabel'])
 };
 
-const useUtilityClasses$z = (ownerState) => {
+const useUtilityClasses$u = (ownerState) => {
   const {
     classes,
     disableUnderline,
@@ -30150,7 +30159,7 @@ const FilledInput = /* @__PURE__ */ reactExports.forwardRef(function FilledInput
     multiline,
     type
   };
-  const classes = useUtilityClasses$z(props);
+  const classes = useUtilityClasses$u(props);
   const filledInputComponentsProps = {
     root: {
       ownerState
@@ -30308,7 +30317,7 @@ const outlinedInputClasses = {
   ...generateUtilityClasses('MuiOutlinedInput', ['root', 'notchedOutline', 'input'])
 };
 
-const useUtilityClasses$y = (ownerState) => {
+const useUtilityClasses$t = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -30486,7 +30495,7 @@ const OutlinedInput = /* @__PURE__ */ reactExports.forwardRef(function OutlinedI
     type = "text",
     ...other
   } = props;
-  const classes = useUtilityClasses$y(props);
+  const classes = useUtilityClasses$t(props);
   const muiFormControl = useFormControl();
   const fcs = formControlState({
     props,
@@ -30552,7 +30561,7 @@ function getFormLabelUtilityClasses(slot) {
 }
 const formLabelClasses = generateUtilityClasses('MuiFormLabel', ['root', 'colorSecondary', 'focused', 'disabled', 'error', 'filled', 'required', 'asterisk']);
 
-const useUtilityClasses$x = (ownerState) => {
+const useUtilityClasses$s = (ownerState) => {
   const {
     classes,
     color,
@@ -30649,7 +30658,7 @@ const FormLabel = /* @__PURE__ */ reactExports.forwardRef(function FormLabel2(in
     focused: fcs.focused,
     required: fcs.required
   };
-  const classes = useUtilityClasses$x(ownerState);
+  const classes = useUtilityClasses$s(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(FormLabelRoot, {
     as: component,
     ownerState,
@@ -30670,7 +30679,7 @@ function getInputLabelUtilityClasses(slot) {
 }
 generateUtilityClasses('MuiInputLabel', ['root', 'focused', 'disabled', 'error', 'required', 'asterisk', 'formControl', 'sizeSmall', 'shrink', 'animated', 'standard', 'filled', 'outlined']);
 
-const useUtilityClasses$w = (ownerState) => {
+const useUtilityClasses$r = (ownerState) => {
   const {
     classes,
     formControl,
@@ -30859,7 +30868,7 @@ const InputLabel = /* @__PURE__ */ reactExports.forwardRef(function InputLabel2(
     required: fcs.required,
     focused: fcs.focused
   };
-  const classes = useUtilityClasses$w(ownerState);
+  const classes = useUtilityClasses$r(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(InputLabelRoot, {
     "data-shrink": shrink,
     ref,
@@ -30875,7 +30884,7 @@ function getFormControlUtilityClasses(slot) {
 }
 generateUtilityClasses('MuiFormControl', ['root', 'marginNone', 'marginNormal', 'marginDense', 'fullWidth', 'disabled']);
 
-const useUtilityClasses$v = (ownerState) => {
+const useUtilityClasses$q = (ownerState) => {
   const {
     classes,
     margin,
@@ -30965,7 +30974,7 @@ const FormControl = /* @__PURE__ */ reactExports.forwardRef(function FormControl
     size,
     variant
   };
-  const classes = useUtilityClasses$v(ownerState);
+  const classes = useUtilityClasses$q(ownerState);
   const [adornedStart, setAdornedStart] = reactExports.useState(() => {
     let initialAdornedStart = false;
     if (children) {
@@ -31052,7 +31061,7 @@ function getFormHelperTextUtilityClasses(slot) {
 const formHelperTextClasses = generateUtilityClasses('MuiFormHelperText', ['root', 'error', 'disabled', 'sizeSmall', 'sizeMedium', 'contained', 'focused', 'filled', 'required']);
 
 var _span$2;
-const useUtilityClasses$u = (ownerState) => {
+const useUtilityClasses$p = (ownerState) => {
   const {
     classes,
     contained,
@@ -31147,7 +31156,7 @@ const FormHelperText = /* @__PURE__ */ reactExports.forwardRef(function FormHelp
     required: fcs.required
   };
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$u(ownerState);
+  const classes = useUtilityClasses$p(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(FormHelperTextRoot, {
     as: component,
     className: clsx(classes.root, className),
@@ -31204,7 +31213,7 @@ function getListUtilityClass(slot) {
 }
 generateUtilityClasses('MuiList', ['root', 'padding', 'dense', 'subheader']);
 
-const useUtilityClasses$t = (ownerState) => {
+const useUtilityClasses$o = (ownerState) => {
   const {
     classes,
     disablePadding,
@@ -31270,7 +31279,7 @@ const List = /* @__PURE__ */ reactExports.forwardRef(function List2(inProps, ref
     dense,
     disablePadding
   };
-  const classes = useUtilityClasses$t(ownerState);
+  const classes = useUtilityClasses$o(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(ListContext.Provider, {
     value: context,
     children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ListRoot, {
@@ -31481,7 +31490,7 @@ const MenuList = /* @__PURE__ */ reactExports.forwardRef(function MenuList2(prop
 function getScale(value) {
   return `scale(${value}, ${value ** 2})`;
 }
-const styles$1 = {
+const styles = {
   entering: {
     opacity: 1,
     transform: getScale(1)
@@ -31625,7 +31634,7 @@ const Grow = /* @__PURE__ */ reactExports.forwardRef(function Grow2(props, ref) 
           opacity: 0,
           transform: getScale(0.75),
           visibility: state === "exited" && !inProp ? "hidden" : void 0,
-          ...styles$1[state],
+          ...styles[state],
           ...style,
           ...children.props.style
         },
@@ -31669,10 +31678,10 @@ function getOffsetLeft(rect, horizontal) {
 function getTransformOriginValue(transformOrigin) {
   return [transformOrigin.horizontal, transformOrigin.vertical].map((n) => typeof n === "number" ? `${n}px` : n).join(" ");
 }
-function resolveAnchorEl$1(anchorEl) {
+function resolveAnchorEl(anchorEl) {
   return typeof anchorEl === "function" ? anchorEl() : anchorEl;
 }
-const useUtilityClasses$s = (ownerState) => {
+const useUtilityClasses$n = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -31750,12 +31759,12 @@ const Popover = /* @__PURE__ */ reactExports.forwardRef(function Popover2(inProp
     transitionDuration: transitionDurationProp,
     TransitionProps
   };
-  const classes = useUtilityClasses$s(ownerState);
+  const classes = useUtilityClasses$n(ownerState);
   const getAnchorOffset = reactExports.useCallback(() => {
     if (anchorReference === "anchorPosition") {
       return anchorPosition;
     }
-    const resolvedAnchorEl = resolveAnchorEl$1(anchorEl);
+    const resolvedAnchorEl = resolveAnchorEl(anchorEl);
     const anchorElement = resolvedAnchorEl && resolvedAnchorEl.nodeType === 1 ? resolvedAnchorEl : ownerDocument(paperRef.current).body;
     const anchorRect = anchorElement.getBoundingClientRect();
     return {
@@ -31787,7 +31796,7 @@ const Popover = /* @__PURE__ */ reactExports.forwardRef(function Popover2(inProp
     let left = anchorOffset.left - elemTransformOrigin.horizontal;
     const bottom = top + elemRect.height;
     const right = left + elemRect.width;
-    const containerWindow = ownerWindow(resolveAnchorEl$1(anchorEl));
+    const containerWindow = ownerWindow(resolveAnchorEl(anchorEl));
     const heightThreshold = containerWindow.innerHeight - marginThreshold;
     const widthThreshold = containerWindow.innerWidth - marginThreshold;
     if (marginThreshold !== null && top < marginThreshold) {
@@ -31856,10 +31865,10 @@ const Popover = /* @__PURE__ */ reactExports.forwardRef(function Popover2(inProp
     if (!open) {
       return void 0;
     }
-    const handleResize = debounce$1(() => {
+    const handleResize = debounce(() => {
       setPositioningStyles();
     });
-    const containerWindow = ownerWindow(resolveAnchorEl$1(anchorEl));
+    const containerWindow = ownerWindow(resolveAnchorEl(anchorEl));
     containerWindow.addEventListener("resize", handleResize);
     return () => {
       handleResize.clear();
@@ -31901,7 +31910,7 @@ const Popover = /* @__PURE__ */ reactExports.forwardRef(function Popover2(inProp
   if (transitionDurationProp === "auto" && !TransitionSlot.muiSupportAuto) {
     transitionDuration = void 0;
   }
-  const container = containerProp || (anchorEl ? ownerDocument(resolveAnchorEl$1(anchorEl)).body : void 0);
+  const container = containerProp || (anchorEl ? ownerDocument(resolveAnchorEl(anchorEl)).body : void 0);
   const [RootSlot, {
     slots: rootSlotsProp,
     slotProps: rootSlotPropsProp,
@@ -31974,7 +31983,7 @@ const LTR_ORIGIN = {
   vertical: "top",
   horizontal: "left"
 };
-const useUtilityClasses$r = (ownerState) => {
+const useUtilityClasses$m = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -32045,7 +32054,7 @@ const Menu = /* @__PURE__ */ reactExports.forwardRef(function Menu2(inProps, ref
     TransitionProps,
     variant
   };
-  const classes = useUtilityClasses$r(ownerState);
+  const classes = useUtilityClasses$m(ownerState);
   const autoFocusItem = autoFocus && !disableAutoFocusItem && open;
   const menuListActionsRef = reactExports.useRef(null);
   const handleEntering = (element, isAppearing) => {
@@ -32166,7 +32175,7 @@ function getNativeSelectUtilityClasses(slot) {
 }
 const nativeSelectClasses = generateUtilityClasses('MuiNativeSelect', ['root', 'select', 'multiple', 'filled', 'outlined', 'standard', 'disabled', 'icon', 'iconOpen', 'iconFilled', 'iconOutlined', 'iconStandard', 'nativeInput', 'error']);
 
-const useUtilityClasses$q = (ownerState) => {
+const useUtilityClasses$l = (ownerState) => {
   const {
     classes,
     variant,
@@ -32325,7 +32334,7 @@ const NativeSelectInput = /* @__PURE__ */ reactExports.forwardRef(function Nativ
     variant,
     error
   };
-  const classes = useUtilityClasses$q(ownerState);
+  const classes = useUtilityClasses$l(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(reactExports.Fragment, {
     children: [/* @__PURE__ */ jsxRuntimeExports.jsx(NativeSelectSelect, {
       ownerState,
@@ -32414,7 +32423,7 @@ function areEqualValues(a, b) {
 function isEmpty(display) {
   return display == null || typeof display === "string" && !display.trim();
 }
-const useUtilityClasses$p = (ownerState) => {
+const useUtilityClasses$k = (ownerState) => {
   const {
     classes,
     variant,
@@ -32716,7 +32725,7 @@ const SelectInput = /* @__PURE__ */ reactExports.forwardRef(function SelectInput
     open,
     error
   };
-  const classes = useUtilityClasses$p(ownerState);
+  const classes = useUtilityClasses$k(ownerState);
   const paperProps = {
     ...MenuProps.PaperProps,
     ...MenuProps.slotProps?.paper
@@ -32816,7 +32825,7 @@ const ArrowDropDownIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path
   d: "M7 10l5 5 5-5z"
 }));
 
-const useUtilityClasses$o = (ownerState) => {
+const useUtilityClasses$j = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -32879,7 +32888,7 @@ const Select = /* @__PURE__ */ reactExports.forwardRef(function Select2(inProps,
     variant,
     classes: classesProp
   };
-  const classes = useUtilityClasses$o(ownerState);
+  const classes = useUtilityClasses$j(ownerState);
   const {
     root,
     ...restOfClasses
@@ -32956,7 +32965,7 @@ const variantComponent = {
   filled: FilledInput,
   outlined: OutlinedInput
 };
-const useUtilityClasses$n = (ownerState) => {
+const useUtilityClasses$i = (ownerState) => {
   const {
     classes
   } = ownerState;
@@ -33023,7 +33032,7 @@ const TextField = /* @__PURE__ */ reactExports.forwardRef(function TextField2(in
     select,
     variant
   };
-  const classes = useUtilityClasses$n(ownerState);
+  const classes = useUtilityClasses$i(ownerState);
   const id = useId(idOverride);
   const helperTextId = helperText && id ? `${id}-helper-text` : void 0;
   const inputLabelId = label && id ? `${id}-label` : void 0;
@@ -33151,7 +33160,7 @@ function getSwitchBaseUtilityClass(slot) {
 }
 generateUtilityClasses('PrivateSwitchBase', ['root', 'checked', 'disabled', 'input', 'edgeStart', 'edgeEnd']);
 
-const useUtilityClasses$m = (ownerState) => {
+const useUtilityClasses$h = (ownerState) => {
   const {
     classes,
     checked,
@@ -33291,7 +33300,7 @@ const SwitchBase = /* @__PURE__ */ reactExports.forwardRef(function SwitchBase2(
     disableFocusRipple,
     edge
   };
-  const classes = useUtilityClasses$m(ownerState);
+  const classes = useUtilityClasses$h(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -33383,7 +33392,7 @@ function getCheckboxUtilityClass(slot) {
 }
 const checkboxClasses = generateUtilityClasses('MuiCheckbox', ['root', 'checked', 'disabled', 'indeterminate', 'colorPrimary', 'colorSecondary', 'sizeSmall', 'sizeMedium']);
 
-const useUtilityClasses$l = (ownerState) => {
+const useUtilityClasses$g = (ownerState) => {
   const {
     classes,
     indeterminate,
@@ -33492,7 +33501,7 @@ const Checkbox = /* @__PURE__ */ reactExports.forwardRef(function Checkbox2(inPr
     indeterminate,
     size
   };
-  const classes = useUtilityClasses$l(ownerState);
+  const classes = useUtilityClasses$g(ownerState);
   const externalInputProps = slotProps.input ?? inputProps;
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
@@ -33533,7 +33542,7 @@ function getFormControlLabelUtilityClasses(slot) {
 }
 const formControlLabelClasses = generateUtilityClasses('MuiFormControlLabel', ['root', 'labelPlacementStart', 'labelPlacementTop', 'labelPlacementBottom', 'disabled', 'label', 'error', 'required', 'asterisk']);
 
-const useUtilityClasses$k = (ownerState) => {
+const useUtilityClasses$f = (ownerState) => {
   const {
     classes,
     disabled,
@@ -33668,7 +33677,7 @@ const FormControlLabel = /* @__PURE__ */ reactExports.forwardRef(function FormCo
     required,
     error: fcs.error
   };
-  const classes = useUtilityClasses$k(ownerState);
+  const classes = useUtilityClasses$f(ownerState);
   const externalForwardedProps = {
     slots,
     slotProps: {
@@ -33888,7 +33897,7 @@ var ConfirmationDialog = function ConfirmationDialog(_ref) {
   }), title && /*#__PURE__*/React.createElement(DialogTitle, titleProps, title), content ? /*#__PURE__*/React.createElement(DialogContent, contentProps, content, confirmationContent, acknowledgeCheckbox) : description ? /*#__PURE__*/React.createElement(DialogContent, contentProps, /*#__PURE__*/React.createElement(DialogContentText, null, description), confirmationContent, acknowledgeCheckbox) : (confirmationKeyword || acknowledgeCheckbox) && /*#__PURE__*/React.createElement(DialogContent, contentProps, confirmationContent, acknowledgeCheckbox), /*#__PURE__*/React.createElement(DialogActions, dialogActionsProps, dialogActions));
 };
 
-var DEFAULT_OPTIONS$1 = {
+var DEFAULT_OPTIONS = {
   title: "Are you sure?",
   description: "",
   content: null,
@@ -33909,16 +33918,16 @@ var DEFAULT_OPTIONS$1 = {
   acknowledgementCheckboxProps: {}
 };
 var buildOptions = function buildOptions(defaultOptions, options) {
-  var dialogProps = _objectSpread2(_objectSpread2({}, defaultOptions.dialogProps || DEFAULT_OPTIONS$1.dialogProps), options.dialogProps || {});
-  var dialogActionsProps = _objectSpread2(_objectSpread2({}, defaultOptions.dialogActionsProps || DEFAULT_OPTIONS$1.dialogActionsProps), options.dialogActionsProps || {});
-  var confirmationButtonProps = _objectSpread2(_objectSpread2({}, defaultOptions.confirmationButtonProps || DEFAULT_OPTIONS$1.confirmationButtonProps), options.confirmationButtonProps || {});
-  var cancellationButtonProps = _objectSpread2(_objectSpread2({}, defaultOptions.cancellationButtonProps || DEFAULT_OPTIONS$1.cancellationButtonProps), options.cancellationButtonProps || {});
-  var titleProps = _objectSpread2(_objectSpread2({}, defaultOptions.titleProps || DEFAULT_OPTIONS$1.titleProps), options.titleProps || {});
-  var contentProps = _objectSpread2(_objectSpread2({}, defaultOptions.contentProps || DEFAULT_OPTIONS$1.contentProps), options.contentProps || {});
-  var confirmationKeywordTextFieldProps = _objectSpread2(_objectSpread2({}, defaultOptions.confirmationKeywordTextFieldProps || DEFAULT_OPTIONS$1.confirmationKeywordTextFieldProps), options.confirmationKeywordTextFieldProps || {});
-  var acknowledgementFormControlLabelProps = _objectSpread2(_objectSpread2({}, defaultOptions.acknowledgementFormControlLabelProps || DEFAULT_OPTIONS$1.acknowledgementFormControlLabelProps), options.acknowledgementFormControlLabelProps || {});
-  var acknowledgementCheckboxProps = _objectSpread2(_objectSpread2({}, defaultOptions.acknowledgementCheckboxProps || DEFAULT_OPTIONS$1.acknowledgementCheckboxProps), options.acknowledgementCheckboxProps || {});
-  return _objectSpread2(_objectSpread2(_objectSpread2(_objectSpread2({}, DEFAULT_OPTIONS$1), defaultOptions), options), {}, {
+  var dialogProps = _objectSpread2(_objectSpread2({}, defaultOptions.dialogProps || DEFAULT_OPTIONS.dialogProps), options.dialogProps || {});
+  var dialogActionsProps = _objectSpread2(_objectSpread2({}, defaultOptions.dialogActionsProps || DEFAULT_OPTIONS.dialogActionsProps), options.dialogActionsProps || {});
+  var confirmationButtonProps = _objectSpread2(_objectSpread2({}, defaultOptions.confirmationButtonProps || DEFAULT_OPTIONS.confirmationButtonProps), options.confirmationButtonProps || {});
+  var cancellationButtonProps = _objectSpread2(_objectSpread2({}, defaultOptions.cancellationButtonProps || DEFAULT_OPTIONS.cancellationButtonProps), options.cancellationButtonProps || {});
+  var titleProps = _objectSpread2(_objectSpread2({}, defaultOptions.titleProps || DEFAULT_OPTIONS.titleProps), options.titleProps || {});
+  var contentProps = _objectSpread2(_objectSpread2({}, defaultOptions.contentProps || DEFAULT_OPTIONS.contentProps), options.contentProps || {});
+  var confirmationKeywordTextFieldProps = _objectSpread2(_objectSpread2({}, defaultOptions.confirmationKeywordTextFieldProps || DEFAULT_OPTIONS.confirmationKeywordTextFieldProps), options.confirmationKeywordTextFieldProps || {});
+  var acknowledgementFormControlLabelProps = _objectSpread2(_objectSpread2({}, defaultOptions.acknowledgementFormControlLabelProps || DEFAULT_OPTIONS.acknowledgementFormControlLabelProps), options.acknowledgementFormControlLabelProps || {});
+  var acknowledgementCheckboxProps = _objectSpread2(_objectSpread2({}, defaultOptions.acknowledgementCheckboxProps || DEFAULT_OPTIONS.acknowledgementCheckboxProps), options.acknowledgementCheckboxProps || {});
+  return _objectSpread2(_objectSpread2(_objectSpread2(_objectSpread2({}, DEFAULT_OPTIONS), defaultOptions), options), {}, {
     dialogProps: dialogProps,
     dialogActionsProps: dialogActionsProps,
     confirmationButtonProps: confirmationButtonProps,
@@ -34067,6 +34076,1280 @@ var useConfirm = function useConfirm() {
   }, [parentId]);
   return confirm;
 };
+
+// base-x encoding / decoding
+// Copyright (c) 2018 base-x contributors
+// Copyright (c) 2014-2018 The Bitcoin Core developers (base58.cpp)
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+function base (ALPHABET) {
+  if (ALPHABET.length >= 255) { throw new TypeError('Alphabet too long') }
+  const BASE_MAP = new Uint8Array(256);
+  for (let j = 0; j < BASE_MAP.length; j++) {
+    BASE_MAP[j] = 255;
+  }
+  for (let i = 0; i < ALPHABET.length; i++) {
+    const x = ALPHABET.charAt(i);
+    const xc = x.charCodeAt(0);
+    if (BASE_MAP[xc] !== 255) { throw new TypeError(x + ' is ambiguous') }
+    BASE_MAP[xc] = i;
+  }
+  const BASE = ALPHABET.length;
+  const LEADER = ALPHABET.charAt(0);
+  const FACTOR = Math.log(BASE) / Math.log(256); // log(BASE) / log(256), rounded up
+  const iFACTOR = Math.log(256) / Math.log(BASE); // log(256) / log(BASE), rounded up
+  function encode (source) {
+    // eslint-disable-next-line no-empty
+    if (source instanceof Uint8Array) ; else if (ArrayBuffer.isView(source)) {
+      source = new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
+    } else if (Array.isArray(source)) {
+      source = Uint8Array.from(source);
+    }
+    if (!(source instanceof Uint8Array)) { throw new TypeError('Expected Uint8Array') }
+    if (source.length === 0) { return '' }
+    // Skip & count leading zeroes.
+    let zeroes = 0;
+    let length = 0;
+    let pbegin = 0;
+    const pend = source.length;
+    while (pbegin !== pend && source[pbegin] === 0) {
+      pbegin++;
+      zeroes++;
+    }
+    // Allocate enough space in big-endian base58 representation.
+    const size = ((pend - pbegin) * iFACTOR + 1) >>> 0;
+    const b58 = new Uint8Array(size);
+    // Process the bytes.
+    while (pbegin !== pend) {
+      let carry = source[pbegin];
+      // Apply "b58 = b58 * 256 + ch".
+      let i = 0;
+      for (let it1 = size - 1; (carry !== 0 || i < length) && (it1 !== -1); it1--, i++) {
+        carry += (256 * b58[it1]) >>> 0;
+        b58[it1] = (carry % BASE) >>> 0;
+        carry = (carry / BASE) >>> 0;
+      }
+      if (carry !== 0) { throw new Error('Non-zero carry') }
+      length = i;
+      pbegin++;
+    }
+    // Skip leading zeroes in base58 result.
+    let it2 = size - length;
+    while (it2 !== size && b58[it2] === 0) {
+      it2++;
+    }
+    // Translate the result into a string.
+    let str = LEADER.repeat(zeroes);
+    for (; it2 < size; ++it2) { str += ALPHABET.charAt(b58[it2]); }
+    return str
+  }
+  function decodeUnsafe (source) {
+    if (typeof source !== 'string') { throw new TypeError('Expected String') }
+    if (source.length === 0) { return new Uint8Array() }
+    let psz = 0;
+    // Skip and count leading '1's.
+    let zeroes = 0;
+    let length = 0;
+    while (source[psz] === LEADER) {
+      zeroes++;
+      psz++;
+    }
+    // Allocate enough space in big-endian base256 representation.
+    const size = (((source.length - psz) * FACTOR) + 1) >>> 0; // log(58) / log(256), rounded up.
+    const b256 = new Uint8Array(size);
+    // Process the characters.
+    while (psz < source.length) {
+      // Find code of next character
+      const charCode = source.charCodeAt(psz);
+      // Base map can not be indexed using char code
+      if (charCode > 255) { return }
+      // Decode character
+      let carry = BASE_MAP[charCode];
+      // Invalid character
+      if (carry === 255) { return }
+      let i = 0;
+      for (let it3 = size - 1; (carry !== 0 || i < length) && (it3 !== -1); it3--, i++) {
+        carry += (BASE * b256[it3]) >>> 0;
+        b256[it3] = (carry % 256) >>> 0;
+        carry = (carry / 256) >>> 0;
+      }
+      if (carry !== 0) { throw new Error('Non-zero carry') }
+      length = i;
+      psz++;
+    }
+    // Skip leading zeroes in b256.
+    let it4 = size - length;
+    while (it4 !== size && b256[it4] === 0) {
+      it4++;
+    }
+    const vch = new Uint8Array(zeroes + (size - it4));
+    let j = zeroes;
+    while (it4 !== size) {
+      vch[j++] = b256[it4++];
+    }
+    return vch
+  }
+  function decode (string) {
+    const buffer = decodeUnsafe(string);
+    if (buffer) { return buffer }
+    throw new Error('Non-base' + BASE + ' character')
+  }
+  return {
+    encode,
+    decodeUnsafe,
+    decode
+  }
+}
+
+var ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const bs58 = base(ALPHABET);
+
+function numberToLEBytes(num, byteLength = 4) {
+  const buffer = new ArrayBuffer(byteLength);
+  const view = new DataView(buffer);
+  if (byteLength === 4) {
+    view.setUint32(0, num, true);
+  } else if (byteLength === 2) {
+    view.setUint16(0, num, true);
+  } else if (byteLength === 8) {
+    view.setBigUint64(0, BigInt(num), true);
+  } else if (byteLength === 1) {
+    view.setUint8(0, num);
+  }
+  return new Uint8Array(buffer);
+}
+function objectHasKey(obj, key) {
+  return typeof obj === "object" && obj !== null && key in obj;
+}
+const SYSTEM_PROGRAM_PUBKEY = new Uint8Array(32);
+function txMessageData(from, to, transfer_lamports, blockhash) {
+  const message = [1, 0, 1];
+  message.push(3);
+  message.push(...from);
+  message.push(...to);
+  message.push(...SYSTEM_PROGRAM_PUBKEY);
+  message.push(...blockhash);
+  message.push(1);
+  message.push(2);
+  message.push(2);
+  message.push(0);
+  message.push(1);
+  message.push(12);
+  message.push(2);
+  message.push(0);
+  message.push(0);
+  message.push(0);
+  message.push(...numberToLEBytes(transfer_lamports, 8));
+  return Uint8Array.from(message);
+}
+function byteArrayToBase64(bytes) {
+  return btoa(String.fromCharCode(...bytes));
+}
+function shortSolanaAddress(address) {
+  return address.slice(0, 4) + "..." + address.slice(-4);
+}
+function shortTransferID(transferID) {
+  return transferID.slice(0, 4) + "..." + transferID.slice(-4);
+}
+function getErrorMsg(error) {
+  if (!error) return "Empty Error";
+  if (typeof error === "string") return error;
+  if (typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  if (typeof error === "object" && "toString" in error && typeof error.toString === "function") {
+    return error.toString();
+  }
+  return "UnknownError";
+}
+function isValidSolanaAddress(address) {
+  try {
+    const decoded = bs58.decode(address);
+    const leng = decoded.length;
+    if (leng != 32) {
+      return `账户地址格式不正确: ${leng} != 32`;
+    }
+    return true;
+  } catch (error) {
+    return `账户地址格式不正确: ${getErrorMsg(error)}`;
+  }
+}
+
+let JsonRpcId = 0;
+async function callSolanaRpc(method, params) {
+  const jsonrpc = {
+    jsonrpc: "2.0",
+    method,
+    params,
+    id: JsonRpcId++
+  };
+  const response = await fetch("https://api.devnet.solana.com", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(jsonrpc)
+  });
+  if (!response.ok) {
+    throw new Error(`${method} HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  if (!data) {
+    throw new Error(`No data in JSON-RPC ${method} response`);
+  }
+  if (data.error) {
+    throw new Error(
+      `JSON-RPC ${method} error! code: ${data.error.code}, message: ${data.error.message}`
+    );
+  }
+  if (!data.result) {
+    throw new Error(`No result in JSON-RPC ${method} response`);
+  }
+  const result = data.result;
+  if (objectHasKey(result, "value")) {
+    return result.value;
+  }
+  return result;
+}
+
+function getAccountInfo(address, config = {}) {
+  return callSolanaRpc("getAccountInfo", [address, config]);
+}
+function getBalance(address, config = {}) {
+  return callSolanaRpc("getBalance", [address, config]);
+}
+function getLatestBlockhash(config = {}) {
+  return callSolanaRpc(
+    "getLatestBlockhash",
+    [config]
+  );
+}
+function sendTransaction(transactionData, config = {}) {
+  return callSolanaRpc("sendTransaction", [transactionData, config]);
+}
+function getSignatureStatuses(signatures, config = {}) {
+  return callSolanaRpc("getSignatureStatuses", [
+    signatures,
+    config
+  ]);
+}
+
+async function transfer(from, to, transfer_lamports, psw) {
+  const { blockhash } = await getLatestBlockhash();
+  const fromBytes = bs58.decode(from);
+  const toBytes = bs58.decode(to);
+  const blockhashBytes = bs58.decode(blockhash);
+  const messageData = txMessageData(
+    fromBytes,
+    toBytes,
+    transfer_lamports,
+    blockhashBytes
+  );
+  const signature = await signMessage(
+    from,
+    messageData.buffer,
+    psw
+  );
+  const signatureBytes = new Uint8Array(signature);
+  const txData = [1];
+  txData.push(...signatureBytes);
+  txData.push(...messageData);
+  const txDataBase64 = byteArrayToBase64(Uint8Array.from(txData));
+  return sendTransaction(txDataBase64, {
+    encoding: "base64"
+  });
+}
+function loopGetTransferStatus(transferID, onProgress, onStopped, interval = 1e3) {
+  let stopped = false;
+  async function poll() {
+    if (stopped) {
+      onStopped();
+      return;
+    }
+    try {
+      const statuses = await getSignatureStatuses([transferID], {
+        searchTransactionHistory: false
+      });
+      if (statuses[0]?.confirmationStatus === "finalized") {
+        onStopped();
+        stopped = true;
+      } else if (statuses[0]?.err) {
+        onStopped(`Transfer failed: ${statuses[0].err}`);
+        stopped = true;
+      } else {
+        if (statuses[0]) {
+          onProgress(statuses[0]);
+        }
+        setTimeout(poll, interval);
+      }
+    } catch (error) {
+      console.error("Error fetching transfer status:", error);
+      setTimeout(poll, interval);
+    }
+  }
+  poll();
+  return () => {
+    stopped = true;
+  };
+}
+
+function getCollapseUtilityClass(slot) {
+  return generateUtilityClass('MuiCollapse', slot);
+}
+generateUtilityClasses('MuiCollapse', ['root', 'horizontal', 'vertical', 'entered', 'hidden', 'wrapper', 'wrapperInner']);
+
+const useUtilityClasses$e = (ownerState) => {
+  const {
+    orientation,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", `${orientation}`],
+    entered: ["entered"],
+    hidden: ["hidden"],
+    wrapper: ["wrapper", `${orientation}`],
+    wrapperInner: ["wrapperInner", `${orientation}`]
+  };
+  return composeClasses(slots, getCollapseUtilityClass, classes);
+};
+const CollapseRoot = styled("div", {
+  name: "MuiCollapse",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[ownerState.orientation], ownerState.state === "entered" && styles.entered, ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px" && styles.hidden];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  height: 0,
+  overflow: "hidden",
+  transition: theme.transitions.create("height"),
+  variants: [{
+    props: {
+      orientation: "horizontal"
+    },
+    style: {
+      height: "auto",
+      width: 0,
+      transition: theme.transitions.create("width")
+    }
+  }, {
+    props: {
+      state: "entered"
+    },
+    style: {
+      height: "auto",
+      overflow: "visible"
+    }
+  }, {
+    props: {
+      state: "entered",
+      orientation: "horizontal"
+    },
+    style: {
+      width: "auto"
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px",
+    style: {
+      visibility: "hidden"
+    }
+  }]
+})));
+const CollapseWrapper = styled("div", {
+  name: "MuiCollapse",
+  slot: "Wrapper"
+})({
+  // Hack to get children with a negative margin to not falsify the height computation.
+  display: "flex",
+  width: "100%",
+  variants: [{
+    props: {
+      orientation: "horizontal"
+    },
+    style: {
+      width: "auto",
+      height: "100%"
+    }
+  }]
+});
+const CollapseWrapperInner = styled("div", {
+  name: "MuiCollapse",
+  slot: "WrapperInner"
+})({
+  width: "100%",
+  variants: [{
+    props: {
+      orientation: "horizontal"
+    },
+    style: {
+      width: "auto",
+      height: "100%"
+    }
+  }]
+});
+const Collapse = /* @__PURE__ */ reactExports.forwardRef(function Collapse2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiCollapse"
+  });
+  const {
+    addEndListener,
+    children,
+    className,
+    collapsedSize: collapsedSizeProp = "0px",
+    component,
+    easing,
+    in: inProp,
+    onEnter,
+    onEntered,
+    onEntering,
+    onExit,
+    onExited,
+    onExiting,
+    orientation = "vertical",
+    style,
+    timeout = duration.standard,
+    // eslint-disable-next-line react/prop-types
+    TransitionComponent = Transition,
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    orientation,
+    collapsedSize: collapsedSizeProp
+  };
+  const classes = useUtilityClasses$e(ownerState);
+  const theme = useTheme();
+  const timer = useTimeout();
+  const wrapperRef = reactExports.useRef(null);
+  const autoTransitionDuration = reactExports.useRef();
+  const collapsedSize = typeof collapsedSizeProp === "number" ? `${collapsedSizeProp}px` : collapsedSizeProp;
+  const isHorizontal = orientation === "horizontal";
+  const size = isHorizontal ? "width" : "height";
+  const nodeRef = reactExports.useRef(null);
+  const handleRef = useForkRef(ref, nodeRef);
+  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
+    if (callback) {
+      const node = nodeRef.current;
+      if (maybeIsAppearing === void 0) {
+        callback(node);
+      } else {
+        callback(node, maybeIsAppearing);
+      }
+    }
+  };
+  const getWrapperSize = () => wrapperRef.current ? wrapperRef.current[isHorizontal ? "clientWidth" : "clientHeight"] : 0;
+  const handleEnter = normalizedTransitionCallback((node, isAppearing) => {
+    if (wrapperRef.current && isHorizontal) {
+      wrapperRef.current.style.position = "absolute";
+    }
+    node.style[size] = collapsedSize;
+    if (onEnter) {
+      onEnter(node, isAppearing);
+    }
+  });
+  const handleEntering = normalizedTransitionCallback((node, isAppearing) => {
+    const wrapperSize = getWrapperSize();
+    if (wrapperRef.current && isHorizontal) {
+      wrapperRef.current.style.position = "";
+    }
+    const {
+      duration: transitionDuration,
+      easing: transitionTimingFunction
+    } = getTransitionProps({
+      style,
+      timeout,
+      easing
+    }, {
+      mode: "enter"
+    });
+    if (timeout === "auto") {
+      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
+      node.style.transitionDuration = `${duration2}ms`;
+      autoTransitionDuration.current = duration2;
+    } else {
+      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
+    }
+    node.style[size] = `${wrapperSize}px`;
+    node.style.transitionTimingFunction = transitionTimingFunction;
+    if (onEntering) {
+      onEntering(node, isAppearing);
+    }
+  });
+  const handleEntered = normalizedTransitionCallback((node, isAppearing) => {
+    node.style[size] = "auto";
+    if (onEntered) {
+      onEntered(node, isAppearing);
+    }
+  });
+  const handleExit = normalizedTransitionCallback((node) => {
+    node.style[size] = `${getWrapperSize()}px`;
+    if (onExit) {
+      onExit(node);
+    }
+  });
+  const handleExited = normalizedTransitionCallback(onExited);
+  const handleExiting = normalizedTransitionCallback((node) => {
+    const wrapperSize = getWrapperSize();
+    const {
+      duration: transitionDuration,
+      easing: transitionTimingFunction
+    } = getTransitionProps({
+      style,
+      timeout,
+      easing
+    }, {
+      mode: "exit"
+    });
+    if (timeout === "auto") {
+      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
+      node.style.transitionDuration = `${duration2}ms`;
+      autoTransitionDuration.current = duration2;
+    } else {
+      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
+    }
+    node.style[size] = collapsedSize;
+    node.style.transitionTimingFunction = transitionTimingFunction;
+    if (onExiting) {
+      onExiting(node);
+    }
+  });
+  const handleAddEndListener = (next) => {
+    if (timeout === "auto") {
+      timer.start(autoTransitionDuration.current || 0, next);
+    }
+    if (addEndListener) {
+      addEndListener(nodeRef.current, next);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionComponent, {
+    in: inProp,
+    onEnter: handleEnter,
+    onEntered: handleEntered,
+    onEntering: handleEntering,
+    onExit: handleExit,
+    onExited: handleExited,
+    onExiting: handleExiting,
+    addEndListener: handleAddEndListener,
+    nodeRef,
+    timeout: timeout === "auto" ? null : timeout,
+    ...other,
+    children: (state, {
+      ownerState: incomingOwnerState,
+      ...restChildProps
+    }) => /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseRoot, {
+      as: component,
+      className: clsx(classes.root, className, {
+        "entered": classes.entered,
+        "exited": !inProp && collapsedSize === "0px" && classes.hidden
+      }[state]),
+      style: {
+        [isHorizontal ? "minWidth" : "minHeight"]: collapsedSize,
+        ...style
+      },
+      ref: handleRef,
+      ownerState: {
+        ...ownerState,
+        state
+      },
+      ...restChildProps,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapper, {
+        ownerState: {
+          ...ownerState,
+          state
+        },
+        className: classes.wrapper,
+        ref: wrapperRef,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapperInner, {
+          ownerState: {
+            ...ownerState,
+            state
+          },
+          className: classes.wrapperInner,
+          children
+        })
+      })
+    })
+  });
+});
+if (Collapse) {
+  Collapse.muiSupportAuto = true;
+}
+
+const AccordionContext = /* @__PURE__ */ reactExports.createContext({});
+
+function getAccordionUtilityClass(slot) {
+  return generateUtilityClass('MuiAccordion', slot);
+}
+const accordionClasses = generateUtilityClasses('MuiAccordion', ['root', 'heading', 'rounded', 'expanded', 'disabled', 'gutters', 'region']);
+
+const useUtilityClasses$d = (ownerState) => {
+  const {
+    classes,
+    square,
+    expanded,
+    disabled,
+    disableGutters
+  } = ownerState;
+  const slots = {
+    root: ["root", !square && "rounded", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
+    heading: ["heading"],
+    region: ["region"]
+  };
+  return composeClasses(slots, getAccordionUtilityClass, classes);
+};
+const AccordionRoot = styled(Paper, {
+  name: "MuiAccordion",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [{
+      [`& .${accordionClasses.region}`]: styles.region
+    }, styles.root, !ownerState.square && styles.rounded, !ownerState.disableGutters && styles.gutters];
+  }
+})(memoTheme(({
+  theme
+}) => {
+  const transition = {
+    duration: theme.transitions.duration.shortest
+  };
+  return {
+    position: "relative",
+    transition: theme.transitions.create(["margin"], transition),
+    overflowAnchor: "none",
+    // Keep the same scrolling position
+    "&::before": {
+      position: "absolute",
+      left: 0,
+      top: -1,
+      right: 0,
+      height: 1,
+      content: '""',
+      opacity: 1,
+      backgroundColor: (theme.vars || theme).palette.divider,
+      transition: theme.transitions.create(["opacity", "background-color"], transition)
+    },
+    "&:first-of-type": {
+      "&::before": {
+        display: "none"
+      }
+    },
+    [`&.${accordionClasses.expanded}`]: {
+      "&::before": {
+        opacity: 0
+      },
+      "&:first-of-type": {
+        marginTop: 0
+      },
+      "&:last-of-type": {
+        marginBottom: 0
+      },
+      "& + &": {
+        "&::before": {
+          display: "none"
+        }
+      }
+    },
+    [`&.${accordionClasses.disabled}`]: {
+      backgroundColor: (theme.vars || theme).palette.action.disabledBackground
+    }
+  };
+}), memoTheme(({
+  theme
+}) => ({
+  variants: [{
+    props: (props) => !props.square,
+    style: {
+      borderRadius: 0,
+      "&:first-of-type": {
+        borderTopLeftRadius: (theme.vars || theme).shape.borderRadius,
+        borderTopRightRadius: (theme.vars || theme).shape.borderRadius
+      },
+      "&:last-of-type": {
+        borderBottomLeftRadius: (theme.vars || theme).shape.borderRadius,
+        borderBottomRightRadius: (theme.vars || theme).shape.borderRadius,
+        // Fix a rendering issue on Edge
+        "@supports (-ms-ime-align: auto)": {
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0
+        }
+      }
+    }
+  }, {
+    props: (props) => !props.disableGutters,
+    style: {
+      [`&.${accordionClasses.expanded}`]: {
+        margin: "16px 0"
+      }
+    }
+  }]
+})));
+const AccordionHeading = styled("h3", {
+  name: "MuiAccordion",
+  slot: "Heading"
+})({
+  all: "unset"
+});
+const Accordion = /* @__PURE__ */ reactExports.forwardRef(function Accordion2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiAccordion"
+  });
+  const {
+    children: childrenProp,
+    className,
+    defaultExpanded = false,
+    disabled = false,
+    disableGutters = false,
+    expanded: expandedProp,
+    onChange,
+    square = false,
+    slots = {},
+    slotProps = {},
+    TransitionComponent: TransitionComponentProp,
+    TransitionProps: TransitionPropsProp,
+    ...other
+  } = props;
+  const [expanded, setExpandedState] = useControlled({
+    controlled: expandedProp,
+    default: defaultExpanded,
+    name: "Accordion",
+    state: "expanded"
+  });
+  const handleChange = reactExports.useCallback((event) => {
+    setExpandedState(!expanded);
+    if (onChange) {
+      onChange(event, !expanded);
+    }
+  }, [expanded, onChange, setExpandedState]);
+  const [summary, ...children] = reactExports.Children.toArray(childrenProp);
+  const contextValue = reactExports.useMemo(() => ({
+    expanded,
+    disabled,
+    disableGutters,
+    toggle: handleChange
+  }), [expanded, disabled, disableGutters, handleChange]);
+  const ownerState = {
+    ...props,
+    square,
+    disabled,
+    disableGutters,
+    expanded
+  };
+  const classes = useUtilityClasses$d(ownerState);
+  const backwardCompatibleSlots = {
+    transition: TransitionComponentProp,
+    ...slots
+  };
+  const backwardCompatibleSlotProps = {
+    transition: TransitionPropsProp,
+    ...slotProps
+  };
+  const externalForwardedProps = {
+    slots: backwardCompatibleSlots,
+    slotProps: backwardCompatibleSlotProps
+  };
+  const [RootSlot, rootProps] = useSlot("root", {
+    elementType: AccordionRoot,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other
+    },
+    className: clsx(classes.root, className),
+    shouldForwardComponentProp: true,
+    ownerState,
+    ref,
+    additionalProps: {
+      square
+    }
+  });
+  const [AccordionHeadingSlot, accordionProps] = useSlot("heading", {
+    elementType: AccordionHeading,
+    externalForwardedProps,
+    className: classes.heading,
+    ownerState
+  });
+  const [TransitionSlot, transitionProps] = useSlot("transition", {
+    elementType: Collapse,
+    externalForwardedProps,
+    ownerState
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
+    ...rootProps,
+    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(AccordionHeadingSlot, {
+      ...accordionProps,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionContext.Provider, {
+        value: contextValue,
+        children: summary
+      })
+    }), /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionSlot, {
+      in: expanded,
+      timeout: "auto",
+      ...transitionProps,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", {
+        "aria-labelledby": summary.props.id,
+        id: summary.props["aria-controls"],
+        role: "region",
+        className: classes.region,
+        children
+      })
+    })]
+  });
+});
+
+function getAccordionSummaryUtilityClass(slot) {
+  return generateUtilityClass('MuiAccordionSummary', slot);
+}
+const accordionSummaryClasses = generateUtilityClasses('MuiAccordionSummary', ['root', 'expanded', 'focusVisible', 'disabled', 'gutters', 'contentGutters', 'content', 'expandIconWrapper']);
+
+const useUtilityClasses$c = (ownerState) => {
+  const {
+    classes,
+    expanded,
+    disabled,
+    disableGutters
+  } = ownerState;
+  const slots = {
+    root: ["root", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
+    focusVisible: ["focusVisible"],
+    content: ["content", expanded && "expanded", !disableGutters && "contentGutters"],
+    expandIconWrapper: ["expandIconWrapper", expanded && "expanded"]
+  };
+  return composeClasses(slots, getAccordionSummaryUtilityClass, classes);
+};
+const AccordionSummaryRoot = styled(ButtonBase, {
+  name: "MuiAccordionSummary",
+  slot: "Root"
+})(memoTheme(({
+  theme
+}) => {
+  const transition = {
+    duration: theme.transitions.duration.shortest
+  };
+  return {
+    display: "flex",
+    width: "100%",
+    minHeight: 48,
+    padding: theme.spacing(0, 2),
+    transition: theme.transitions.create(["min-height", "background-color"], transition),
+    [`&.${accordionSummaryClasses.focusVisible}`]: {
+      backgroundColor: (theme.vars || theme).palette.action.focus
+    },
+    [`&.${accordionSummaryClasses.disabled}`]: {
+      opacity: (theme.vars || theme).palette.action.disabledOpacity
+    },
+    [`&:hover:not(.${accordionSummaryClasses.disabled})`]: {
+      cursor: "pointer"
+    },
+    variants: [{
+      props: (props) => !props.disableGutters,
+      style: {
+        [`&.${accordionSummaryClasses.expanded}`]: {
+          minHeight: 64
+        }
+      }
+    }]
+  };
+}));
+const AccordionSummaryContent = styled("span", {
+  name: "MuiAccordionSummary",
+  slot: "Content"
+})(memoTheme(({
+  theme
+}) => ({
+  display: "flex",
+  textAlign: "start",
+  flexGrow: 1,
+  margin: "12px 0",
+  variants: [{
+    props: (props) => !props.disableGutters,
+    style: {
+      transition: theme.transitions.create(["margin"], {
+        duration: theme.transitions.duration.shortest
+      }),
+      [`&.${accordionSummaryClasses.expanded}`]: {
+        margin: "20px 0"
+      }
+    }
+  }]
+})));
+const AccordionSummaryExpandIconWrapper = styled("span", {
+  name: "MuiAccordionSummary",
+  slot: "ExpandIconWrapper"
+})(memoTheme(({
+  theme
+}) => ({
+  display: "flex",
+  color: (theme.vars || theme).palette.action.active,
+  transform: "rotate(0deg)",
+  transition: theme.transitions.create("transform", {
+    duration: theme.transitions.duration.shortest
+  }),
+  [`&.${accordionSummaryClasses.expanded}`]: {
+    transform: "rotate(180deg)"
+  }
+})));
+const AccordionSummary = /* @__PURE__ */ reactExports.forwardRef(function AccordionSummary2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiAccordionSummary"
+  });
+  const {
+    children,
+    className,
+    expandIcon,
+    focusVisibleClassName,
+    onClick,
+    slots,
+    slotProps,
+    ...other
+  } = props;
+  const {
+    disabled = false,
+    disableGutters,
+    expanded,
+    toggle
+  } = reactExports.useContext(AccordionContext);
+  const handleChange = (event) => {
+    if (toggle) {
+      toggle(event);
+    }
+    if (onClick) {
+      onClick(event);
+    }
+  };
+  const ownerState = {
+    ...props,
+    expanded,
+    disabled,
+    disableGutters
+  };
+  const classes = useUtilityClasses$c(ownerState);
+  const externalForwardedProps = {
+    slots,
+    slotProps
+  };
+  const [RootSlot, rootSlotProps] = useSlot("root", {
+    ref,
+    shouldForwardComponentProp: true,
+    className: clsx(classes.root, className),
+    elementType: AccordionSummaryRoot,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other
+    },
+    ownerState,
+    additionalProps: {
+      focusRipple: false,
+      disableRipple: true,
+      disabled,
+      "aria-expanded": expanded,
+      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName)
+    },
+    getSlotProps: (handlers) => ({
+      ...handlers,
+      onClick: (event) => {
+        handlers.onClick?.(event);
+        handleChange(event);
+      }
+    })
+  });
+  const [ContentSlot, contentSlotProps] = useSlot("content", {
+    className: classes.content,
+    elementType: AccordionSummaryContent,
+    externalForwardedProps,
+    ownerState
+  });
+  const [ExpandIconWrapperSlot, expandIconWrapperSlotProps] = useSlot("expandIconWrapper", {
+    className: classes.expandIconWrapper,
+    elementType: AccordionSummaryExpandIconWrapper,
+    externalForwardedProps,
+    ownerState
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
+    ...rootSlotProps,
+    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(ContentSlot, {
+      ...contentSlotProps,
+      children
+    }), expandIcon && /* @__PURE__ */ jsxRuntimeExports.jsx(ExpandIconWrapperSlot, {
+      ...expandIconWrapperSlotProps,
+      children: expandIcon
+    })]
+  });
+});
+
+function getAccordionDetailsUtilityClass(slot) {
+  return generateUtilityClass('MuiAccordionDetails', slot);
+}
+generateUtilityClasses('MuiAccordionDetails', ['root']);
+
+const useUtilityClasses$b = (ownerState) => {
+  const {
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root"]
+  };
+  return composeClasses(slots, getAccordionDetailsUtilityClass, classes);
+};
+const AccordionDetailsRoot = styled("div", {
+  name: "MuiAccordionDetails",
+  slot: "Root"
+})(memoTheme(({
+  theme
+}) => ({
+  padding: theme.spacing(1, 2, 2)
+})));
+const AccordionDetails = /* @__PURE__ */ reactExports.forwardRef(function AccordionDetails2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiAccordionDetails"
+  });
+  const {
+    className,
+    ...other
+  } = props;
+  const ownerState = props;
+  const classes = useUtilityClasses$b(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionDetailsRoot, {
+    className: clsx(classes.root, className),
+    ref,
+    ownerState,
+    ...other
+  });
+});
+
+const Stack = createStack({
+  createStyledComponent: styled("div", {
+    name: "MuiStack",
+    slot: "Root"
+  }),
+  useThemeProps: (inProps) => useDefaultProps({
+    props: inProps,
+    name: "MuiStack"
+  })
+});
+
+function getIconButtonUtilityClass(slot) {
+  return generateUtilityClass('MuiIconButton', slot);
+}
+const iconButtonClasses = generateUtilityClasses('MuiIconButton', ['root', 'disabled', 'colorInherit', 'colorPrimary', 'colorSecondary', 'colorError', 'colorInfo', 'colorSuccess', 'colorWarning', 'edgeStart', 'edgeEnd', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'loading', 'loadingIndicator', 'loadingWrapper']);
+
+const useUtilityClasses$a = (ownerState) => {
+  const {
+    classes,
+    disabled,
+    color,
+    edge,
+    size,
+    loading
+  } = ownerState;
+  const slots = {
+    root: ["root", loading && "loading", disabled && "disabled", color !== "default" && `color${capitalize(color)}`, edge && `edge${capitalize(edge)}`, `size${capitalize(size)}`],
+    loadingIndicator: ["loadingIndicator"],
+    loadingWrapper: ["loadingWrapper"]
+  };
+  return composeClasses(slots, getIconButtonUtilityClass, classes);
+};
+const IconButtonRoot = styled(ButtonBase, {
+  name: "MuiIconButton",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, ownerState.loading && styles.loading, ownerState.color !== "default" && styles[`color${capitalize(ownerState.color)}`], ownerState.edge && styles[`edge${capitalize(ownerState.edge)}`], styles[`size${capitalize(ownerState.size)}`]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  textAlign: "center",
+  flex: "0 0 auto",
+  fontSize: theme.typography.pxToRem(24),
+  padding: 8,
+  borderRadius: "50%",
+  color: (theme.vars || theme).palette.action.active,
+  transition: theme.transitions.create("background-color", {
+    duration: theme.transitions.duration.shortest
+  }),
+  variants: [{
+    props: (props) => !props.disableRipple,
+    style: {
+      "--IconButton-hoverBg": theme.vars ? `rgba(${theme.vars.palette.action.activeChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha(theme.palette.action.active, theme.palette.action.hoverOpacity),
+      "&:hover": {
+        backgroundColor: "var(--IconButton-hoverBg)",
+        // Reset on touch devices, it doesn't add specificity
+        "@media (hover: none)": {
+          backgroundColor: "transparent"
+        }
+      }
+    }
+  }, {
+    props: {
+      edge: "start"
+    },
+    style: {
+      marginLeft: -12
+    }
+  }, {
+    props: {
+      edge: "start",
+      size: "small"
+    },
+    style: {
+      marginLeft: -3
+    }
+  }, {
+    props: {
+      edge: "end"
+    },
+    style: {
+      marginRight: -12
+    }
+  }, {
+    props: {
+      edge: "end",
+      size: "small"
+    },
+    style: {
+      marginRight: -3
+    }
+  }]
+})), memoTheme(({
+  theme
+}) => ({
+  variants: [{
+    props: {
+      color: "inherit"
+    },
+    style: {
+      color: "inherit"
+    }
+  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      color: (theme.vars || theme).palette[color].main
+    }
+  })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      "--IconButton-hoverBg": theme.vars ? `rgba(${(theme.vars || theme).palette[color].mainChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha((theme.vars || theme).palette[color].main, theme.palette.action.hoverOpacity)
+    }
+  })), {
+    props: {
+      size: "small"
+    },
+    style: {
+      padding: 5,
+      fontSize: theme.typography.pxToRem(18)
+    }
+  }, {
+    props: {
+      size: "large"
+    },
+    style: {
+      padding: 12,
+      fontSize: theme.typography.pxToRem(28)
+    }
+  }],
+  [`&.${iconButtonClasses.disabled}`]: {
+    backgroundColor: "transparent",
+    color: (theme.vars || theme).palette.action.disabled
+  },
+  [`&.${iconButtonClasses.loading}`]: {
+    color: "transparent"
+  }
+})));
+const IconButtonLoadingIndicator = styled("span", {
+  name: "MuiIconButton",
+  slot: "LoadingIndicator"
+})(({
+  theme
+}) => ({
+  display: "none",
+  position: "absolute",
+  visibility: "visible",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  color: (theme.vars || theme).palette.action.disabled,
+  variants: [{
+    props: {
+      loading: true
+    },
+    style: {
+      display: "flex"
+    }
+  }]
+}));
+const IconButton = /* @__PURE__ */ reactExports.forwardRef(function IconButton2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiIconButton"
+  });
+  const {
+    edge = false,
+    children,
+    className,
+    color = "default",
+    disabled = false,
+    disableFocusRipple = false,
+    size = "medium",
+    id: idProp,
+    loading = null,
+    loadingIndicator: loadingIndicatorProp,
+    ...other
+  } = props;
+  const loadingId = useId(idProp);
+  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgress, {
+    "aria-labelledby": loadingId,
+    color: "inherit",
+    size: 16
+  });
+  const ownerState = {
+    ...props,
+    edge,
+    color,
+    disabled,
+    disableFocusRipple,
+    loading,
+    loadingIndicator,
+    size
+  };
+  const classes = useUtilityClasses$a(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(IconButtonRoot, {
+    id: loading ? loadingId : idProp,
+    className: clsx(classes.root, className),
+    centerRipple: true,
+    focusRipple: !disableFocusRipple,
+    disabled: disabled || loading,
+    ref,
+    ...other,
+    ownerState,
+    children: [typeof loading === "boolean" && // use plain HTML span to minimize the runtime overhead
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", {
+      className: classes.loadingWrapper,
+      style: {
+        display: "contents"
+      },
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButtonLoadingIndicator, {
+        className: classes.loadingIndicator,
+        ownerState,
+        children: loading && loadingIndicator
+      })
+    }), children]
+  });
+});
 
 var isCheckBoxInput = (element) => element.type === 'checkbox';
 
@@ -34635,7 +35918,7 @@ var isFileInput = (element) => element.type === 'file';
 
 var isFunction = (value) => typeof value === 'function';
 
-var isHTMLElement$2 = (value) => {
+var isHTMLElement = (value) => {
     if (!isWeb) {
         return false;
     }
@@ -34650,7 +35933,7 @@ var isRadioInput = (element) => element.type === 'radio';
 
 var isRadioOrCheckbox = (ref) => isRadioInput(ref) || isCheckBoxInput(ref);
 
-var live = (ref) => isHTMLElement$2(ref) && ref.isConnected;
+var live = (ref) => isHTMLElement(ref) && ref.isConnected;
 
 function baseGet(object, updatePath) {
     const length = updatePath.slice(0, -1).length;
@@ -35011,7 +36294,7 @@ var validateField = async (field, disabledFieldNames, formValues, validateAllFie
     const isEmpty = ((valueAsNumber || isFileInput(ref)) &&
         isUndefined(ref.value) &&
         isUndefined(inputValue)) ||
-        (isHTMLElement$2(ref) && ref.value === '') ||
+        (isHTMLElement(ref) && ref.value === '') ||
         inputValue === '' ||
         (Array.isArray(inputValue) && !inputValue.length);
     const appendErrorsCurry = appendErrors.bind(null, name, validateAllFieldCriteria, error);
@@ -35495,7 +36778,7 @@ function createFormControl(props = {}) {
                 !fieldReference.disabled &&
                     set(_formValues, name, getFieldValueAs(value, fieldReference));
                 fieldValue =
-                    isHTMLElement$2(fieldReference.ref) && isNullOrUndefined(value)
+                    isHTMLElement(fieldReference.ref) && isNullOrUndefined(value)
                         ? ''
                         : value;
                 if (isMultipleSelect(fieldReference.ref)) {
@@ -36032,7 +37315,7 @@ function createFormControl(props = {}) {
                             const fieldReference = Array.isArray(field._f.refs)
                                 ? field._f.refs[0]
                                 : field._f.ref;
-                            if (isHTMLElement$2(fieldReference)) {
+                            if (isHTMLElement(fieldReference)) {
                                 const form = fieldReference.closest('form');
                                 if (form) {
                                     form.reset();
@@ -36363,1378 +37646,6 @@ function useForm(props = {}) {
     return _formControl.current;
 }
 
-// base-x encoding / decoding
-// Copyright (c) 2018 base-x contributors
-// Copyright (c) 2014-2018 The Bitcoin Core developers (base58.cpp)
-// Distributed under the MIT software license, see the accompanying
-// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-function base (ALPHABET) {
-  if (ALPHABET.length >= 255) { throw new TypeError('Alphabet too long') }
-  const BASE_MAP = new Uint8Array(256);
-  for (let j = 0; j < BASE_MAP.length; j++) {
-    BASE_MAP[j] = 255;
-  }
-  for (let i = 0; i < ALPHABET.length; i++) {
-    const x = ALPHABET.charAt(i);
-    const xc = x.charCodeAt(0);
-    if (BASE_MAP[xc] !== 255) { throw new TypeError(x + ' is ambiguous') }
-    BASE_MAP[xc] = i;
-  }
-  const BASE = ALPHABET.length;
-  const LEADER = ALPHABET.charAt(0);
-  const FACTOR = Math.log(BASE) / Math.log(256); // log(BASE) / log(256), rounded up
-  const iFACTOR = Math.log(256) / Math.log(BASE); // log(256) / log(BASE), rounded up
-  function encode (source) {
-    // eslint-disable-next-line no-empty
-    if (source instanceof Uint8Array) ; else if (ArrayBuffer.isView(source)) {
-      source = new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
-    } else if (Array.isArray(source)) {
-      source = Uint8Array.from(source);
-    }
-    if (!(source instanceof Uint8Array)) { throw new TypeError('Expected Uint8Array') }
-    if (source.length === 0) { return '' }
-    // Skip & count leading zeroes.
-    let zeroes = 0;
-    let length = 0;
-    let pbegin = 0;
-    const pend = source.length;
-    while (pbegin !== pend && source[pbegin] === 0) {
-      pbegin++;
-      zeroes++;
-    }
-    // Allocate enough space in big-endian base58 representation.
-    const size = ((pend - pbegin) * iFACTOR + 1) >>> 0;
-    const b58 = new Uint8Array(size);
-    // Process the bytes.
-    while (pbegin !== pend) {
-      let carry = source[pbegin];
-      // Apply "b58 = b58 * 256 + ch".
-      let i = 0;
-      for (let it1 = size - 1; (carry !== 0 || i < length) && (it1 !== -1); it1--, i++) {
-        carry += (256 * b58[it1]) >>> 0;
-        b58[it1] = (carry % BASE) >>> 0;
-        carry = (carry / BASE) >>> 0;
-      }
-      if (carry !== 0) { throw new Error('Non-zero carry') }
-      length = i;
-      pbegin++;
-    }
-    // Skip leading zeroes in base58 result.
-    let it2 = size - length;
-    while (it2 !== size && b58[it2] === 0) {
-      it2++;
-    }
-    // Translate the result into a string.
-    let str = LEADER.repeat(zeroes);
-    for (; it2 < size; ++it2) { str += ALPHABET.charAt(b58[it2]); }
-    return str
-  }
-  function decodeUnsafe (source) {
-    if (typeof source !== 'string') { throw new TypeError('Expected String') }
-    if (source.length === 0) { return new Uint8Array() }
-    let psz = 0;
-    // Skip and count leading '1's.
-    let zeroes = 0;
-    let length = 0;
-    while (source[psz] === LEADER) {
-      zeroes++;
-      psz++;
-    }
-    // Allocate enough space in big-endian base256 representation.
-    const size = (((source.length - psz) * FACTOR) + 1) >>> 0; // log(58) / log(256), rounded up.
-    const b256 = new Uint8Array(size);
-    // Process the characters.
-    while (psz < source.length) {
-      // Find code of next character
-      const charCode = source.charCodeAt(psz);
-      // Base map can not be indexed using char code
-      if (charCode > 255) { return }
-      // Decode character
-      let carry = BASE_MAP[charCode];
-      // Invalid character
-      if (carry === 255) { return }
-      let i = 0;
-      for (let it3 = size - 1; (carry !== 0 || i < length) && (it3 !== -1); it3--, i++) {
-        carry += (BASE * b256[it3]) >>> 0;
-        b256[it3] = (carry % 256) >>> 0;
-        carry = (carry / 256) >>> 0;
-      }
-      if (carry !== 0) { throw new Error('Non-zero carry') }
-      length = i;
-      psz++;
-    }
-    // Skip leading zeroes in b256.
-    let it4 = size - length;
-    while (it4 !== size && b256[it4] === 0) {
-      it4++;
-    }
-    const vch = new Uint8Array(zeroes + (size - it4));
-    let j = zeroes;
-    while (it4 !== size) {
-      vch[j++] = b256[it4++];
-    }
-    return vch
-  }
-  function decode (string) {
-    const buffer = decodeUnsafe(string);
-    if (buffer) { return buffer }
-    throw new Error('Non-base' + BASE + ' character')
-  }
-  return {
-    encode,
-    decodeUnsafe,
-    decode
-  }
-}
-
-var ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-const bs58 = base(ALPHABET);
-
-function numberToLEBytes(num, byteLength = 4) {
-  const buffer = new ArrayBuffer(byteLength);
-  const view = new DataView(buffer);
-  if (byteLength === 4) {
-    view.setUint32(0, num, true);
-  } else if (byteLength === 2) {
-    view.setUint16(0, num, true);
-  } else if (byteLength === 8) {
-    view.setBigUint64(0, BigInt(num), true);
-  } else if (byteLength === 1) {
-    view.setUint8(0, num);
-  }
-  return new Uint8Array(buffer);
-}
-function objectHasKey(obj, key) {
-  return typeof obj === "object" && obj !== null && key in obj;
-}
-const SYSTEM_PROGRAM_PUBKEY = new Uint8Array(32);
-function txMessageData(from, to, transfer_lamports, blockhash) {
-  const message = [1, 0, 1];
-  message.push(3);
-  message.push(...from);
-  message.push(...to);
-  message.push(...SYSTEM_PROGRAM_PUBKEY);
-  message.push(...blockhash);
-  message.push(1);
-  message.push(2);
-  message.push(2);
-  message.push(0);
-  message.push(1);
-  message.push(12);
-  message.push(2);
-  message.push(0);
-  message.push(0);
-  message.push(0);
-  message.push(...numberToLEBytes(transfer_lamports, 8));
-  return Uint8Array.from(message);
-}
-function byteArrayToBase64(bytes) {
-  return btoa(String.fromCharCode(...bytes));
-}
-function shortSolanaAddress(address) {
-  return address.slice(0, 4) + "..." + address.slice(-4);
-}
-function shortTransferID(transferID) {
-  return transferID.slice(0, 4) + "..." + transferID.slice(-4);
-}
-function getErrorMsg(error) {
-  if (!error) return "Empty Error";
-  if (typeof error === "string") return error;
-  if (typeof error === "object" && "message" in error && typeof error.message === "string") {
-    return error.message;
-  }
-  if (typeof error === "object" && "toString" in error && typeof error.toString === "function") {
-    return error.toString();
-  }
-  return "UnknownError";
-}
-function isValidSolanaAddress(address) {
-  try {
-    const decoded = bs58.decode(address);
-    const leng = decoded.length;
-    if (leng != 32) {
-      return `账户地址格式不正确: ${leng} != 32`;
-    }
-    return true;
-  } catch (error) {
-    return `账户地址格式不正确: ${getErrorMsg(error)}`;
-  }
-}
-
-function WalletDlg({
-  initAddress = "",
-  initName = "",
-  type = "add",
-  children
-}) {
-  const [open, setOpen] = reactExports.useState(false);
-  const { dispatch } = reactExports.useContext(WalletsCtx);
-  const [isPending, startTransition] = reactExports.useTransition();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    watch,
-    setValue
-  } = useForm({
-    defaultValues: {
-      address: initAddress,
-      name: initName
-    }
-  });
-  const title = type === "add" ? "添加钱包" : "修改钱包";
-  function handleOpen() {
-    reset({
-      address: initAddress,
-      name: initName
-    });
-    setOpen(true);
-  }
-  const onSubmit = (data) => {
-    setOpen(false);
-    startTransition(() => {
-      const wallet = {
-        address: data.address,
-        name: data.name
-      };
-      queueMicrotask(() => {
-        dispatch({ type, wallet });
-      });
-    });
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    children({ triggerOpen: handleOpen }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      Dialog,
-      {
-        open,
-        onClose: () => setOpen(false),
-        disableAutoFocus: false,
-        disableRestoreFocus: true,
-        onClick: (e) => e.stopPropagation(),
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { id: "alert-dialog-title", children: title }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContent, { sx: { paddingBottom: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSubmit(onSubmit), style: { paddingTop: 8 }, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              TextField,
-              {
-                sx: { marginBottom: 2 },
-                fullWidth: true,
-                label: "钱包地址",
-                disabled: type === "modify",
-                ...register("address", {
-                  required: "必须填写钱包地址",
-                  validate: isValidSolanaAddress
-                }),
-                error: !!errors.address,
-                helperText: errors.address && errors.address.message
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              TextField,
-              {
-                label: "钱包名称",
-                fullWidth: true,
-                onFocus: () => {
-                  const address = watch("address");
-                  const name = watch("name");
-                  if (!name && address && isValidSolanaAddress(address) === true) {
-                    setValue("name", shortSolanaAddress(address));
-                  }
-                },
-                ...register("name", { required: "必须填写钱包名称" }),
-                error: !!errors.name,
-                helperText: errors.name && errors.name.message
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogActions, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => setOpen(false), children: "取消" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { type: "submit", disabled: isPending, children: isPending ? "处理中..." : "确认" })
-            ] })
-          ] }) })
-        ]
-      }
-    )
-  ] });
-}
-
-let JsonRpcId = 0;
-async function callSolanaRpc(method, params) {
-  const jsonrpc = {
-    jsonrpc: "2.0",
-    method,
-    params,
-    id: JsonRpcId++
-  };
-  const response = await fetch("https://api.devnet.solana.com", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(jsonrpc)
-  });
-  if (!response.ok) {
-    throw new Error(`${method} HTTP error! status: ${response.status}`);
-  }
-  const data = await response.json();
-  if (!data) {
-    throw new Error(`No data in JSON-RPC ${method} response`);
-  }
-  if (data.error) {
-    throw new Error(
-      `JSON-RPC ${method} error! code: ${data.error.code}, message: ${data.error.message}`
-    );
-  }
-  if (!data.result) {
-    throw new Error(`No result in JSON-RPC ${method} response`);
-  }
-  const result = data.result;
-  if (objectHasKey(result, "value")) {
-    return result.value;
-  }
-  return result;
-}
-
-function getAccountInfo(address, config = {}) {
-  return callSolanaRpc("getAccountInfo", [address, config]);
-}
-function getBalance(address, config = {}) {
-  return callSolanaRpc("getBalance", [address, config]);
-}
-function getLatestBlockhash(config = {}) {
-  return callSolanaRpc(
-    "getLatestBlockhash",
-    [config]
-  );
-}
-function sendTransaction(transactionData, config = {}) {
-  return callSolanaRpc("sendTransaction", [transactionData, config]);
-}
-function getSignatureStatuses(signatures, config = {}) {
-  return callSolanaRpc("getSignatureStatuses", [
-    signatures,
-    config
-  ]);
-}
-
-async function transfer(from, to, transfer_lamports, psw) {
-  const { blockhash } = await getLatestBlockhash();
-  const fromBytes = bs58.decode(from);
-  const toBytes = bs58.decode(to);
-  const blockhashBytes = bs58.decode(blockhash);
-  const messageData = txMessageData(
-    fromBytes,
-    toBytes,
-    transfer_lamports,
-    blockhashBytes
-  );
-  const signature = await signMessage(
-    from,
-    messageData.buffer,
-    psw
-  );
-  const signatureBytes = new Uint8Array(signature);
-  const txData = [1];
-  txData.push(...signatureBytes);
-  txData.push(...messageData);
-  const txDataBase64 = byteArrayToBase64(Uint8Array.from(txData));
-  return sendTransaction(txDataBase64, {
-    encoding: "base64"
-  });
-}
-function loopGetTransferStatus(transferID, onProgress, onStopped, interval = 1e3) {
-  let stopped = false;
-  async function poll() {
-    if (stopped) {
-      onStopped();
-      return;
-    }
-    try {
-      const statuses = await getSignatureStatuses([transferID], {
-        searchTransactionHistory: false
-      });
-      if (statuses[0]?.confirmationStatus === "finalized") {
-        onStopped();
-        stopped = true;
-      } else if (statuses[0]?.err) {
-        onStopped(`Transfer failed: ${statuses[0].err}`);
-        stopped = true;
-      } else {
-        if (statuses[0]) {
-          onProgress(statuses[0]);
-        }
-        setTimeout(poll, interval);
-      }
-    } catch (error) {
-      console.error("Error fetching transfer status:", error);
-      setTimeout(poll, interval);
-    }
-  }
-  poll();
-  return () => {
-    stopped = true;
-  };
-}
-
-function getCollapseUtilityClass(slot) {
-  return generateUtilityClass('MuiCollapse', slot);
-}
-generateUtilityClasses('MuiCollapse', ['root', 'horizontal', 'vertical', 'entered', 'hidden', 'wrapper', 'wrapperInner']);
-
-const useUtilityClasses$j = (ownerState) => {
-  const {
-    orientation,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", `${orientation}`],
-    entered: ["entered"],
-    hidden: ["hidden"],
-    wrapper: ["wrapper", `${orientation}`],
-    wrapperInner: ["wrapperInner", `${orientation}`]
-  };
-  return composeClasses(slots, getCollapseUtilityClass, classes);
-};
-const CollapseRoot = styled("div", {
-  name: "MuiCollapse",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[ownerState.orientation], ownerState.state === "entered" && styles.entered, ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px" && styles.hidden];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  height: 0,
-  overflow: "hidden",
-  transition: theme.transitions.create("height"),
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      height: "auto",
-      width: 0,
-      transition: theme.transitions.create("width")
-    }
-  }, {
-    props: {
-      state: "entered"
-    },
-    style: {
-      height: "auto",
-      overflow: "visible"
-    }
-  }, {
-    props: {
-      state: "entered",
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px",
-    style: {
-      visibility: "hidden"
-    }
-  }]
-})));
-const CollapseWrapper = styled("div", {
-  name: "MuiCollapse",
-  slot: "Wrapper"
-})({
-  // Hack to get children with a negative margin to not falsify the height computation.
-  display: "flex",
-  width: "100%",
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto",
-      height: "100%"
-    }
-  }]
-});
-const CollapseWrapperInner = styled("div", {
-  name: "MuiCollapse",
-  slot: "WrapperInner"
-})({
-  width: "100%",
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto",
-      height: "100%"
-    }
-  }]
-});
-const Collapse = /* @__PURE__ */ reactExports.forwardRef(function Collapse2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiCollapse"
-  });
-  const {
-    addEndListener,
-    children,
-    className,
-    collapsedSize: collapsedSizeProp = "0px",
-    component,
-    easing,
-    in: inProp,
-    onEnter,
-    onEntered,
-    onEntering,
-    onExit,
-    onExited,
-    onExiting,
-    orientation = "vertical",
-    style,
-    timeout = duration.standard,
-    // eslint-disable-next-line react/prop-types
-    TransitionComponent = Transition,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    orientation,
-    collapsedSize: collapsedSizeProp
-  };
-  const classes = useUtilityClasses$j(ownerState);
-  const theme = useTheme();
-  const timer = useTimeout();
-  const wrapperRef = reactExports.useRef(null);
-  const autoTransitionDuration = reactExports.useRef();
-  const collapsedSize = typeof collapsedSizeProp === "number" ? `${collapsedSizeProp}px` : collapsedSizeProp;
-  const isHorizontal = orientation === "horizontal";
-  const size = isHorizontal ? "width" : "height";
-  const nodeRef = reactExports.useRef(null);
-  const handleRef = useForkRef(ref, nodeRef);
-  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
-    if (callback) {
-      const node = nodeRef.current;
-      if (maybeIsAppearing === void 0) {
-        callback(node);
-      } else {
-        callback(node, maybeIsAppearing);
-      }
-    }
-  };
-  const getWrapperSize = () => wrapperRef.current ? wrapperRef.current[isHorizontal ? "clientWidth" : "clientHeight"] : 0;
-  const handleEnter = normalizedTransitionCallback((node, isAppearing) => {
-    if (wrapperRef.current && isHorizontal) {
-      wrapperRef.current.style.position = "absolute";
-    }
-    node.style[size] = collapsedSize;
-    if (onEnter) {
-      onEnter(node, isAppearing);
-    }
-  });
-  const handleEntering = normalizedTransitionCallback((node, isAppearing) => {
-    const wrapperSize = getWrapperSize();
-    if (wrapperRef.current && isHorizontal) {
-      wrapperRef.current.style.position = "";
-    }
-    const {
-      duration: transitionDuration,
-      easing: transitionTimingFunction
-    } = getTransitionProps({
-      style,
-      timeout,
-      easing
-    }, {
-      mode: "enter"
-    });
-    if (timeout === "auto") {
-      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
-      node.style.transitionDuration = `${duration2}ms`;
-      autoTransitionDuration.current = duration2;
-    } else {
-      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
-    }
-    node.style[size] = `${wrapperSize}px`;
-    node.style.transitionTimingFunction = transitionTimingFunction;
-    if (onEntering) {
-      onEntering(node, isAppearing);
-    }
-  });
-  const handleEntered = normalizedTransitionCallback((node, isAppearing) => {
-    node.style[size] = "auto";
-    if (onEntered) {
-      onEntered(node, isAppearing);
-    }
-  });
-  const handleExit = normalizedTransitionCallback((node) => {
-    node.style[size] = `${getWrapperSize()}px`;
-    if (onExit) {
-      onExit(node);
-    }
-  });
-  const handleExited = normalizedTransitionCallback(onExited);
-  const handleExiting = normalizedTransitionCallback((node) => {
-    const wrapperSize = getWrapperSize();
-    const {
-      duration: transitionDuration,
-      easing: transitionTimingFunction
-    } = getTransitionProps({
-      style,
-      timeout,
-      easing
-    }, {
-      mode: "exit"
-    });
-    if (timeout === "auto") {
-      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
-      node.style.transitionDuration = `${duration2}ms`;
-      autoTransitionDuration.current = duration2;
-    } else {
-      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
-    }
-    node.style[size] = collapsedSize;
-    node.style.transitionTimingFunction = transitionTimingFunction;
-    if (onExiting) {
-      onExiting(node);
-    }
-  });
-  const handleAddEndListener = (next) => {
-    if (timeout === "auto") {
-      timer.start(autoTransitionDuration.current || 0, next);
-    }
-    if (addEndListener) {
-      addEndListener(nodeRef.current, next);
-    }
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionComponent, {
-    in: inProp,
-    onEnter: handleEnter,
-    onEntered: handleEntered,
-    onEntering: handleEntering,
-    onExit: handleExit,
-    onExited: handleExited,
-    onExiting: handleExiting,
-    addEndListener: handleAddEndListener,
-    nodeRef,
-    timeout: timeout === "auto" ? null : timeout,
-    ...other,
-    children: (state, {
-      ownerState: incomingOwnerState,
-      ...restChildProps
-    }) => /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseRoot, {
-      as: component,
-      className: clsx(classes.root, className, {
-        "entered": classes.entered,
-        "exited": !inProp && collapsedSize === "0px" && classes.hidden
-      }[state]),
-      style: {
-        [isHorizontal ? "minWidth" : "minHeight"]: collapsedSize,
-        ...style
-      },
-      ref: handleRef,
-      ownerState: {
-        ...ownerState,
-        state
-      },
-      ...restChildProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapper, {
-        ownerState: {
-          ...ownerState,
-          state
-        },
-        className: classes.wrapper,
-        ref: wrapperRef,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapperInner, {
-          ownerState: {
-            ...ownerState,
-            state
-          },
-          className: classes.wrapperInner,
-          children
-        })
-      })
-    })
-  });
-});
-if (Collapse) {
-  Collapse.muiSupportAuto = true;
-}
-
-const AccordionContext = /* @__PURE__ */ reactExports.createContext({});
-
-function getAccordionUtilityClass(slot) {
-  return generateUtilityClass('MuiAccordion', slot);
-}
-const accordionClasses = generateUtilityClasses('MuiAccordion', ['root', 'heading', 'rounded', 'expanded', 'disabled', 'gutters', 'region']);
-
-const useUtilityClasses$i = (ownerState) => {
-  const {
-    classes,
-    square,
-    expanded,
-    disabled,
-    disableGutters
-  } = ownerState;
-  const slots = {
-    root: ["root", !square && "rounded", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
-    heading: ["heading"],
-    region: ["region"]
-  };
-  return composeClasses(slots, getAccordionUtilityClass, classes);
-};
-const AccordionRoot = styled(Paper, {
-  name: "MuiAccordion",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [{
-      [`& .${accordionClasses.region}`]: styles.region
-    }, styles.root, !ownerState.square && styles.rounded, !ownerState.disableGutters && styles.gutters];
-  }
-})(memoTheme(({
-  theme
-}) => {
-  const transition = {
-    duration: theme.transitions.duration.shortest
-  };
-  return {
-    position: "relative",
-    transition: theme.transitions.create(["margin"], transition),
-    overflowAnchor: "none",
-    // Keep the same scrolling position
-    "&::before": {
-      position: "absolute",
-      left: 0,
-      top: -1,
-      right: 0,
-      height: 1,
-      content: '""',
-      opacity: 1,
-      backgroundColor: (theme.vars || theme).palette.divider,
-      transition: theme.transitions.create(["opacity", "background-color"], transition)
-    },
-    "&:first-of-type": {
-      "&::before": {
-        display: "none"
-      }
-    },
-    [`&.${accordionClasses.expanded}`]: {
-      "&::before": {
-        opacity: 0
-      },
-      "&:first-of-type": {
-        marginTop: 0
-      },
-      "&:last-of-type": {
-        marginBottom: 0
-      },
-      "& + &": {
-        "&::before": {
-          display: "none"
-        }
-      }
-    },
-    [`&.${accordionClasses.disabled}`]: {
-      backgroundColor: (theme.vars || theme).palette.action.disabledBackground
-    }
-  };
-}), memoTheme(({
-  theme
-}) => ({
-  variants: [{
-    props: (props) => !props.square,
-    style: {
-      borderRadius: 0,
-      "&:first-of-type": {
-        borderTopLeftRadius: (theme.vars || theme).shape.borderRadius,
-        borderTopRightRadius: (theme.vars || theme).shape.borderRadius
-      },
-      "&:last-of-type": {
-        borderBottomLeftRadius: (theme.vars || theme).shape.borderRadius,
-        borderBottomRightRadius: (theme.vars || theme).shape.borderRadius,
-        // Fix a rendering issue on Edge
-        "@supports (-ms-ime-align: auto)": {
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0
-        }
-      }
-    }
-  }, {
-    props: (props) => !props.disableGutters,
-    style: {
-      [`&.${accordionClasses.expanded}`]: {
-        margin: "16px 0"
-      }
-    }
-  }]
-})));
-const AccordionHeading = styled("h3", {
-  name: "MuiAccordion",
-  slot: "Heading"
-})({
-  all: "unset"
-});
-const Accordion = /* @__PURE__ */ reactExports.forwardRef(function Accordion2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordion"
-  });
-  const {
-    children: childrenProp,
-    className,
-    defaultExpanded = false,
-    disabled = false,
-    disableGutters = false,
-    expanded: expandedProp,
-    onChange,
-    square = false,
-    slots = {},
-    slotProps = {},
-    TransitionComponent: TransitionComponentProp,
-    TransitionProps: TransitionPropsProp,
-    ...other
-  } = props;
-  const [expanded, setExpandedState] = useControlled({
-    controlled: expandedProp,
-    default: defaultExpanded,
-    name: "Accordion",
-    state: "expanded"
-  });
-  const handleChange = reactExports.useCallback((event) => {
-    setExpandedState(!expanded);
-    if (onChange) {
-      onChange(event, !expanded);
-    }
-  }, [expanded, onChange, setExpandedState]);
-  const [summary, ...children] = reactExports.Children.toArray(childrenProp);
-  const contextValue = reactExports.useMemo(() => ({
-    expanded,
-    disabled,
-    disableGutters,
-    toggle: handleChange
-  }), [expanded, disabled, disableGutters, handleChange]);
-  const ownerState = {
-    ...props,
-    square,
-    disabled,
-    disableGutters,
-    expanded
-  };
-  const classes = useUtilityClasses$i(ownerState);
-  const backwardCompatibleSlots = {
-    transition: TransitionComponentProp,
-    ...slots
-  };
-  const backwardCompatibleSlotProps = {
-    transition: TransitionPropsProp,
-    ...slotProps
-  };
-  const externalForwardedProps = {
-    slots: backwardCompatibleSlots,
-    slotProps: backwardCompatibleSlotProps
-  };
-  const [RootSlot, rootProps] = useSlot("root", {
-    elementType: AccordionRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    className: clsx(classes.root, className),
-    shouldForwardComponentProp: true,
-    ownerState,
-    ref,
-    additionalProps: {
-      square
-    }
-  });
-  const [AccordionHeadingSlot, accordionProps] = useSlot("heading", {
-    elementType: AccordionHeading,
-    externalForwardedProps,
-    className: classes.heading,
-    ownerState
-  });
-  const [TransitionSlot, transitionProps] = useSlot("transition", {
-    elementType: Collapse,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
-    ...rootProps,
-    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(AccordionHeadingSlot, {
-      ...accordionProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionContext.Provider, {
-        value: contextValue,
-        children: summary
-      })
-    }), /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionSlot, {
-      in: expanded,
-      timeout: "auto",
-      ...transitionProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", {
-        "aria-labelledby": summary.props.id,
-        id: summary.props["aria-controls"],
-        role: "region",
-        className: classes.region,
-        children
-      })
-    })]
-  });
-});
-
-function getAccordionSummaryUtilityClass(slot) {
-  return generateUtilityClass('MuiAccordionSummary', slot);
-}
-const accordionSummaryClasses = generateUtilityClasses('MuiAccordionSummary', ['root', 'expanded', 'focusVisible', 'disabled', 'gutters', 'contentGutters', 'content', 'expandIconWrapper']);
-
-const useUtilityClasses$h = (ownerState) => {
-  const {
-    classes,
-    expanded,
-    disabled,
-    disableGutters
-  } = ownerState;
-  const slots = {
-    root: ["root", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
-    focusVisible: ["focusVisible"],
-    content: ["content", expanded && "expanded", !disableGutters && "contentGutters"],
-    expandIconWrapper: ["expandIconWrapper", expanded && "expanded"]
-  };
-  return composeClasses(slots, getAccordionSummaryUtilityClass, classes);
-};
-const AccordionSummaryRoot = styled(ButtonBase, {
-  name: "MuiAccordionSummary",
-  slot: "Root"
-})(memoTheme(({
-  theme
-}) => {
-  const transition = {
-    duration: theme.transitions.duration.shortest
-  };
-  return {
-    display: "flex",
-    width: "100%",
-    minHeight: 48,
-    padding: theme.spacing(0, 2),
-    transition: theme.transitions.create(["min-height", "background-color"], transition),
-    [`&.${accordionSummaryClasses.focusVisible}`]: {
-      backgroundColor: (theme.vars || theme).palette.action.focus
-    },
-    [`&.${accordionSummaryClasses.disabled}`]: {
-      opacity: (theme.vars || theme).palette.action.disabledOpacity
-    },
-    [`&:hover:not(.${accordionSummaryClasses.disabled})`]: {
-      cursor: "pointer"
-    },
-    variants: [{
-      props: (props) => !props.disableGutters,
-      style: {
-        [`&.${accordionSummaryClasses.expanded}`]: {
-          minHeight: 64
-        }
-      }
-    }]
-  };
-}));
-const AccordionSummaryContent = styled("span", {
-  name: "MuiAccordionSummary",
-  slot: "Content"
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  textAlign: "start",
-  flexGrow: 1,
-  margin: "12px 0",
-  variants: [{
-    props: (props) => !props.disableGutters,
-    style: {
-      transition: theme.transitions.create(["margin"], {
-        duration: theme.transitions.duration.shortest
-      }),
-      [`&.${accordionSummaryClasses.expanded}`]: {
-        margin: "20px 0"
-      }
-    }
-  }]
-})));
-const AccordionSummaryExpandIconWrapper = styled("span", {
-  name: "MuiAccordionSummary",
-  slot: "ExpandIconWrapper"
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  color: (theme.vars || theme).palette.action.active,
-  transform: "rotate(0deg)",
-  transition: theme.transitions.create("transform", {
-    duration: theme.transitions.duration.shortest
-  }),
-  [`&.${accordionSummaryClasses.expanded}`]: {
-    transform: "rotate(180deg)"
-  }
-})));
-const AccordionSummary = /* @__PURE__ */ reactExports.forwardRef(function AccordionSummary2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordionSummary"
-  });
-  const {
-    children,
-    className,
-    expandIcon,
-    focusVisibleClassName,
-    onClick,
-    slots,
-    slotProps,
-    ...other
-  } = props;
-  const {
-    disabled = false,
-    disableGutters,
-    expanded,
-    toggle
-  } = reactExports.useContext(AccordionContext);
-  const handleChange = (event) => {
-    if (toggle) {
-      toggle(event);
-    }
-    if (onClick) {
-      onClick(event);
-    }
-  };
-  const ownerState = {
-    ...props,
-    expanded,
-    disabled,
-    disableGutters
-  };
-  const classes = useUtilityClasses$h(ownerState);
-  const externalForwardedProps = {
-    slots,
-    slotProps
-  };
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    ref,
-    shouldForwardComponentProp: true,
-    className: clsx(classes.root, className),
-    elementType: AccordionSummaryRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    ownerState,
-    additionalProps: {
-      focusRipple: false,
-      disableRipple: true,
-      disabled,
-      "aria-expanded": expanded,
-      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName)
-    },
-    getSlotProps: (handlers) => ({
-      ...handlers,
-      onClick: (event) => {
-        handlers.onClick?.(event);
-        handleChange(event);
-      }
-    })
-  });
-  const [ContentSlot, contentSlotProps] = useSlot("content", {
-    className: classes.content,
-    elementType: AccordionSummaryContent,
-    externalForwardedProps,
-    ownerState
-  });
-  const [ExpandIconWrapperSlot, expandIconWrapperSlotProps] = useSlot("expandIconWrapper", {
-    className: classes.expandIconWrapper,
-    elementType: AccordionSummaryExpandIconWrapper,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
-    ...rootSlotProps,
-    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(ContentSlot, {
-      ...contentSlotProps,
-      children
-    }), expandIcon && /* @__PURE__ */ jsxRuntimeExports.jsx(ExpandIconWrapperSlot, {
-      ...expandIconWrapperSlotProps,
-      children: expandIcon
-    })]
-  });
-});
-
-function getAccordionDetailsUtilityClass(slot) {
-  return generateUtilityClass('MuiAccordionDetails', slot);
-}
-generateUtilityClasses('MuiAccordionDetails', ['root']);
-
-const useUtilityClasses$g = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  return composeClasses(slots, getAccordionDetailsUtilityClass, classes);
-};
-const AccordionDetailsRoot = styled("div", {
-  name: "MuiAccordionDetails",
-  slot: "Root"
-})(memoTheme(({
-  theme
-}) => ({
-  padding: theme.spacing(1, 2, 2)
-})));
-const AccordionDetails = /* @__PURE__ */ reactExports.forwardRef(function AccordionDetails2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordionDetails"
-  });
-  const {
-    className,
-    ...other
-  } = props;
-  const ownerState = props;
-  const classes = useUtilityClasses$g(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionDetailsRoot, {
-    className: clsx(classes.root, className),
-    ref,
-    ownerState,
-    ...other
-  });
-});
-
-const Stack = createStack({
-  createStyledComponent: styled("div", {
-    name: "MuiStack",
-    slot: "Root"
-  }),
-  useThemeProps: (inProps) => useDefaultProps({
-    props: inProps,
-    name: "MuiStack"
-  })
-});
-
-function getIconButtonUtilityClass(slot) {
-  return generateUtilityClass('MuiIconButton', slot);
-}
-const iconButtonClasses = generateUtilityClasses('MuiIconButton', ['root', 'disabled', 'colorInherit', 'colorPrimary', 'colorSecondary', 'colorError', 'colorInfo', 'colorSuccess', 'colorWarning', 'edgeStart', 'edgeEnd', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'loading', 'loadingIndicator', 'loadingWrapper']);
-
-const useUtilityClasses$f = (ownerState) => {
-  const {
-    classes,
-    disabled,
-    color,
-    edge,
-    size,
-    loading
-  } = ownerState;
-  const slots = {
-    root: ["root", loading && "loading", disabled && "disabled", color !== "default" && `color${capitalize(color)}`, edge && `edge${capitalize(edge)}`, `size${capitalize(size)}`],
-    loadingIndicator: ["loadingIndicator"],
-    loadingWrapper: ["loadingWrapper"]
-  };
-  return composeClasses(slots, getIconButtonUtilityClass, classes);
-};
-const IconButtonRoot = styled(ButtonBase, {
-  name: "MuiIconButton",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, ownerState.loading && styles.loading, ownerState.color !== "default" && styles[`color${capitalize(ownerState.color)}`], ownerState.edge && styles[`edge${capitalize(ownerState.edge)}`], styles[`size${capitalize(ownerState.size)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  textAlign: "center",
-  flex: "0 0 auto",
-  fontSize: theme.typography.pxToRem(24),
-  padding: 8,
-  borderRadius: "50%",
-  color: (theme.vars || theme).palette.action.active,
-  transition: theme.transitions.create("background-color", {
-    duration: theme.transitions.duration.shortest
-  }),
-  variants: [{
-    props: (props) => !props.disableRipple,
-    style: {
-      "--IconButton-hoverBg": theme.vars ? `rgba(${theme.vars.palette.action.activeChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha(theme.palette.action.active, theme.palette.action.hoverOpacity),
-      "&:hover": {
-        backgroundColor: "var(--IconButton-hoverBg)",
-        // Reset on touch devices, it doesn't add specificity
-        "@media (hover: none)": {
-          backgroundColor: "transparent"
-        }
-      }
-    }
-  }, {
-    props: {
-      edge: "start"
-    },
-    style: {
-      marginLeft: -12
-    }
-  }, {
-    props: {
-      edge: "start",
-      size: "small"
-    },
-    style: {
-      marginLeft: -3
-    }
-  }, {
-    props: {
-      edge: "end"
-    },
-    style: {
-      marginRight: -12
-    }
-  }, {
-    props: {
-      edge: "end",
-      size: "small"
-    },
-    style: {
-      marginRight: -3
-    }
-  }]
-})), memoTheme(({
-  theme
-}) => ({
-  variants: [{
-    props: {
-      color: "inherit"
-    },
-    style: {
-      color: "inherit"
-    }
-  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
-    props: {
-      color
-    },
-    style: {
-      color: (theme.vars || theme).palette[color].main
-    }
-  })), ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter()).map(([color]) => ({
-    props: {
-      color
-    },
-    style: {
-      "--IconButton-hoverBg": theme.vars ? `rgba(${(theme.vars || theme).palette[color].mainChannel} / ${theme.vars.palette.action.hoverOpacity})` : alpha((theme.vars || theme).palette[color].main, theme.palette.action.hoverOpacity)
-    }
-  })), {
-    props: {
-      size: "small"
-    },
-    style: {
-      padding: 5,
-      fontSize: theme.typography.pxToRem(18)
-    }
-  }, {
-    props: {
-      size: "large"
-    },
-    style: {
-      padding: 12,
-      fontSize: theme.typography.pxToRem(28)
-    }
-  }],
-  [`&.${iconButtonClasses.disabled}`]: {
-    backgroundColor: "transparent",
-    color: (theme.vars || theme).palette.action.disabled
-  },
-  [`&.${iconButtonClasses.loading}`]: {
-    color: "transparent"
-  }
-})));
-const IconButtonLoadingIndicator = styled("span", {
-  name: "MuiIconButton",
-  slot: "LoadingIndicator"
-})(({
-  theme
-}) => ({
-  display: "none",
-  position: "absolute",
-  visibility: "visible",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  color: (theme.vars || theme).palette.action.disabled,
-  variants: [{
-    props: {
-      loading: true
-    },
-    style: {
-      display: "flex"
-    }
-  }]
-}));
-const IconButton = /* @__PURE__ */ reactExports.forwardRef(function IconButton2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiIconButton"
-  });
-  const {
-    edge = false,
-    children,
-    className,
-    color = "default",
-    disabled = false,
-    disableFocusRipple = false,
-    size = "medium",
-    id: idProp,
-    loading = null,
-    loadingIndicator: loadingIndicatorProp,
-    ...other
-  } = props;
-  const loadingId = useId(idProp);
-  const loadingIndicator = loadingIndicatorProp ?? /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgress, {
-    "aria-labelledby": loadingId,
-    color: "inherit",
-    size: 16
-  });
-  const ownerState = {
-    ...props,
-    edge,
-    color,
-    disabled,
-    disableFocusRipple,
-    loading,
-    loadingIndicator,
-    size
-  };
-  const classes = useUtilityClasses$f(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(IconButtonRoot, {
-    id: loading ? loadingId : idProp,
-    className: clsx(classes.root, className),
-    centerRipple: true,
-    focusRipple: !disableFocusRipple,
-    disabled: disabled || loading,
-    ref,
-    ...other,
-    ownerState,
-    children: [typeof loading === "boolean" && // use plain HTML span to minimize the runtime overhead
-    /* @__PURE__ */ jsxRuntimeExports.jsx("span", {
-      className: classes.loadingWrapper,
-      style: {
-        display: "contents"
-      },
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(IconButtonLoadingIndicator, {
-        className: classes.loadingIndicator,
-        ownerState,
-        children: loading && loadingIndicator
-      })
-    }), children]
-  });
-});
-
 const dividerClasses = generateUtilityClasses('MuiDivider', ['root', 'absolute', 'fullWidth', 'inset', 'middle', 'flexItem', 'light', 'vertical', 'withChildren', 'withChildrenVertical', 'textAlignRight', 'textAlignLeft', 'wrapper', 'wrapperVertical']);
 
 const listItemIconClasses = generateUtilityClasses('MuiListItemIcon', ['root', 'alignItemsFlexStart']);
@@ -37752,7 +37663,7 @@ const overridesResolver$1 = (props, styles) => {
   } = props;
   return [styles.root, ownerState.dense && styles.dense, ownerState.divider && styles.divider, !ownerState.disableGutters && styles.gutters];
 };
-const useUtilityClasses$e = (ownerState) => {
+const useUtilityClasses$9 = (ownerState) => {
   const {
     disabled,
     dense,
@@ -37910,7 +37821,7 @@ const MenuItem = /* @__PURE__ */ reactExports.forwardRef(function MenuItem2(inPr
     divider,
     disableGutters
   };
-  const classes = useUtilityClasses$e(props);
+  const classes = useUtilityClasses$9(props);
   const handleRef = useForkRef(menuItemRef, ref);
   let tabIndex;
   if (!props.disabled) {
@@ -38084,7 +37995,7 @@ const ClearIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
   d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 }));
 
-const useUtilityClasses$d = (ownerState) => {
+const useUtilityClasses$8 = (ownerState) => {
   const {
     variant,
     color,
@@ -38236,7 +38147,7 @@ const Alert = /* @__PURE__ */ reactExports.forwardRef(function Alert2(inProps, r
     variant,
     colorSeverity: color || severity
   };
-  const classes = useUtilityClasses$d(ownerState);
+  const classes = useUtilityClasses$8(ownerState);
   const externalForwardedProps = {
     slots: {
       closeButton: components.CloseButton,
@@ -38329,7 +38240,7 @@ function getChipUtilityClass(slot) {
 }
 const chipClasses = generateUtilityClasses('MuiChip', ['root', 'sizeSmall', 'sizeMedium', 'colorDefault', 'colorError', 'colorInfo', 'colorPrimary', 'colorSecondary', 'colorSuccess', 'colorWarning', 'disabled', 'clickable', 'clickableColorPrimary', 'clickableColorSecondary', 'deletable', 'deletableColorPrimary', 'deletableColorSecondary', 'outlined', 'filled', 'outlinedPrimary', 'outlinedSecondary', 'filledPrimary', 'filledSecondary', 'avatar', 'avatarSmall', 'avatarMedium', 'avatarColorPrimary', 'avatarColorSecondary', 'icon', 'iconSmall', 'iconMedium', 'iconColorPrimary', 'iconColorSecondary', 'label', 'labelSmall', 'labelMedium', 'deleteIcon', 'deleteIconSmall', 'deleteIconMedium', 'deleteIconColorPrimary', 'deleteIconColorSecondary', 'deleteIconOutlinedColorPrimary', 'deleteIconOutlinedColorSecondary', 'deleteIconFilledColorPrimary', 'deleteIconFilledColorSecondary', 'focusVisible']);
 
-const useUtilityClasses$c = (ownerState) => {
+const useUtilityClasses$7 = (ownerState) => {
   const {
     classes,
     disabled,
@@ -38723,7 +38634,7 @@ const Chip = /* @__PURE__ */ reactExports.forwardRef(function Chip2(inProps, ref
     clickable,
     variant
   };
-  const classes = useUtilityClasses$c(ownerState);
+  const classes = useUtilityClasses$7(ownerState);
   const moreProps = component === ButtonBase ? {
     component: ComponentProp || "div",
     focusVisibleClassName: classes.focusVisible,
@@ -38818,7 +38729,7 @@ function getAvatarUtilityClass(slot) {
 }
 generateUtilityClasses('MuiAvatar', ['root', 'colorDefault', 'circular', 'rounded', 'square', 'img', 'fallback']);
 
-const useUtilityClasses$b = (ownerState) => {
+const useUtilityClasses$6 = (ownerState) => {
   const {
     classes,
     variant,
@@ -38981,7 +38892,7 @@ const Avatar = /* @__PURE__ */ reactExports.forwardRef(function Avatar2(inProps,
   const hasImgNotFailing = hasImg && loaded !== "error";
   ownerState.colorDefault = !hasImgNotFailing;
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$b(ownerState);
+  const classes = useUtilityClasses$6(ownerState);
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
     className: clsx(classes.root, className),
@@ -39050,6 +38961,127 @@ const EditIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
 const DeleteIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
   d: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"
 }));
+
+const CheckCircleIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8z"
+}));
+
+const ErrorIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m1 15h-2v-2h2zm0-4h-2V7h2z"
+}));
+
+function WalletDlg({
+  initAddress = "",
+  initName = "",
+  type = "add",
+  children
+}) {
+  const [open, setOpen] = reactExports.useState(false);
+  const { dispatch, wallets } = reactExports.useContext(WalletsCtx);
+  const [isPending, startTransition] = reactExports.useTransition();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+    setValue
+  } = useForm({
+    defaultValues: {
+      address: initAddress,
+      name: initName
+    }
+  });
+  const title = type === "add" ? "添加钱包" : "修改钱包";
+  function handleOpen() {
+    reset({
+      address: initAddress,
+      name: initName
+    });
+    setOpen(true);
+  }
+  const onSubmit = (data) => {
+    setOpen(false);
+    startTransition(() => {
+      const wallet = {
+        address: data.address,
+        name: data.name
+      };
+      queueMicrotask(() => {
+        dispatch({ type, wallet });
+      });
+    });
+  };
+  function validateAddress(address) {
+    const isValid = isValidSolanaAddress(address);
+    if (isValid !== true) return isValid;
+    if (type === "add" && wallets && wallets.some((w) => w.address === address))
+      return "钱包地址已存在";
+    return true;
+  }
+  function validateName(name) {
+    if (wallets && wallets.some((w) => w.name === name))
+      return "钱包名称已存在";
+    return true;
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    children({ triggerOpen: handleOpen }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      Dialog,
+      {
+        open,
+        onClose: () => setOpen(false),
+        disableAutoFocus: false,
+        disableRestoreFocus: true,
+        onClick: (e) => e.stopPropagation(),
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { id: "alert-dialog-title", children: title }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContent, { sx: { paddingBottom: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSubmit(onSubmit), style: { paddingTop: 8 }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              TextField,
+              {
+                sx: { marginBottom: 2 },
+                fullWidth: true,
+                label: "钱包地址",
+                disabled: type === "modify",
+                ...register("address", {
+                  required: "必须填写钱包地址",
+                  validate: validateAddress
+                }),
+                error: !!errors.address,
+                helperText: errors.address && errors.address.message
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              TextField,
+              {
+                label: "钱包名称",
+                fullWidth: true,
+                onFocus: () => {
+                  const address = watch("address");
+                  const name = watch("name");
+                  if (!name && address && isValidSolanaAddress(address) === true) {
+                    setValue("name", shortSolanaAddress(address));
+                  }
+                },
+                ...register("name", {
+                  required: "必须填写钱包名称",
+                  validate: validateName
+                }),
+                error: !!errors.name,
+                helperText: errors.name && errors.name.message
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogActions, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => setOpen(false), children: "取消" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { type: "submit", disabled: isPending, children: isPending ? "处理中..." : "确认" })
+            ] })
+          ] }) })
+        ]
+      }
+    )
+  ] });
+}
 
 function TitleActions(props) {
   const { address, name, onDelete, ...rest } = props;
@@ -39273,12 +39305,7 @@ function Wallet({ address, name }) {
       {
         severity: transferStatus === 4 /* Failed */ ? "error" : transferStatus === 3 /* Success */ ? "success" : "info",
         sx: { margin: 2, wordBreak: "break-word" },
-        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          RefreshIcon,
-          {
-            sx: { animation: isTransferring ? rotate360deg : void 0 }
-          }
-        ),
+        icon: isTransferring ? /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshIcon, { sx: { animation: rotate360deg } }) : transferStatus === 3 /* Success */ ? /* @__PURE__ */ jsxRuntimeExports.jsx(CheckCircleIcon, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorIcon, {}),
         onClose: isTransferring ? void 0 : () => {
           setTransferStatus(0 /* Init */);
           setTransferMessage("");
@@ -39289,5175 +39316,6 @@ function Wallet({ address, name }) {
     ) })
   ] }, address);
 }
-
-const Grid = createGrid({
-  createStyledComponent: styled("div", {
-    name: "MuiGrid",
-    slot: "Root",
-    overridesResolver: (props, styles) => {
-      const {
-        ownerState
-      } = props;
-      return [styles.root, ownerState.container && styles.container];
-    }
-  }),
-  componentName: "MuiGrid",
-  useThemeProps: (inProps) => useDefaultProps({
-    props: inProps,
-    name: "MuiGrid"
-  }),
-  useTheme
-});
-
-function WalletList() {
-  const { wallets } = reactExports.useContext(WalletsCtx);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    (!wallets || wallets.length === 0) && /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { variant: "h6", sx: { textAlign: "center" }, children: "没有可用的钱包" }),
-    wallets && wallets.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(Grid, { container: true, spacing: 1, children: wallets.map((wallet) => /* @__PURE__ */ jsxRuntimeExports.jsx(Grid, { size: { xs: 12, md: 4 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Wallet,
-      {
-        address: wallet.address,
-        name: wallet.name
-      },
-      wallet.address
-    ) }, wallet.address)) })
-  ] });
-}
-
-function getInputAdornmentUtilityClass(slot) {
-  return generateUtilityClass('MuiInputAdornment', slot);
-}
-const inputAdornmentClasses = generateUtilityClasses('MuiInputAdornment', ['root', 'filled', 'standard', 'outlined', 'positionStart', 'positionEnd', 'disablePointerEvents', 'hiddenLabel', 'sizeSmall']);
-
-var _span;
-const overridesResolver = (props, styles) => {
-  const {
-    ownerState
-  } = props;
-  return [styles.root, styles[`position${capitalize(ownerState.position)}`], ownerState.disablePointerEvents === true && styles.disablePointerEvents, styles[ownerState.variant]];
-};
-const useUtilityClasses$a = (ownerState) => {
-  const {
-    classes,
-    disablePointerEvents,
-    hiddenLabel,
-    position,
-    size,
-    variant
-  } = ownerState;
-  const slots = {
-    root: ["root", disablePointerEvents && "disablePointerEvents", position && `position${capitalize(position)}`, variant, hiddenLabel && "hiddenLabel", size && `size${capitalize(size)}`]
-  };
-  return composeClasses(slots, getInputAdornmentUtilityClass, classes);
-};
-const InputAdornmentRoot = styled("div", {
-  name: "MuiInputAdornment",
-  slot: "Root",
-  overridesResolver
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  maxHeight: "2em",
-  alignItems: "center",
-  whiteSpace: "nowrap",
-  color: (theme.vars || theme).palette.action.active,
-  variants: [{
-    props: {
-      variant: "filled"
-    },
-    style: {
-      [`&.${inputAdornmentClasses.positionStart}&:not(.${inputAdornmentClasses.hiddenLabel})`]: {
-        marginTop: 16
-      }
-    }
-  }, {
-    props: {
-      position: "start"
-    },
-    style: {
-      marginRight: 8
-    }
-  }, {
-    props: {
-      position: "end"
-    },
-    style: {
-      marginLeft: 8
-    }
-  }, {
-    props: {
-      disablePointerEvents: true
-    },
-    style: {
-      pointerEvents: "none"
-    }
-  }]
-})));
-const InputAdornment = /* @__PURE__ */ reactExports.forwardRef(function InputAdornment2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiInputAdornment"
-  });
-  const {
-    children,
-    className,
-    component = "div",
-    disablePointerEvents = false,
-    disableTypography = false,
-    position,
-    variant: variantProp,
-    ...other
-  } = props;
-  const muiFormControl = useFormControl() || {};
-  let variant = variantProp;
-  if (variantProp && muiFormControl.variant) ;
-  if (muiFormControl && !variant) {
-    variant = muiFormControl.variant;
-  }
-  const ownerState = {
-    ...props,
-    hiddenLabel: muiFormControl.hiddenLabel,
-    size: muiFormControl.size,
-    disablePointerEvents,
-    position,
-    variant
-  };
-  const classes = useUtilityClasses$a(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(FormControlContext.Provider, {
-    value: null,
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(InputAdornmentRoot, {
-      as: component,
-      ownerState,
-      className: clsx(classes.root, className),
-      ref,
-      ...other,
-      children: typeof children === "string" && !disableTypography ? /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, {
-        color: "textSecondary",
-        children
-      }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(reactExports.Fragment, {
-        children: [position === "start" ? (
-          /* notranslate needed while Google Translate will not fix zero-width space issue */
-          _span || (_span = /* @__PURE__ */ jsxRuntimeExports.jsx("span", {
-            className: "notranslate",
-            "aria-hidden": true,
-            children: "​"
-          }))
-        ) : null, children]
-      })
-    })
-  });
-});
-
-const Visibility = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5M12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5m0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"
-}));
-
-const VisibilityOff = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7M2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2m4.31-.78 3.15 3.15.02-.16c0-1.66-1.34-3-3-3z"
-}));
-
-const initialWordCount = 600;
-const initialStartIndex = 8;
-function XinyinDlg({
-  type,
-  children
-}) {
-  const theme = useTheme();
-  const [open, setOpen] = reactExports.useState(false);
-  const [step, setStep] = reactExports.useState(0 /* ChooseCharset */);
-  const [isGenerating, setIsGenerating] = reactExports.useState(false);
-  const [generatedWords32, setGeneratedWords32] = reactExports.useState("");
-  const [showPassword, setShowPassword] = reactExports.useState(false);
-  const [isImporting, setIsImporting] = reactExports.useState(false);
-  const { dispatch } = reactExports.useContext(WalletsCtx);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    resetField,
-    trigger,
-    watch
-  } = useForm({
-    defaultValues: {
-      startIndex: initialStartIndex,
-      wordCount: initialWordCount,
-      xinyinText: "",
-      words32: "",
-      password: "",
-      repeatPassword: "",
-      walletName: ""
-    }
-  });
-  const title = type === "generate" ? "生成心印助记字" : "导入心印助记字";
-  function handleOpen() {
-    setOpen(true);
-    setStep(0 /* ChooseCharset */);
-    setIsGenerating(false);
-    setGeneratedWords32("");
-    setShowPassword(false);
-    setIsImporting(false);
-    reset({
-      startIndex: initialStartIndex,
-      wordCount: initialWordCount,
-      xinyinText: "",
-      words32: "",
-      password: "",
-      repeatPassword: "",
-      walletName: ""
-    });
-  }
-  function handleFormSubmit(data) {
-    if (type == "generate" && step == 1 /* InputXinyinText */) {
-      setIsGenerating(true);
-      generateWords32(data.xinyinText, data.startIndex, data.wordCount).then(
-        (w32) => {
-          setGeneratedWords32(w32);
-          setIsGenerating(false);
-        }
-      );
-    } else if (type == "import" && step == 2 /* InputWords32 */) {
-      setIsImporting(true);
-      importWords32(
-        data.words32,
-        data.xinyinText,
-        data.startIndex,
-        data.wordCount,
-        data.password
-      ).then((solanaAddress) => {
-        dispatch({
-          type: "add",
-          wallet: {
-            address: solanaAddress,
-            name: data.walletName
-          }
-        });
-        setOpen(false);
-      }).catch((error) => {
-        setIsImporting(false);
-        alert("导入心印助记字失败: " + (error.message || "未知错误"));
-      });
-    } else {
-      console.log("submit wrong time...");
-    }
-  }
-  function nextStep() {
-    if (step == 0 /* ChooseCharset */) {
-      trigger(["startIndex", "wordCount"]).then((r) => {
-        if (r) {
-          setStep(1 /* InputXinyinText */);
-          setGeneratedWords32("");
-        }
-      });
-    }
-    if (type == "import") {
-      if (step == 1 /* InputXinyinText */) {
-        trigger("xinyinText").then((r) => {
-          if (r) {
-            setStep(2 /* InputWords32 */);
-            resetField("password");
-            resetField("repeatPassword");
-          }
-        });
-      }
-    }
-  }
-  function validateXinyinText(text) {
-    if (!text || text.trim() === "") {
-      return "心印文本不能为空";
-    }
-    return true;
-  }
-  function validateWords32(words) {
-    if (!words || words.trim() === "") {
-      return "心印助记字不能为空";
-    }
-    if (words.length !== 32) {
-      return "心印助记字必须是32个汉字";
-    }
-    if (!/^[\u4e00-\u9fa5]+$/.test(words)) {
-      return "心印助记字必须是汉字";
-    }
-    return true;
-  }
-  function validateStartIndex(value) {
-    if (isNaN(value)) {
-      return "输入的开始序号必须是数字";
-    }
-    if (value < 1) {
-      return "开始的序号从1开始";
-    }
-    if (value + watch("wordCount") > 8105) {
-      return "选择范围不能超过8105";
-    }
-    return true;
-  }
-  function validateWordCount(value) {
-    if (isNaN(value)) {
-      return "输入的字数必须是数字";
-    }
-    if (value <= 500) {
-      return "不能少于500个汉字";
-    }
-    if (value + watch("startIndex") > 8105) {
-      return "选择范围不能超过8105";
-    }
-    return true;
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    children({ triggerOpen: handleOpen }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      Dialog,
-      {
-        open,
-        onClose: () => setOpen(false),
-        maxWidth: "sm",
-        fullWidth: true,
-        disableRestoreFocus: true,
-        disableAutoFocus: false,
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { children: title }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Stack,
-            {
-              component: "form",
-              spacing: 2,
-              sx: { paddingTop: 2 },
-              onSubmit: handleSubmit(handleFormSubmit),
-              children: [
-                step == 0 /* ChooseCharset */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    TextField,
-                    {
-                      label: "开始的序号",
-                      fullWidth: true,
-                      autoComplete: "off",
-                      ...register("startIndex", {
-                        valueAsNumber: true,
-                        validate: validateStartIndex
-                      }),
-                      error: !!errors.startIndex,
-                      helperText: errors.startIndex ? errors.startIndex.message : ""
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    TextField,
-                    {
-                      label: "字数",
-                      fullWidth: true,
-                      autoComplete: "off",
-                      ...register("wordCount", {
-                        valueAsNumber: true,
-                        validate: validateWordCount
-                      }),
-                      error: !!errors.wordCount,
-                      helperText: errors.wordCount ? errors.wordCount.message : ""
-                    }
-                  )
-                ] }),
-                step == 1 /* InputXinyinText */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { variant: "body2", color: "text.secondary", children: "请输入心印文本，只有自己知道的一句话，用于密钥派生和字表生成。建议为20字符以上，包含多种字符类型，避免使用常见语句或个人信息。例如：“星辰大海，心自无疆。”" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    Typography,
-                    {
-                      variant: "body2",
-                      color: "text.secondary",
-                      sx: {
-                        marginBottom: 1
-                      },
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(
-                          "span",
-                          {
-                            style: {
-                              color: theme.palette.error.main,
-                              fontWeight: theme.typography.fontWeightBold
-                            },
-                            children: "不要输入 "
-                          }
-                        ),
-                        "正式使用的心印文本，这里只是演示使用。"
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    TextField,
-                    {
-                      label: "心印文本",
-                      fullWidth: true,
-                      autoComplete: "off",
-                      ...register("xinyinText", { validate: validateXinyinText }),
-                      error: !!errors.xinyinText,
-                      helperText: errors.xinyinText ? errors.xinyinText.message : ""
-                    }
-                  )
-                ] }),
-                step == 2 /* InputWords32 */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    TextField,
-                    {
-                      label: "心印助记字",
-                      fullWidth: true,
-                      autoComplete: "off",
-                      ...register("words32", {
-                        validate: validateWords32
-                      }),
-                      error: !!errors.words32,
-                      helperText: errors.words32 ? errors.words32.message : "心印助记字（32个汉字）"
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    TextField,
-                    {
-                      label: "钱包名称",
-                      fullWidth: true,
-                      autoComplete: "username",
-                      ...register("walletName", {
-                        required: "必须填写钱包名称"
-                      }),
-                      error: !!errors.walletName,
-                      helperText: errors.walletName ? errors.walletName.message : "给导入的钱包起个名字"
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    TextField,
-                    {
-                      label: "密码",
-                      autoComplete: "new-password",
-                      type: showPassword ? "text" : "password",
-                      fullWidth: true,
-                      ...register("password", {
-                        required: "必须填写密码",
-                        minLength: {
-                          value: 8,
-                          message: "密码至少8个字符"
-                        }
-                      }),
-                      error: !!errors.password,
-                      helperText: errors.password ? errors.password.message : "请输入密码，用于加密导入的钱包",
-                      slotProps: {
-                        input: {
-                          endAdornment: /* @__PURE__ */ jsxRuntimeExports.jsx(InputAdornment, { position: "end", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                            IconButton,
-                            {
-                              onClick: () => setShowPassword((prev) => !prev),
-                              children: showPassword ? /* @__PURE__ */ jsxRuntimeExports.jsx(Visibility, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(VisibilityOff, {})
-                            }
-                          ) })
-                        }
-                      }
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    TextField,
-                    {
-                      label: "重复密码",
-                      type: showPassword ? "text" : "password",
-                      autoComplete: "new-password",
-                      fullWidth: true,
-                      ...register("repeatPassword", {
-                        required: "必须重复输入密码",
-                        validate: (value) => value === watch("password") || "两次输入的密码不一致"
-                      }),
-                      error: !!errors.repeatPassword,
-                      helperText: errors.repeatPassword ? errors.repeatPassword.message : "请重复输入密码"
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogActions, { children: [
-                  step == 0 /* ChooseCharset */ && /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: nextStep, children: "下一步" }),
-                  step == 1 /* InputXinyinText */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => setStep(0 /* ChooseCharset */), children: "上一步" }),
-                    type == "generate" && /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      Button,
-                      {
-                        type: "submit",
-                        variant: "contained",
-                        disabled: isGenerating,
-                        children: "生成心印助记字"
-                      }
-                    ),
-                    type == "import" && /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: nextStep, children: "下一步" })
-                  ] }),
-                  step == 2 /* InputWords32 */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => setStep(1 /* InputXinyinText */), children: "上一步" }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      Button,
-                      {
-                        type: "submit",
-                        variant: "contained",
-                        disabled: isImporting,
-                        children: "导入心印助记字"
-                      }
-                    )
-                  ] })
-                ] }),
-                type == "generate" && step == 1 /* InputXinyinText */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(Typography, { color: "text.secondary", variant: "body2", children: [
-                    "生成的心印助记字：",
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
-                    "用于表示加密密钥的32个汉字，每个汉字唯一对应加密密钥中的一个字节"
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { color: "success", variant: "body2", children: generatedWords32 })
-                ] })
-              ]
-            }
-          ) })
-        ]
-      }
-    )
-  ] });
-}
-
-function getAppBarUtilityClass(slot) {
-  return generateUtilityClass('MuiAppBar', slot);
-}
-generateUtilityClasses('MuiAppBar', ['root', 'positionFixed', 'positionAbsolute', 'positionSticky', 'positionStatic', 'positionRelative', 'colorDefault', 'colorPrimary', 'colorSecondary', 'colorInherit', 'colorTransparent', 'colorError', 'colorInfo', 'colorSuccess', 'colorWarning']);
-
-const useUtilityClasses$9 = (ownerState) => {
-  const {
-    color,
-    position,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", `color${capitalize(color)}`, `position${capitalize(position)}`]
-  };
-  return composeClasses(slots, getAppBarUtilityClass, classes);
-};
-const joinVars = (var1, var2) => var1 ? `${var1?.replace(")", "")}, ${var2})` : var2;
-const AppBarRoot = styled(Paper, {
-  name: "MuiAppBar",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[`position${capitalize(ownerState.position)}`], styles[`color${capitalize(ownerState.color)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  flexDirection: "column",
-  width: "100%",
-  boxSizing: "border-box",
-  // Prevent padding issue with the Modal and fixed positioned AppBar.
-  flexShrink: 0,
-  variants: [{
-    props: {
-      position: "fixed"
-    },
-    style: {
-      position: "fixed",
-      zIndex: (theme.vars || theme).zIndex.appBar,
-      top: 0,
-      left: "auto",
-      right: 0,
-      "@media print": {
-        // Prevent the app bar to be visible on each printed page.
-        position: "absolute"
-      }
-    }
-  }, {
-    props: {
-      position: "absolute"
-    },
-    style: {
-      position: "absolute",
-      zIndex: (theme.vars || theme).zIndex.appBar,
-      top: 0,
-      left: "auto",
-      right: 0
-    }
-  }, {
-    props: {
-      position: "sticky"
-    },
-    style: {
-      position: "sticky",
-      zIndex: (theme.vars || theme).zIndex.appBar,
-      top: 0,
-      left: "auto",
-      right: 0
-    }
-  }, {
-    props: {
-      position: "static"
-    },
-    style: {
-      position: "static"
-    }
-  }, {
-    props: {
-      position: "relative"
-    },
-    style: {
-      position: "relative"
-    }
-  }, {
-    props: {
-      color: "inherit"
-    },
-    style: {
-      "--AppBar-color": "inherit"
-    }
-  }, {
-    props: {
-      color: "default"
-    },
-    style: {
-      "--AppBar-background": theme.vars ? theme.vars.palette.AppBar.defaultBg : theme.palette.grey[100],
-      "--AppBar-color": theme.vars ? theme.vars.palette.text.primary : theme.palette.getContrastText(theme.palette.grey[100]),
-      ...theme.applyStyles("dark", {
-        "--AppBar-background": theme.vars ? theme.vars.palette.AppBar.defaultBg : theme.palette.grey[900],
-        "--AppBar-color": theme.vars ? theme.vars.palette.text.primary : theme.palette.getContrastText(theme.palette.grey[900])
-      })
-    }
-  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["contrastText"])).map(([color]) => ({
-    props: {
-      color
-    },
-    style: {
-      "--AppBar-background": (theme.vars ?? theme).palette[color].main,
-      "--AppBar-color": (theme.vars ?? theme).palette[color].contrastText
-    }
-  })), {
-    props: (props) => props.enableColorOnDark === true && !["inherit", "transparent"].includes(props.color),
-    style: {
-      backgroundColor: "var(--AppBar-background)",
-      color: "var(--AppBar-color)"
-    }
-  }, {
-    props: (props) => props.enableColorOnDark === false && !["inherit", "transparent"].includes(props.color),
-    style: {
-      backgroundColor: "var(--AppBar-background)",
-      color: "var(--AppBar-color)",
-      ...theme.applyStyles("dark", {
-        backgroundColor: theme.vars ? joinVars(theme.vars.palette.AppBar.darkBg, "var(--AppBar-background)") : null,
-        color: theme.vars ? joinVars(theme.vars.palette.AppBar.darkColor, "var(--AppBar-color)") : null
-      })
-    }
-  }, {
-    props: {
-      color: "transparent"
-    },
-    style: {
-      "--AppBar-background": "transparent",
-      "--AppBar-color": "inherit",
-      backgroundColor: "var(--AppBar-background)",
-      color: "var(--AppBar-color)",
-      ...theme.applyStyles("dark", {
-        backgroundImage: "none"
-      })
-    }
-  }]
-})));
-const AppBar = /* @__PURE__ */ reactExports.forwardRef(function AppBar2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAppBar"
-  });
-  const {
-    className,
-    color = "primary",
-    enableColorOnDark = false,
-    position = "fixed",
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    color,
-    position,
-    enableColorOnDark
-  };
-  const classes = useUtilityClasses$9(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(AppBarRoot, {
-    square: true,
-    component: "header",
-    ownerState,
-    elevation: 4,
-    className: clsx(classes.root, className, position === "fixed" && "mui-fixed"),
-    ref,
-    ...other
-  });
-});
-
-var top = 'top';
-var bottom = 'bottom';
-var right = 'right';
-var left = 'left';
-var auto = 'auto';
-var basePlacements = [top, bottom, right, left];
-var start = 'start';
-var end = 'end';
-var clippingParents = 'clippingParents';
-var viewport = 'viewport';
-var popper = 'popper';
-var reference = 'reference';
-var variationPlacements = /*#__PURE__*/basePlacements.reduce(function (acc, placement) {
-  return acc.concat([placement + "-" + start, placement + "-" + end]);
-}, []);
-var placements = /*#__PURE__*/[].concat(basePlacements, [auto]).reduce(function (acc, placement) {
-  return acc.concat([placement, placement + "-" + start, placement + "-" + end]);
-}, []); // modifiers that need to read the DOM
-
-var beforeRead = 'beforeRead';
-var read = 'read';
-var afterRead = 'afterRead'; // pure-logic modifiers
-
-var beforeMain = 'beforeMain';
-var main = 'main';
-var afterMain = 'afterMain'; // modifier with the purpose to write to the DOM (or write into a framework state)
-
-var beforeWrite = 'beforeWrite';
-var write = 'write';
-var afterWrite = 'afterWrite';
-var modifierPhases = [beforeRead, read, afterRead, beforeMain, main, afterMain, beforeWrite, write, afterWrite];
-
-function getNodeName(element) {
-  return element ? (element.nodeName || '').toLowerCase() : null;
-}
-
-function getWindow(node) {
-  if (node == null) {
-    return window;
-  }
-
-  if (node.toString() !== '[object Window]') {
-    var ownerDocument = node.ownerDocument;
-    return ownerDocument ? ownerDocument.defaultView || window : window;
-  }
-
-  return node;
-}
-
-function isElement(node) {
-  var OwnElement = getWindow(node).Element;
-  return node instanceof OwnElement || node instanceof Element;
-}
-
-function isHTMLElement$1(node) {
-  var OwnElement = getWindow(node).HTMLElement;
-  return node instanceof OwnElement || node instanceof HTMLElement;
-}
-
-function isShadowRoot(node) {
-  // IE 11 has no ShadowRoot
-  if (typeof ShadowRoot === 'undefined') {
-    return false;
-  }
-
-  var OwnElement = getWindow(node).ShadowRoot;
-  return node instanceof OwnElement || node instanceof ShadowRoot;
-}
-
-// and applies them to the HTMLElements such as popper and arrow
-
-function applyStyles(_ref) {
-  var state = _ref.state;
-  Object.keys(state.elements).forEach(function (name) {
-    var style = state.styles[name] || {};
-    var attributes = state.attributes[name] || {};
-    var element = state.elements[name]; // arrow is optional + virtual elements
-
-    if (!isHTMLElement$1(element) || !getNodeName(element)) {
-      return;
-    } // Flow doesn't support to extend this property, but it's the most
-    // effective way to apply styles to an HTMLElement
-    // $FlowFixMe[cannot-write]
-
-
-    Object.assign(element.style, style);
-    Object.keys(attributes).forEach(function (name) {
-      var value = attributes[name];
-
-      if (value === false) {
-        element.removeAttribute(name);
-      } else {
-        element.setAttribute(name, value === true ? '' : value);
-      }
-    });
-  });
-}
-
-function effect$2(_ref2) {
-  var state = _ref2.state;
-  var initialStyles = {
-    popper: {
-      position: state.options.strategy,
-      left: '0',
-      top: '0',
-      margin: '0'
-    },
-    arrow: {
-      position: 'absolute'
-    },
-    reference: {}
-  };
-  Object.assign(state.elements.popper.style, initialStyles.popper);
-  state.styles = initialStyles;
-
-  if (state.elements.arrow) {
-    Object.assign(state.elements.arrow.style, initialStyles.arrow);
-  }
-
-  return function () {
-    Object.keys(state.elements).forEach(function (name) {
-      var element = state.elements[name];
-      var attributes = state.attributes[name] || {};
-      var styleProperties = Object.keys(state.styles.hasOwnProperty(name) ? state.styles[name] : initialStyles[name]); // Set all values to an empty string to unset them
-
-      var style = styleProperties.reduce(function (style, property) {
-        style[property] = '';
-        return style;
-      }, {}); // arrow is optional + virtual elements
-
-      if (!isHTMLElement$1(element) || !getNodeName(element)) {
-        return;
-      }
-
-      Object.assign(element.style, style);
-      Object.keys(attributes).forEach(function (attribute) {
-        element.removeAttribute(attribute);
-      });
-    });
-  };
-} // eslint-disable-next-line import/no-unused-modules
-
-
-const applyStyles$1 = {
-  name: 'applyStyles',
-  enabled: true,
-  phase: 'write',
-  fn: applyStyles,
-  effect: effect$2,
-  requires: ['computeStyles']
-};
-
-function getBasePlacement(placement) {
-  return placement.split('-')[0];
-}
-
-var max = Math.max;
-var min = Math.min;
-var round$1 = Math.round;
-
-function getUAString() {
-  var uaData = navigator.userAgentData;
-
-  if (uaData != null && uaData.brands && Array.isArray(uaData.brands)) {
-    return uaData.brands.map(function (item) {
-      return item.brand + "/" + item.version;
-    }).join(' ');
-  }
-
-  return navigator.userAgent;
-}
-
-function isLayoutViewport() {
-  return !/^((?!chrome|android).)*safari/i.test(getUAString());
-}
-
-function getBoundingClientRect(element, includeScale, isFixedStrategy) {
-  if (includeScale === void 0) {
-    includeScale = false;
-  }
-
-  if (isFixedStrategy === void 0) {
-    isFixedStrategy = false;
-  }
-
-  var clientRect = element.getBoundingClientRect();
-  var scaleX = 1;
-  var scaleY = 1;
-
-  if (includeScale && isHTMLElement$1(element)) {
-    scaleX = element.offsetWidth > 0 ? round$1(clientRect.width) / element.offsetWidth || 1 : 1;
-    scaleY = element.offsetHeight > 0 ? round$1(clientRect.height) / element.offsetHeight || 1 : 1;
-  }
-
-  var _ref = isElement(element) ? getWindow(element) : window,
-      visualViewport = _ref.visualViewport;
-
-  var addVisualOffsets = !isLayoutViewport() && isFixedStrategy;
-  var x = (clientRect.left + (addVisualOffsets && visualViewport ? visualViewport.offsetLeft : 0)) / scaleX;
-  var y = (clientRect.top + (addVisualOffsets && visualViewport ? visualViewport.offsetTop : 0)) / scaleY;
-  var width = clientRect.width / scaleX;
-  var height = clientRect.height / scaleY;
-  return {
-    width: width,
-    height: height,
-    top: y,
-    right: x + width,
-    bottom: y + height,
-    left: x,
-    x: x,
-    y: y
-  };
-}
-
-// means it doesn't take into account transforms.
-
-function getLayoutRect(element) {
-  var clientRect = getBoundingClientRect(element); // Use the clientRect sizes if it's not been transformed.
-  // Fixes https://github.com/popperjs/popper-core/issues/1223
-
-  var width = element.offsetWidth;
-  var height = element.offsetHeight;
-
-  if (Math.abs(clientRect.width - width) <= 1) {
-    width = clientRect.width;
-  }
-
-  if (Math.abs(clientRect.height - height) <= 1) {
-    height = clientRect.height;
-  }
-
-  return {
-    x: element.offsetLeft,
-    y: element.offsetTop,
-    width: width,
-    height: height
-  };
-}
-
-function contains(parent, child) {
-  var rootNode = child.getRootNode && child.getRootNode(); // First, attempt with faster native method
-
-  if (parent.contains(child)) {
-    return true;
-  } // then fallback to custom implementation with Shadow DOM support
-  else if (rootNode && isShadowRoot(rootNode)) {
-      var next = child;
-
-      do {
-        if (next && parent.isSameNode(next)) {
-          return true;
-        } // $FlowFixMe[prop-missing]: need a better way to handle this...
-
-
-        next = next.parentNode || next.host;
-      } while (next);
-    } // Give up, the result is false
-
-
-  return false;
-}
-
-function getComputedStyle(element) {
-  return getWindow(element).getComputedStyle(element);
-}
-
-function isTableElement(element) {
-  return ['table', 'td', 'th'].indexOf(getNodeName(element)) >= 0;
-}
-
-function getDocumentElement(element) {
-  // $FlowFixMe[incompatible-return]: assume body is always available
-  return ((isElement(element) ? element.ownerDocument : // $FlowFixMe[prop-missing]
-  element.document) || window.document).documentElement;
-}
-
-function getParentNode(element) {
-  if (getNodeName(element) === 'html') {
-    return element;
-  }
-
-  return (// this is a quicker (but less type safe) way to save quite some bytes from the bundle
-    // $FlowFixMe[incompatible-return]
-    // $FlowFixMe[prop-missing]
-    element.assignedSlot || // step into the shadow DOM of the parent of a slotted node
-    element.parentNode || ( // DOM Element detected
-    isShadowRoot(element) ? element.host : null) || // ShadowRoot detected
-    // $FlowFixMe[incompatible-call]: HTMLElement is a Node
-    getDocumentElement(element) // fallback
-
-  );
-}
-
-function getTrueOffsetParent(element) {
-  if (!isHTMLElement$1(element) || // https://github.com/popperjs/popper-core/issues/837
-  getComputedStyle(element).position === 'fixed') {
-    return null;
-  }
-
-  return element.offsetParent;
-} // `.offsetParent` reports `null` for fixed elements, while absolute elements
-// return the containing block
-
-
-function getContainingBlock(element) {
-  var isFirefox = /firefox/i.test(getUAString());
-  var isIE = /Trident/i.test(getUAString());
-
-  if (isIE && isHTMLElement$1(element)) {
-    // In IE 9, 10 and 11 fixed elements containing block is always established by the viewport
-    var elementCss = getComputedStyle(element);
-
-    if (elementCss.position === 'fixed') {
-      return null;
-    }
-  }
-
-  var currentNode = getParentNode(element);
-
-  if (isShadowRoot(currentNode)) {
-    currentNode = currentNode.host;
-  }
-
-  while (isHTMLElement$1(currentNode) && ['html', 'body'].indexOf(getNodeName(currentNode)) < 0) {
-    var css = getComputedStyle(currentNode); // This is non-exhaustive but covers the most common CSS properties that
-    // create a containing block.
-    // https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block#identifying_the_containing_block
-
-    if (css.transform !== 'none' || css.perspective !== 'none' || css.contain === 'paint' || ['transform', 'perspective'].indexOf(css.willChange) !== -1 || isFirefox && css.willChange === 'filter' || isFirefox && css.filter && css.filter !== 'none') {
-      return currentNode;
-    } else {
-      currentNode = currentNode.parentNode;
-    }
-  }
-
-  return null;
-} // Gets the closest ancestor positioned element. Handles some edge cases,
-// such as table ancestors and cross browser bugs.
-
-
-function getOffsetParent(element) {
-  var window = getWindow(element);
-  var offsetParent = getTrueOffsetParent(element);
-
-  while (offsetParent && isTableElement(offsetParent) && getComputedStyle(offsetParent).position === 'static') {
-    offsetParent = getTrueOffsetParent(offsetParent);
-  }
-
-  if (offsetParent && (getNodeName(offsetParent) === 'html' || getNodeName(offsetParent) === 'body' && getComputedStyle(offsetParent).position === 'static')) {
-    return window;
-  }
-
-  return offsetParent || getContainingBlock(element) || window;
-}
-
-function getMainAxisFromPlacement(placement) {
-  return ['top', 'bottom'].indexOf(placement) >= 0 ? 'x' : 'y';
-}
-
-function within(min$1, value, max$1) {
-  return max(min$1, min(value, max$1));
-}
-function withinMaxClamp(min, value, max) {
-  var v = within(min, value, max);
-  return v > max ? max : v;
-}
-
-function getFreshSideObject() {
-  return {
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0
-  };
-}
-
-function mergePaddingObject(paddingObject) {
-  return Object.assign({}, getFreshSideObject(), paddingObject);
-}
-
-function expandToHashMap(value, keys) {
-  return keys.reduce(function (hashMap, key) {
-    hashMap[key] = value;
-    return hashMap;
-  }, {});
-}
-
-var toPaddingObject = function toPaddingObject(padding, state) {
-  padding = typeof padding === 'function' ? padding(Object.assign({}, state.rects, {
-    placement: state.placement
-  })) : padding;
-  return mergePaddingObject(typeof padding !== 'number' ? padding : expandToHashMap(padding, basePlacements));
-};
-
-function arrow(_ref) {
-  var _state$modifiersData$;
-
-  var state = _ref.state,
-      name = _ref.name,
-      options = _ref.options;
-  var arrowElement = state.elements.arrow;
-  var popperOffsets = state.modifiersData.popperOffsets;
-  var basePlacement = getBasePlacement(state.placement);
-  var axis = getMainAxisFromPlacement(basePlacement);
-  var isVertical = [left, right].indexOf(basePlacement) >= 0;
-  var len = isVertical ? 'height' : 'width';
-
-  if (!arrowElement || !popperOffsets) {
-    return;
-  }
-
-  var paddingObject = toPaddingObject(options.padding, state);
-  var arrowRect = getLayoutRect(arrowElement);
-  var minProp = axis === 'y' ? top : left;
-  var maxProp = axis === 'y' ? bottom : right;
-  var endDiff = state.rects.reference[len] + state.rects.reference[axis] - popperOffsets[axis] - state.rects.popper[len];
-  var startDiff = popperOffsets[axis] - state.rects.reference[axis];
-  var arrowOffsetParent = getOffsetParent(arrowElement);
-  var clientSize = arrowOffsetParent ? axis === 'y' ? arrowOffsetParent.clientHeight || 0 : arrowOffsetParent.clientWidth || 0 : 0;
-  var centerToReference = endDiff / 2 - startDiff / 2; // Make sure the arrow doesn't overflow the popper if the center point is
-  // outside of the popper bounds
-
-  var min = paddingObject[minProp];
-  var max = clientSize - arrowRect[len] - paddingObject[maxProp];
-  var center = clientSize / 2 - arrowRect[len] / 2 + centerToReference;
-  var offset = within(min, center, max); // Prevents breaking syntax highlighting...
-
-  var axisProp = axis;
-  state.modifiersData[name] = (_state$modifiersData$ = {}, _state$modifiersData$[axisProp] = offset, _state$modifiersData$.centerOffset = offset - center, _state$modifiersData$);
-}
-
-function effect$1(_ref2) {
-  var state = _ref2.state,
-      options = _ref2.options;
-  var _options$element = options.element,
-      arrowElement = _options$element === void 0 ? '[data-popper-arrow]' : _options$element;
-
-  if (arrowElement == null) {
-    return;
-  } // CSS selector
-
-
-  if (typeof arrowElement === 'string') {
-    arrowElement = state.elements.popper.querySelector(arrowElement);
-
-    if (!arrowElement) {
-      return;
-    }
-  }
-
-  if (!contains(state.elements.popper, arrowElement)) {
-    return;
-  }
-
-  state.elements.arrow = arrowElement;
-} // eslint-disable-next-line import/no-unused-modules
-
-
-const arrow$1 = {
-  name: 'arrow',
-  enabled: true,
-  phase: 'main',
-  fn: arrow,
-  effect: effect$1,
-  requires: ['popperOffsets'],
-  requiresIfExists: ['preventOverflow']
-};
-
-function getVariation(placement) {
-  return placement.split('-')[1];
-}
-
-var unsetSides = {
-  top: 'auto',
-  right: 'auto',
-  bottom: 'auto',
-  left: 'auto'
-}; // Round the offsets to the nearest suitable subpixel based on the DPR.
-// Zooming can change the DPR, but it seems to report a value that will
-// cleanly divide the values into the appropriate subpixels.
-
-function roundOffsetsByDPR(_ref, win) {
-  var x = _ref.x,
-      y = _ref.y;
-  var dpr = win.devicePixelRatio || 1;
-  return {
-    x: round$1(x * dpr) / dpr || 0,
-    y: round$1(y * dpr) / dpr || 0
-  };
-}
-
-function mapToStyles(_ref2) {
-  var _Object$assign2;
-
-  var popper = _ref2.popper,
-      popperRect = _ref2.popperRect,
-      placement = _ref2.placement,
-      variation = _ref2.variation,
-      offsets = _ref2.offsets,
-      position = _ref2.position,
-      gpuAcceleration = _ref2.gpuAcceleration,
-      adaptive = _ref2.adaptive,
-      roundOffsets = _ref2.roundOffsets,
-      isFixed = _ref2.isFixed;
-  var _offsets$x = offsets.x,
-      x = _offsets$x === void 0 ? 0 : _offsets$x,
-      _offsets$y = offsets.y,
-      y = _offsets$y === void 0 ? 0 : _offsets$y;
-
-  var _ref3 = typeof roundOffsets === 'function' ? roundOffsets({
-    x: x,
-    y: y
-  }) : {
-    x: x,
-    y: y
-  };
-
-  x = _ref3.x;
-  y = _ref3.y;
-  var hasX = offsets.hasOwnProperty('x');
-  var hasY = offsets.hasOwnProperty('y');
-  var sideX = left;
-  var sideY = top;
-  var win = window;
-
-  if (adaptive) {
-    var offsetParent = getOffsetParent(popper);
-    var heightProp = 'clientHeight';
-    var widthProp = 'clientWidth';
-
-    if (offsetParent === getWindow(popper)) {
-      offsetParent = getDocumentElement(popper);
-
-      if (getComputedStyle(offsetParent).position !== 'static' && position === 'absolute') {
-        heightProp = 'scrollHeight';
-        widthProp = 'scrollWidth';
-      }
-    } // $FlowFixMe[incompatible-cast]: force type refinement, we compare offsetParent with window above, but Flow doesn't detect it
-
-
-    offsetParent = offsetParent;
-
-    if (placement === top || (placement === left || placement === right) && variation === end) {
-      sideY = bottom;
-      var offsetY = isFixed && offsetParent === win && win.visualViewport ? win.visualViewport.height : // $FlowFixMe[prop-missing]
-      offsetParent[heightProp];
-      y -= offsetY - popperRect.height;
-      y *= gpuAcceleration ? 1 : -1;
-    }
-
-    if (placement === left || (placement === top || placement === bottom) && variation === end) {
-      sideX = right;
-      var offsetX = isFixed && offsetParent === win && win.visualViewport ? win.visualViewport.width : // $FlowFixMe[prop-missing]
-      offsetParent[widthProp];
-      x -= offsetX - popperRect.width;
-      x *= gpuAcceleration ? 1 : -1;
-    }
-  }
-
-  var commonStyles = Object.assign({
-    position: position
-  }, adaptive && unsetSides);
-
-  var _ref4 = roundOffsets === true ? roundOffsetsByDPR({
-    x: x,
-    y: y
-  }, getWindow(popper)) : {
-    x: x,
-    y: y
-  };
-
-  x = _ref4.x;
-  y = _ref4.y;
-
-  if (gpuAcceleration) {
-    var _Object$assign;
-
-    return Object.assign({}, commonStyles, (_Object$assign = {}, _Object$assign[sideY] = hasY ? '0' : '', _Object$assign[sideX] = hasX ? '0' : '', _Object$assign.transform = (win.devicePixelRatio || 1) <= 1 ? "translate(" + x + "px, " + y + "px)" : "translate3d(" + x + "px, " + y + "px, 0)", _Object$assign));
-  }
-
-  return Object.assign({}, commonStyles, (_Object$assign2 = {}, _Object$assign2[sideY] = hasY ? y + "px" : '', _Object$assign2[sideX] = hasX ? x + "px" : '', _Object$assign2.transform = '', _Object$assign2));
-}
-
-function computeStyles(_ref5) {
-  var state = _ref5.state,
-      options = _ref5.options;
-  var _options$gpuAccelerat = options.gpuAcceleration,
-      gpuAcceleration = _options$gpuAccelerat === void 0 ? true : _options$gpuAccelerat,
-      _options$adaptive = options.adaptive,
-      adaptive = _options$adaptive === void 0 ? true : _options$adaptive,
-      _options$roundOffsets = options.roundOffsets,
-      roundOffsets = _options$roundOffsets === void 0 ? true : _options$roundOffsets;
-  var commonStyles = {
-    placement: getBasePlacement(state.placement),
-    variation: getVariation(state.placement),
-    popper: state.elements.popper,
-    popperRect: state.rects.popper,
-    gpuAcceleration: gpuAcceleration,
-    isFixed: state.options.strategy === 'fixed'
-  };
-
-  if (state.modifiersData.popperOffsets != null) {
-    state.styles.popper = Object.assign({}, state.styles.popper, mapToStyles(Object.assign({}, commonStyles, {
-      offsets: state.modifiersData.popperOffsets,
-      position: state.options.strategy,
-      adaptive: adaptive,
-      roundOffsets: roundOffsets
-    })));
-  }
-
-  if (state.modifiersData.arrow != null) {
-    state.styles.arrow = Object.assign({}, state.styles.arrow, mapToStyles(Object.assign({}, commonStyles, {
-      offsets: state.modifiersData.arrow,
-      position: 'absolute',
-      adaptive: false,
-      roundOffsets: roundOffsets
-    })));
-  }
-
-  state.attributes.popper = Object.assign({}, state.attributes.popper, {
-    'data-popper-placement': state.placement
-  });
-} // eslint-disable-next-line import/no-unused-modules
-
-
-const computeStyles$1 = {
-  name: 'computeStyles',
-  enabled: true,
-  phase: 'beforeWrite',
-  fn: computeStyles,
-  data: {}
-};
-
-var passive = {
-  passive: true
-};
-
-function effect(_ref) {
-  var state = _ref.state,
-      instance = _ref.instance,
-      options = _ref.options;
-  var _options$scroll = options.scroll,
-      scroll = _options$scroll === void 0 ? true : _options$scroll,
-      _options$resize = options.resize,
-      resize = _options$resize === void 0 ? true : _options$resize;
-  var window = getWindow(state.elements.popper);
-  var scrollParents = [].concat(state.scrollParents.reference, state.scrollParents.popper);
-
-  if (scroll) {
-    scrollParents.forEach(function (scrollParent) {
-      scrollParent.addEventListener('scroll', instance.update, passive);
-    });
-  }
-
-  if (resize) {
-    window.addEventListener('resize', instance.update, passive);
-  }
-
-  return function () {
-    if (scroll) {
-      scrollParents.forEach(function (scrollParent) {
-        scrollParent.removeEventListener('scroll', instance.update, passive);
-      });
-    }
-
-    if (resize) {
-      window.removeEventListener('resize', instance.update, passive);
-    }
-  };
-} // eslint-disable-next-line import/no-unused-modules
-
-
-const eventListeners = {
-  name: 'eventListeners',
-  enabled: true,
-  phase: 'write',
-  fn: function fn() {},
-  effect: effect,
-  data: {}
-};
-
-var hash$1 = {
-  left: 'right',
-  right: 'left',
-  bottom: 'top',
-  top: 'bottom'
-};
-function getOppositePlacement(placement) {
-  return placement.replace(/left|right|bottom|top/g, function (matched) {
-    return hash$1[matched];
-  });
-}
-
-var hash = {
-  start: 'end',
-  end: 'start'
-};
-function getOppositeVariationPlacement(placement) {
-  return placement.replace(/start|end/g, function (matched) {
-    return hash[matched];
-  });
-}
-
-function getWindowScroll(node) {
-  var win = getWindow(node);
-  var scrollLeft = win.pageXOffset;
-  var scrollTop = win.pageYOffset;
-  return {
-    scrollLeft: scrollLeft,
-    scrollTop: scrollTop
-  };
-}
-
-function getWindowScrollBarX(element) {
-  // If <html> has a CSS width greater than the viewport, then this will be
-  // incorrect for RTL.
-  // Popper 1 is broken in this case and never had a bug report so let's assume
-  // it's not an issue. I don't think anyone ever specifies width on <html>
-  // anyway.
-  // Browsers where the left scrollbar doesn't cause an issue report `0` for
-  // this (e.g. Edge 2019, IE11, Safari)
-  return getBoundingClientRect(getDocumentElement(element)).left + getWindowScroll(element).scrollLeft;
-}
-
-function getViewportRect(element, strategy) {
-  var win = getWindow(element);
-  var html = getDocumentElement(element);
-  var visualViewport = win.visualViewport;
-  var width = html.clientWidth;
-  var height = html.clientHeight;
-  var x = 0;
-  var y = 0;
-
-  if (visualViewport) {
-    width = visualViewport.width;
-    height = visualViewport.height;
-    var layoutViewport = isLayoutViewport();
-
-    if (layoutViewport || !layoutViewport && strategy === 'fixed') {
-      x = visualViewport.offsetLeft;
-      y = visualViewport.offsetTop;
-    }
-  }
-
-  return {
-    width: width,
-    height: height,
-    x: x + getWindowScrollBarX(element),
-    y: y
-  };
-}
-
-// of the `<html>` and `<body>` rect bounds if horizontally scrollable
-
-function getDocumentRect(element) {
-  var _element$ownerDocumen;
-
-  var html = getDocumentElement(element);
-  var winScroll = getWindowScroll(element);
-  var body = (_element$ownerDocumen = element.ownerDocument) == null ? void 0 : _element$ownerDocumen.body;
-  var width = max(html.scrollWidth, html.clientWidth, body ? body.scrollWidth : 0, body ? body.clientWidth : 0);
-  var height = max(html.scrollHeight, html.clientHeight, body ? body.scrollHeight : 0, body ? body.clientHeight : 0);
-  var x = -winScroll.scrollLeft + getWindowScrollBarX(element);
-  var y = -winScroll.scrollTop;
-
-  if (getComputedStyle(body || html).direction === 'rtl') {
-    x += max(html.clientWidth, body ? body.clientWidth : 0) - width;
-  }
-
-  return {
-    width: width,
-    height: height,
-    x: x,
-    y: y
-  };
-}
-
-function isScrollParent(element) {
-  // Firefox wants us to check `-x` and `-y` variations as well
-  var _getComputedStyle = getComputedStyle(element),
-      overflow = _getComputedStyle.overflow,
-      overflowX = _getComputedStyle.overflowX,
-      overflowY = _getComputedStyle.overflowY;
-
-  return /auto|scroll|overlay|hidden/.test(overflow + overflowY + overflowX);
-}
-
-function getScrollParent(node) {
-  if (['html', 'body', '#document'].indexOf(getNodeName(node)) >= 0) {
-    // $FlowFixMe[incompatible-return]: assume body is always available
-    return node.ownerDocument.body;
-  }
-
-  if (isHTMLElement$1(node) && isScrollParent(node)) {
-    return node;
-  }
-
-  return getScrollParent(getParentNode(node));
-}
-
-/*
-given a DOM element, return the list of all scroll parents, up the list of ancesors
-until we get to the top window object. This list is what we attach scroll listeners
-to, because if any of these parent elements scroll, we'll need to re-calculate the
-reference element's position.
-*/
-
-function listScrollParents(element, list) {
-  var _element$ownerDocumen;
-
-  if (list === void 0) {
-    list = [];
-  }
-
-  var scrollParent = getScrollParent(element);
-  var isBody = scrollParent === ((_element$ownerDocumen = element.ownerDocument) == null ? void 0 : _element$ownerDocumen.body);
-  var win = getWindow(scrollParent);
-  var target = isBody ? [win].concat(win.visualViewport || [], isScrollParent(scrollParent) ? scrollParent : []) : scrollParent;
-  var updatedList = list.concat(target);
-  return isBody ? updatedList : // $FlowFixMe[incompatible-call]: isBody tells us target will be an HTMLElement here
-  updatedList.concat(listScrollParents(getParentNode(target)));
-}
-
-function rectToClientRect(rect) {
-  return Object.assign({}, rect, {
-    left: rect.x,
-    top: rect.y,
-    right: rect.x + rect.width,
-    bottom: rect.y + rect.height
-  });
-}
-
-function getInnerBoundingClientRect(element, strategy) {
-  var rect = getBoundingClientRect(element, false, strategy === 'fixed');
-  rect.top = rect.top + element.clientTop;
-  rect.left = rect.left + element.clientLeft;
-  rect.bottom = rect.top + element.clientHeight;
-  rect.right = rect.left + element.clientWidth;
-  rect.width = element.clientWidth;
-  rect.height = element.clientHeight;
-  rect.x = rect.left;
-  rect.y = rect.top;
-  return rect;
-}
-
-function getClientRectFromMixedType(element, clippingParent, strategy) {
-  return clippingParent === viewport ? rectToClientRect(getViewportRect(element, strategy)) : isElement(clippingParent) ? getInnerBoundingClientRect(clippingParent, strategy) : rectToClientRect(getDocumentRect(getDocumentElement(element)));
-} // A "clipping parent" is an overflowable container with the characteristic of
-// clipping (or hiding) overflowing elements with a position different from
-// `initial`
-
-
-function getClippingParents(element) {
-  var clippingParents = listScrollParents(getParentNode(element));
-  var canEscapeClipping = ['absolute', 'fixed'].indexOf(getComputedStyle(element).position) >= 0;
-  var clipperElement = canEscapeClipping && isHTMLElement$1(element) ? getOffsetParent(element) : element;
-
-  if (!isElement(clipperElement)) {
-    return [];
-  } // $FlowFixMe[incompatible-return]: https://github.com/facebook/flow/issues/1414
-
-
-  return clippingParents.filter(function (clippingParent) {
-    return isElement(clippingParent) && contains(clippingParent, clipperElement) && getNodeName(clippingParent) !== 'body';
-  });
-} // Gets the maximum area that the element is visible in due to any number of
-// clipping parents
-
-
-function getClippingRect(element, boundary, rootBoundary, strategy) {
-  var mainClippingParents = boundary === 'clippingParents' ? getClippingParents(element) : [].concat(boundary);
-  var clippingParents = [].concat(mainClippingParents, [rootBoundary]);
-  var firstClippingParent = clippingParents[0];
-  var clippingRect = clippingParents.reduce(function (accRect, clippingParent) {
-    var rect = getClientRectFromMixedType(element, clippingParent, strategy);
-    accRect.top = max(rect.top, accRect.top);
-    accRect.right = min(rect.right, accRect.right);
-    accRect.bottom = min(rect.bottom, accRect.bottom);
-    accRect.left = max(rect.left, accRect.left);
-    return accRect;
-  }, getClientRectFromMixedType(element, firstClippingParent, strategy));
-  clippingRect.width = clippingRect.right - clippingRect.left;
-  clippingRect.height = clippingRect.bottom - clippingRect.top;
-  clippingRect.x = clippingRect.left;
-  clippingRect.y = clippingRect.top;
-  return clippingRect;
-}
-
-function computeOffsets(_ref) {
-  var reference = _ref.reference,
-      element = _ref.element,
-      placement = _ref.placement;
-  var basePlacement = placement ? getBasePlacement(placement) : null;
-  var variation = placement ? getVariation(placement) : null;
-  var commonX = reference.x + reference.width / 2 - element.width / 2;
-  var commonY = reference.y + reference.height / 2 - element.height / 2;
-  var offsets;
-
-  switch (basePlacement) {
-    case top:
-      offsets = {
-        x: commonX,
-        y: reference.y - element.height
-      };
-      break;
-
-    case bottom:
-      offsets = {
-        x: commonX,
-        y: reference.y + reference.height
-      };
-      break;
-
-    case right:
-      offsets = {
-        x: reference.x + reference.width,
-        y: commonY
-      };
-      break;
-
-    case left:
-      offsets = {
-        x: reference.x - element.width,
-        y: commonY
-      };
-      break;
-
-    default:
-      offsets = {
-        x: reference.x,
-        y: reference.y
-      };
-  }
-
-  var mainAxis = basePlacement ? getMainAxisFromPlacement(basePlacement) : null;
-
-  if (mainAxis != null) {
-    var len = mainAxis === 'y' ? 'height' : 'width';
-
-    switch (variation) {
-      case start:
-        offsets[mainAxis] = offsets[mainAxis] - (reference[len] / 2 - element[len] / 2);
-        break;
-
-      case end:
-        offsets[mainAxis] = offsets[mainAxis] + (reference[len] / 2 - element[len] / 2);
-        break;
-    }
-  }
-
-  return offsets;
-}
-
-function detectOverflow(state, options) {
-  if (options === void 0) {
-    options = {};
-  }
-
-  var _options = options,
-      _options$placement = _options.placement,
-      placement = _options$placement === void 0 ? state.placement : _options$placement,
-      _options$strategy = _options.strategy,
-      strategy = _options$strategy === void 0 ? state.strategy : _options$strategy,
-      _options$boundary = _options.boundary,
-      boundary = _options$boundary === void 0 ? clippingParents : _options$boundary,
-      _options$rootBoundary = _options.rootBoundary,
-      rootBoundary = _options$rootBoundary === void 0 ? viewport : _options$rootBoundary,
-      _options$elementConte = _options.elementContext,
-      elementContext = _options$elementConte === void 0 ? popper : _options$elementConte,
-      _options$altBoundary = _options.altBoundary,
-      altBoundary = _options$altBoundary === void 0 ? false : _options$altBoundary,
-      _options$padding = _options.padding,
-      padding = _options$padding === void 0 ? 0 : _options$padding;
-  var paddingObject = mergePaddingObject(typeof padding !== 'number' ? padding : expandToHashMap(padding, basePlacements));
-  var altContext = elementContext === popper ? reference : popper;
-  var popperRect = state.rects.popper;
-  var element = state.elements[altBoundary ? altContext : elementContext];
-  var clippingClientRect = getClippingRect(isElement(element) ? element : element.contextElement || getDocumentElement(state.elements.popper), boundary, rootBoundary, strategy);
-  var referenceClientRect = getBoundingClientRect(state.elements.reference);
-  var popperOffsets = computeOffsets({
-    reference: referenceClientRect,
-    element: popperRect,
-    placement: placement
-  });
-  var popperClientRect = rectToClientRect(Object.assign({}, popperRect, popperOffsets));
-  var elementClientRect = elementContext === popper ? popperClientRect : referenceClientRect; // positive = overflowing the clipping rect
-  // 0 or negative = within the clipping rect
-
-  var overflowOffsets = {
-    top: clippingClientRect.top - elementClientRect.top + paddingObject.top,
-    bottom: elementClientRect.bottom - clippingClientRect.bottom + paddingObject.bottom,
-    left: clippingClientRect.left - elementClientRect.left + paddingObject.left,
-    right: elementClientRect.right - clippingClientRect.right + paddingObject.right
-  };
-  var offsetData = state.modifiersData.offset; // Offsets can be applied only to the popper element
-
-  if (elementContext === popper && offsetData) {
-    var offset = offsetData[placement];
-    Object.keys(overflowOffsets).forEach(function (key) {
-      var multiply = [right, bottom].indexOf(key) >= 0 ? 1 : -1;
-      var axis = [top, bottom].indexOf(key) >= 0 ? 'y' : 'x';
-      overflowOffsets[key] += offset[axis] * multiply;
-    });
-  }
-
-  return overflowOffsets;
-}
-
-function computeAutoPlacement(state, options) {
-  if (options === void 0) {
-    options = {};
-  }
-
-  var _options = options,
-      placement = _options.placement,
-      boundary = _options.boundary,
-      rootBoundary = _options.rootBoundary,
-      padding = _options.padding,
-      flipVariations = _options.flipVariations,
-      _options$allowedAutoP = _options.allowedAutoPlacements,
-      allowedAutoPlacements = _options$allowedAutoP === void 0 ? placements : _options$allowedAutoP;
-  var variation = getVariation(placement);
-  var placements$1 = variation ? flipVariations ? variationPlacements : variationPlacements.filter(function (placement) {
-    return getVariation(placement) === variation;
-  }) : basePlacements;
-  var allowedPlacements = placements$1.filter(function (placement) {
-    return allowedAutoPlacements.indexOf(placement) >= 0;
-  });
-
-  if (allowedPlacements.length === 0) {
-    allowedPlacements = placements$1;
-  } // $FlowFixMe[incompatible-type]: Flow seems to have problems with two array unions...
-
-
-  var overflows = allowedPlacements.reduce(function (acc, placement) {
-    acc[placement] = detectOverflow(state, {
-      placement: placement,
-      boundary: boundary,
-      rootBoundary: rootBoundary,
-      padding: padding
-    })[getBasePlacement(placement)];
-    return acc;
-  }, {});
-  return Object.keys(overflows).sort(function (a, b) {
-    return overflows[a] - overflows[b];
-  });
-}
-
-function getExpandedFallbackPlacements(placement) {
-  if (getBasePlacement(placement) === auto) {
-    return [];
-  }
-
-  var oppositePlacement = getOppositePlacement(placement);
-  return [getOppositeVariationPlacement(placement), oppositePlacement, getOppositeVariationPlacement(oppositePlacement)];
-}
-
-function flip(_ref) {
-  var state = _ref.state,
-      options = _ref.options,
-      name = _ref.name;
-
-  if (state.modifiersData[name]._skip) {
-    return;
-  }
-
-  var _options$mainAxis = options.mainAxis,
-      checkMainAxis = _options$mainAxis === void 0 ? true : _options$mainAxis,
-      _options$altAxis = options.altAxis,
-      checkAltAxis = _options$altAxis === void 0 ? true : _options$altAxis,
-      specifiedFallbackPlacements = options.fallbackPlacements,
-      padding = options.padding,
-      boundary = options.boundary,
-      rootBoundary = options.rootBoundary,
-      altBoundary = options.altBoundary,
-      _options$flipVariatio = options.flipVariations,
-      flipVariations = _options$flipVariatio === void 0 ? true : _options$flipVariatio,
-      allowedAutoPlacements = options.allowedAutoPlacements;
-  var preferredPlacement = state.options.placement;
-  var basePlacement = getBasePlacement(preferredPlacement);
-  var isBasePlacement = basePlacement === preferredPlacement;
-  var fallbackPlacements = specifiedFallbackPlacements || (isBasePlacement || !flipVariations ? [getOppositePlacement(preferredPlacement)] : getExpandedFallbackPlacements(preferredPlacement));
-  var placements = [preferredPlacement].concat(fallbackPlacements).reduce(function (acc, placement) {
-    return acc.concat(getBasePlacement(placement) === auto ? computeAutoPlacement(state, {
-      placement: placement,
-      boundary: boundary,
-      rootBoundary: rootBoundary,
-      padding: padding,
-      flipVariations: flipVariations,
-      allowedAutoPlacements: allowedAutoPlacements
-    }) : placement);
-  }, []);
-  var referenceRect = state.rects.reference;
-  var popperRect = state.rects.popper;
-  var checksMap = new Map();
-  var makeFallbackChecks = true;
-  var firstFittingPlacement = placements[0];
-
-  for (var i = 0; i < placements.length; i++) {
-    var placement = placements[i];
-
-    var _basePlacement = getBasePlacement(placement);
-
-    var isStartVariation = getVariation(placement) === start;
-    var isVertical = [top, bottom].indexOf(_basePlacement) >= 0;
-    var len = isVertical ? 'width' : 'height';
-    var overflow = detectOverflow(state, {
-      placement: placement,
-      boundary: boundary,
-      rootBoundary: rootBoundary,
-      altBoundary: altBoundary,
-      padding: padding
-    });
-    var mainVariationSide = isVertical ? isStartVariation ? right : left : isStartVariation ? bottom : top;
-
-    if (referenceRect[len] > popperRect[len]) {
-      mainVariationSide = getOppositePlacement(mainVariationSide);
-    }
-
-    var altVariationSide = getOppositePlacement(mainVariationSide);
-    var checks = [];
-
-    if (checkMainAxis) {
-      checks.push(overflow[_basePlacement] <= 0);
-    }
-
-    if (checkAltAxis) {
-      checks.push(overflow[mainVariationSide] <= 0, overflow[altVariationSide] <= 0);
-    }
-
-    if (checks.every(function (check) {
-      return check;
-    })) {
-      firstFittingPlacement = placement;
-      makeFallbackChecks = false;
-      break;
-    }
-
-    checksMap.set(placement, checks);
-  }
-
-  if (makeFallbackChecks) {
-    // `2` may be desired in some cases – research later
-    var numberOfChecks = flipVariations ? 3 : 1;
-
-    var _loop = function _loop(_i) {
-      var fittingPlacement = placements.find(function (placement) {
-        var checks = checksMap.get(placement);
-
-        if (checks) {
-          return checks.slice(0, _i).every(function (check) {
-            return check;
-          });
-        }
-      });
-
-      if (fittingPlacement) {
-        firstFittingPlacement = fittingPlacement;
-        return "break";
-      }
-    };
-
-    for (var _i = numberOfChecks; _i > 0; _i--) {
-      var _ret = _loop(_i);
-
-      if (_ret === "break") break;
-    }
-  }
-
-  if (state.placement !== firstFittingPlacement) {
-    state.modifiersData[name]._skip = true;
-    state.placement = firstFittingPlacement;
-    state.reset = true;
-  }
-} // eslint-disable-next-line import/no-unused-modules
-
-
-const flip$1 = {
-  name: 'flip',
-  enabled: true,
-  phase: 'main',
-  fn: flip,
-  requiresIfExists: ['offset'],
-  data: {
-    _skip: false
-  }
-};
-
-function getSideOffsets(overflow, rect, preventedOffsets) {
-  if (preventedOffsets === void 0) {
-    preventedOffsets = {
-      x: 0,
-      y: 0
-    };
-  }
-
-  return {
-    top: overflow.top - rect.height - preventedOffsets.y,
-    right: overflow.right - rect.width + preventedOffsets.x,
-    bottom: overflow.bottom - rect.height + preventedOffsets.y,
-    left: overflow.left - rect.width - preventedOffsets.x
-  };
-}
-
-function isAnySideFullyClipped(overflow) {
-  return [top, right, bottom, left].some(function (side) {
-    return overflow[side] >= 0;
-  });
-}
-
-function hide(_ref) {
-  var state = _ref.state,
-      name = _ref.name;
-  var referenceRect = state.rects.reference;
-  var popperRect = state.rects.popper;
-  var preventedOffsets = state.modifiersData.preventOverflow;
-  var referenceOverflow = detectOverflow(state, {
-    elementContext: 'reference'
-  });
-  var popperAltOverflow = detectOverflow(state, {
-    altBoundary: true
-  });
-  var referenceClippingOffsets = getSideOffsets(referenceOverflow, referenceRect);
-  var popperEscapeOffsets = getSideOffsets(popperAltOverflow, popperRect, preventedOffsets);
-  var isReferenceHidden = isAnySideFullyClipped(referenceClippingOffsets);
-  var hasPopperEscaped = isAnySideFullyClipped(popperEscapeOffsets);
-  state.modifiersData[name] = {
-    referenceClippingOffsets: referenceClippingOffsets,
-    popperEscapeOffsets: popperEscapeOffsets,
-    isReferenceHidden: isReferenceHidden,
-    hasPopperEscaped: hasPopperEscaped
-  };
-  state.attributes.popper = Object.assign({}, state.attributes.popper, {
-    'data-popper-reference-hidden': isReferenceHidden,
-    'data-popper-escaped': hasPopperEscaped
-  });
-} // eslint-disable-next-line import/no-unused-modules
-
-
-const hide$1 = {
-  name: 'hide',
-  enabled: true,
-  phase: 'main',
-  requiresIfExists: ['preventOverflow'],
-  fn: hide
-};
-
-function distanceAndSkiddingToXY(placement, rects, offset) {
-  var basePlacement = getBasePlacement(placement);
-  var invertDistance = [left, top].indexOf(basePlacement) >= 0 ? -1 : 1;
-
-  var _ref = typeof offset === 'function' ? offset(Object.assign({}, rects, {
-    placement: placement
-  })) : offset,
-      skidding = _ref[0],
-      distance = _ref[1];
-
-  skidding = skidding || 0;
-  distance = (distance || 0) * invertDistance;
-  return [left, right].indexOf(basePlacement) >= 0 ? {
-    x: distance,
-    y: skidding
-  } : {
-    x: skidding,
-    y: distance
-  };
-}
-
-function offset(_ref2) {
-  var state = _ref2.state,
-      options = _ref2.options,
-      name = _ref2.name;
-  var _options$offset = options.offset,
-      offset = _options$offset === void 0 ? [0, 0] : _options$offset;
-  var data = placements.reduce(function (acc, placement) {
-    acc[placement] = distanceAndSkiddingToXY(placement, state.rects, offset);
-    return acc;
-  }, {});
-  var _data$state$placement = data[state.placement],
-      x = _data$state$placement.x,
-      y = _data$state$placement.y;
-
-  if (state.modifiersData.popperOffsets != null) {
-    state.modifiersData.popperOffsets.x += x;
-    state.modifiersData.popperOffsets.y += y;
-  }
-
-  state.modifiersData[name] = data;
-} // eslint-disable-next-line import/no-unused-modules
-
-
-const offset$1 = {
-  name: 'offset',
-  enabled: true,
-  phase: 'main',
-  requires: ['popperOffsets'],
-  fn: offset
-};
-
-function popperOffsets(_ref) {
-  var state = _ref.state,
-      name = _ref.name;
-  // Offsets are the actual position the popper needs to have to be
-  // properly positioned near its reference element
-  // This is the most basic placement, and will be adjusted by
-  // the modifiers in the next step
-  state.modifiersData[name] = computeOffsets({
-    reference: state.rects.reference,
-    element: state.rects.popper,
-    placement: state.placement
-  });
-} // eslint-disable-next-line import/no-unused-modules
-
-
-const popperOffsets$1 = {
-  name: 'popperOffsets',
-  enabled: true,
-  phase: 'read',
-  fn: popperOffsets,
-  data: {}
-};
-
-function getAltAxis(axis) {
-  return axis === 'x' ? 'y' : 'x';
-}
-
-function preventOverflow(_ref) {
-  var state = _ref.state,
-      options = _ref.options,
-      name = _ref.name;
-  var _options$mainAxis = options.mainAxis,
-      checkMainAxis = _options$mainAxis === void 0 ? true : _options$mainAxis,
-      _options$altAxis = options.altAxis,
-      checkAltAxis = _options$altAxis === void 0 ? false : _options$altAxis,
-      boundary = options.boundary,
-      rootBoundary = options.rootBoundary,
-      altBoundary = options.altBoundary,
-      padding = options.padding,
-      _options$tether = options.tether,
-      tether = _options$tether === void 0 ? true : _options$tether,
-      _options$tetherOffset = options.tetherOffset,
-      tetherOffset = _options$tetherOffset === void 0 ? 0 : _options$tetherOffset;
-  var overflow = detectOverflow(state, {
-    boundary: boundary,
-    rootBoundary: rootBoundary,
-    padding: padding,
-    altBoundary: altBoundary
-  });
-  var basePlacement = getBasePlacement(state.placement);
-  var variation = getVariation(state.placement);
-  var isBasePlacement = !variation;
-  var mainAxis = getMainAxisFromPlacement(basePlacement);
-  var altAxis = getAltAxis(mainAxis);
-  var popperOffsets = state.modifiersData.popperOffsets;
-  var referenceRect = state.rects.reference;
-  var popperRect = state.rects.popper;
-  var tetherOffsetValue = typeof tetherOffset === 'function' ? tetherOffset(Object.assign({}, state.rects, {
-    placement: state.placement
-  })) : tetherOffset;
-  var normalizedTetherOffsetValue = typeof tetherOffsetValue === 'number' ? {
-    mainAxis: tetherOffsetValue,
-    altAxis: tetherOffsetValue
-  } : Object.assign({
-    mainAxis: 0,
-    altAxis: 0
-  }, tetherOffsetValue);
-  var offsetModifierState = state.modifiersData.offset ? state.modifiersData.offset[state.placement] : null;
-  var data = {
-    x: 0,
-    y: 0
-  };
-
-  if (!popperOffsets) {
-    return;
-  }
-
-  if (checkMainAxis) {
-    var _offsetModifierState$;
-
-    var mainSide = mainAxis === 'y' ? top : left;
-    var altSide = mainAxis === 'y' ? bottom : right;
-    var len = mainAxis === 'y' ? 'height' : 'width';
-    var offset = popperOffsets[mainAxis];
-    var min$1 = offset + overflow[mainSide];
-    var max$1 = offset - overflow[altSide];
-    var additive = tether ? -popperRect[len] / 2 : 0;
-    var minLen = variation === start ? referenceRect[len] : popperRect[len];
-    var maxLen = variation === start ? -popperRect[len] : -referenceRect[len]; // We need to include the arrow in the calculation so the arrow doesn't go
-    // outside the reference bounds
-
-    var arrowElement = state.elements.arrow;
-    var arrowRect = tether && arrowElement ? getLayoutRect(arrowElement) : {
-      width: 0,
-      height: 0
-    };
-    var arrowPaddingObject = state.modifiersData['arrow#persistent'] ? state.modifiersData['arrow#persistent'].padding : getFreshSideObject();
-    var arrowPaddingMin = arrowPaddingObject[mainSide];
-    var arrowPaddingMax = arrowPaddingObject[altSide]; // If the reference length is smaller than the arrow length, we don't want
-    // to include its full size in the calculation. If the reference is small
-    // and near the edge of a boundary, the popper can overflow even if the
-    // reference is not overflowing as well (e.g. virtual elements with no
-    // width or height)
-
-    var arrowLen = within(0, referenceRect[len], arrowRect[len]);
-    var minOffset = isBasePlacement ? referenceRect[len] / 2 - additive - arrowLen - arrowPaddingMin - normalizedTetherOffsetValue.mainAxis : minLen - arrowLen - arrowPaddingMin - normalizedTetherOffsetValue.mainAxis;
-    var maxOffset = isBasePlacement ? -referenceRect[len] / 2 + additive + arrowLen + arrowPaddingMax + normalizedTetherOffsetValue.mainAxis : maxLen + arrowLen + arrowPaddingMax + normalizedTetherOffsetValue.mainAxis;
-    var arrowOffsetParent = state.elements.arrow && getOffsetParent(state.elements.arrow);
-    var clientOffset = arrowOffsetParent ? mainAxis === 'y' ? arrowOffsetParent.clientTop || 0 : arrowOffsetParent.clientLeft || 0 : 0;
-    var offsetModifierValue = (_offsetModifierState$ = offsetModifierState == null ? void 0 : offsetModifierState[mainAxis]) != null ? _offsetModifierState$ : 0;
-    var tetherMin = offset + minOffset - offsetModifierValue - clientOffset;
-    var tetherMax = offset + maxOffset - offsetModifierValue;
-    var preventedOffset = within(tether ? min(min$1, tetherMin) : min$1, offset, tether ? max(max$1, tetherMax) : max$1);
-    popperOffsets[mainAxis] = preventedOffset;
-    data[mainAxis] = preventedOffset - offset;
-  }
-
-  if (checkAltAxis) {
-    var _offsetModifierState$2;
-
-    var _mainSide = mainAxis === 'x' ? top : left;
-
-    var _altSide = mainAxis === 'x' ? bottom : right;
-
-    var _offset = popperOffsets[altAxis];
-
-    var _len = altAxis === 'y' ? 'height' : 'width';
-
-    var _min = _offset + overflow[_mainSide];
-
-    var _max = _offset - overflow[_altSide];
-
-    var isOriginSide = [top, left].indexOf(basePlacement) !== -1;
-
-    var _offsetModifierValue = (_offsetModifierState$2 = offsetModifierState == null ? void 0 : offsetModifierState[altAxis]) != null ? _offsetModifierState$2 : 0;
-
-    var _tetherMin = isOriginSide ? _min : _offset - referenceRect[_len] - popperRect[_len] - _offsetModifierValue + normalizedTetherOffsetValue.altAxis;
-
-    var _tetherMax = isOriginSide ? _offset + referenceRect[_len] + popperRect[_len] - _offsetModifierValue - normalizedTetherOffsetValue.altAxis : _max;
-
-    var _preventedOffset = tether && isOriginSide ? withinMaxClamp(_tetherMin, _offset, _tetherMax) : within(tether ? _tetherMin : _min, _offset, tether ? _tetherMax : _max);
-
-    popperOffsets[altAxis] = _preventedOffset;
-    data[altAxis] = _preventedOffset - _offset;
-  }
-
-  state.modifiersData[name] = data;
-} // eslint-disable-next-line import/no-unused-modules
-
-
-const preventOverflow$1 = {
-  name: 'preventOverflow',
-  enabled: true,
-  phase: 'main',
-  fn: preventOverflow,
-  requiresIfExists: ['offset']
-};
-
-function getHTMLElementScroll(element) {
-  return {
-    scrollLeft: element.scrollLeft,
-    scrollTop: element.scrollTop
-  };
-}
-
-function getNodeScroll(node) {
-  if (node === getWindow(node) || !isHTMLElement$1(node)) {
-    return getWindowScroll(node);
-  } else {
-    return getHTMLElementScroll(node);
-  }
-}
-
-function isElementScaled(element) {
-  var rect = element.getBoundingClientRect();
-  var scaleX = round$1(rect.width) / element.offsetWidth || 1;
-  var scaleY = round$1(rect.height) / element.offsetHeight || 1;
-  return scaleX !== 1 || scaleY !== 1;
-} // Returns the composite rect of an element relative to its offsetParent.
-// Composite means it takes into account transforms as well as layout.
-
-
-function getCompositeRect(elementOrVirtualElement, offsetParent, isFixed) {
-  if (isFixed === void 0) {
-    isFixed = false;
-  }
-
-  var isOffsetParentAnElement = isHTMLElement$1(offsetParent);
-  var offsetParentIsScaled = isHTMLElement$1(offsetParent) && isElementScaled(offsetParent);
-  var documentElement = getDocumentElement(offsetParent);
-  var rect = getBoundingClientRect(elementOrVirtualElement, offsetParentIsScaled, isFixed);
-  var scroll = {
-    scrollLeft: 0,
-    scrollTop: 0
-  };
-  var offsets = {
-    x: 0,
-    y: 0
-  };
-
-  if (isOffsetParentAnElement || !isOffsetParentAnElement && !isFixed) {
-    if (getNodeName(offsetParent) !== 'body' || // https://github.com/popperjs/popper-core/issues/1078
-    isScrollParent(documentElement)) {
-      scroll = getNodeScroll(offsetParent);
-    }
-
-    if (isHTMLElement$1(offsetParent)) {
-      offsets = getBoundingClientRect(offsetParent, true);
-      offsets.x += offsetParent.clientLeft;
-      offsets.y += offsetParent.clientTop;
-    } else if (documentElement) {
-      offsets.x = getWindowScrollBarX(documentElement);
-    }
-  }
-
-  return {
-    x: rect.left + scroll.scrollLeft - offsets.x,
-    y: rect.top + scroll.scrollTop - offsets.y,
-    width: rect.width,
-    height: rect.height
-  };
-}
-
-function order(modifiers) {
-  var map = new Map();
-  var visited = new Set();
-  var result = [];
-  modifiers.forEach(function (modifier) {
-    map.set(modifier.name, modifier);
-  }); // On visiting object, check for its dependencies and visit them recursively
-
-  function sort(modifier) {
-    visited.add(modifier.name);
-    var requires = [].concat(modifier.requires || [], modifier.requiresIfExists || []);
-    requires.forEach(function (dep) {
-      if (!visited.has(dep)) {
-        var depModifier = map.get(dep);
-
-        if (depModifier) {
-          sort(depModifier);
-        }
-      }
-    });
-    result.push(modifier);
-  }
-
-  modifiers.forEach(function (modifier) {
-    if (!visited.has(modifier.name)) {
-      // check for visited object
-      sort(modifier);
-    }
-  });
-  return result;
-}
-
-function orderModifiers(modifiers) {
-  // order based on dependencies
-  var orderedModifiers = order(modifiers); // order based on phase
-
-  return modifierPhases.reduce(function (acc, phase) {
-    return acc.concat(orderedModifiers.filter(function (modifier) {
-      return modifier.phase === phase;
-    }));
-  }, []);
-}
-
-function debounce(fn) {
-  var pending;
-  return function () {
-    if (!pending) {
-      pending = new Promise(function (resolve) {
-        Promise.resolve().then(function () {
-          pending = undefined;
-          resolve(fn());
-        });
-      });
-    }
-
-    return pending;
-  };
-}
-
-function mergeByName(modifiers) {
-  var merged = modifiers.reduce(function (merged, current) {
-    var existing = merged[current.name];
-    merged[current.name] = existing ? Object.assign({}, existing, current, {
-      options: Object.assign({}, existing.options, current.options),
-      data: Object.assign({}, existing.data, current.data)
-    }) : current;
-    return merged;
-  }, {}); // IE11 does not support Object.values
-
-  return Object.keys(merged).map(function (key) {
-    return merged[key];
-  });
-}
-
-var DEFAULT_OPTIONS = {
-  placement: 'bottom',
-  modifiers: [],
-  strategy: 'absolute'
-};
-
-function areValidElements() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
-
-  return !args.some(function (element) {
-    return !(element && typeof element.getBoundingClientRect === 'function');
-  });
-}
-
-function popperGenerator(generatorOptions) {
-  if (generatorOptions === void 0) {
-    generatorOptions = {};
-  }
-
-  var _generatorOptions = generatorOptions,
-      _generatorOptions$def = _generatorOptions.defaultModifiers,
-      defaultModifiers = _generatorOptions$def === void 0 ? [] : _generatorOptions$def,
-      _generatorOptions$def2 = _generatorOptions.defaultOptions,
-      defaultOptions = _generatorOptions$def2 === void 0 ? DEFAULT_OPTIONS : _generatorOptions$def2;
-  return function createPopper(reference, popper, options) {
-    if (options === void 0) {
-      options = defaultOptions;
-    }
-
-    var state = {
-      placement: 'bottom',
-      orderedModifiers: [],
-      options: Object.assign({}, DEFAULT_OPTIONS, defaultOptions),
-      modifiersData: {},
-      elements: {
-        reference: reference,
-        popper: popper
-      },
-      attributes: {},
-      styles: {}
-    };
-    var effectCleanupFns = [];
-    var isDestroyed = false;
-    var instance = {
-      state: state,
-      setOptions: function setOptions(setOptionsAction) {
-        var options = typeof setOptionsAction === 'function' ? setOptionsAction(state.options) : setOptionsAction;
-        cleanupModifierEffects();
-        state.options = Object.assign({}, defaultOptions, state.options, options);
-        state.scrollParents = {
-          reference: isElement(reference) ? listScrollParents(reference) : reference.contextElement ? listScrollParents(reference.contextElement) : [],
-          popper: listScrollParents(popper)
-        }; // Orders the modifiers based on their dependencies and `phase`
-        // properties
-
-        var orderedModifiers = orderModifiers(mergeByName([].concat(defaultModifiers, state.options.modifiers))); // Strip out disabled modifiers
-
-        state.orderedModifiers = orderedModifiers.filter(function (m) {
-          return m.enabled;
-        });
-        runModifierEffects();
-        return instance.update();
-      },
-      // Sync update – it will always be executed, even if not necessary. This
-      // is useful for low frequency updates where sync behavior simplifies the
-      // logic.
-      // For high frequency updates (e.g. `resize` and `scroll` events), always
-      // prefer the async Popper#update method
-      forceUpdate: function forceUpdate() {
-        if (isDestroyed) {
-          return;
-        }
-
-        var _state$elements = state.elements,
-            reference = _state$elements.reference,
-            popper = _state$elements.popper; // Don't proceed if `reference` or `popper` are not valid elements
-        // anymore
-
-        if (!areValidElements(reference, popper)) {
-          return;
-        } // Store the reference and popper rects to be read by modifiers
-
-
-        state.rects = {
-          reference: getCompositeRect(reference, getOffsetParent(popper), state.options.strategy === 'fixed'),
-          popper: getLayoutRect(popper)
-        }; // Modifiers have the ability to reset the current update cycle. The
-        // most common use case for this is the `flip` modifier changing the
-        // placement, which then needs to re-run all the modifiers, because the
-        // logic was previously ran for the previous placement and is therefore
-        // stale/incorrect
-
-        state.reset = false;
-        state.placement = state.options.placement; // On each update cycle, the `modifiersData` property for each modifier
-        // is filled with the initial data specified by the modifier. This means
-        // it doesn't persist and is fresh on each update.
-        // To ensure persistent data, use `${name}#persistent`
-
-        state.orderedModifiers.forEach(function (modifier) {
-          return state.modifiersData[modifier.name] = Object.assign({}, modifier.data);
-        });
-
-        for (var index = 0; index < state.orderedModifiers.length; index++) {
-          if (state.reset === true) {
-            state.reset = false;
-            index = -1;
-            continue;
-          }
-
-          var _state$orderedModifie = state.orderedModifiers[index],
-              fn = _state$orderedModifie.fn,
-              _state$orderedModifie2 = _state$orderedModifie.options,
-              _options = _state$orderedModifie2 === void 0 ? {} : _state$orderedModifie2,
-              name = _state$orderedModifie.name;
-
-          if (typeof fn === 'function') {
-            state = fn({
-              state: state,
-              options: _options,
-              name: name,
-              instance: instance
-            }) || state;
-          }
-        }
-      },
-      // Async and optimistically optimized update – it will not be executed if
-      // not necessary (debounced to run at most once-per-tick)
-      update: debounce(function () {
-        return new Promise(function (resolve) {
-          instance.forceUpdate();
-          resolve(state);
-        });
-      }),
-      destroy: function destroy() {
-        cleanupModifierEffects();
-        isDestroyed = true;
-      }
-    };
-
-    if (!areValidElements(reference, popper)) {
-      return instance;
-    }
-
-    instance.setOptions(options).then(function (state) {
-      if (!isDestroyed && options.onFirstUpdate) {
-        options.onFirstUpdate(state);
-      }
-    }); // Modifiers have the ability to execute arbitrary code before the first
-    // update cycle runs. They will be executed in the same order as the update
-    // cycle. This is useful when a modifier adds some persistent data that
-    // other modifiers need to use, but the modifier is run after the dependent
-    // one.
-
-    function runModifierEffects() {
-      state.orderedModifiers.forEach(function (_ref) {
-        var name = _ref.name,
-            _ref$options = _ref.options,
-            options = _ref$options === void 0 ? {} : _ref$options,
-            effect = _ref.effect;
-
-        if (typeof effect === 'function') {
-          var cleanupFn = effect({
-            state: state,
-            name: name,
-            instance: instance,
-            options: options
-          });
-
-          var noopFn = function noopFn() {};
-
-          effectCleanupFns.push(cleanupFn || noopFn);
-        }
-      });
-    }
-
-    function cleanupModifierEffects() {
-      effectCleanupFns.forEach(function (fn) {
-        return fn();
-      });
-      effectCleanupFns = [];
-    }
-
-    return instance;
-  };
-}
-
-var defaultModifiers = [eventListeners, popperOffsets$1, computeStyles$1, applyStyles$1, offset$1, flip$1, preventOverflow$1, arrow$1, hide$1];
-var createPopper = /*#__PURE__*/popperGenerator({
-  defaultModifiers: defaultModifiers
-}); // eslint-disable-next-line import/no-unused-modules
-
-function getPopperUtilityClass(slot) {
-  return generateUtilityClass('MuiPopper', slot);
-}
-generateUtilityClasses('MuiPopper', ['root']);
-
-function flipPlacement(placement, direction) {
-  if (direction === "ltr") {
-    return placement;
-  }
-  switch (placement) {
-    case "bottom-end":
-      return "bottom-start";
-    case "bottom-start":
-      return "bottom-end";
-    case "top-end":
-      return "top-start";
-    case "top-start":
-      return "top-end";
-    default:
-      return placement;
-  }
-}
-function resolveAnchorEl(anchorEl) {
-  return typeof anchorEl === "function" ? anchorEl() : anchorEl;
-}
-function isHTMLElement(element) {
-  return element.nodeType !== void 0;
-}
-const useUtilityClasses$8 = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  return composeClasses(slots, getPopperUtilityClass, classes);
-};
-const defaultPopperOptions = {};
-const PopperTooltip = /* @__PURE__ */ reactExports.forwardRef(function PopperTooltip2(props, forwardedRef) {
-  const {
-    anchorEl,
-    children,
-    direction,
-    disablePortal,
-    modifiers,
-    open,
-    placement: initialPlacement,
-    popperOptions,
-    popperRef: popperRefProp,
-    slotProps = {},
-    slots = {},
-    TransitionProps,
-    // @ts-ignore internal logic
-    ownerState: ownerStateProp,
-    // prevent from spreading to DOM, it can come from the parent component e.g. Select.
-    ...other
-  } = props;
-  const tooltipRef = reactExports.useRef(null);
-  const ownRef = useForkRef(tooltipRef, forwardedRef);
-  const popperRef = reactExports.useRef(null);
-  const handlePopperRef = useForkRef(popperRef, popperRefProp);
-  const handlePopperRefRef = reactExports.useRef(handlePopperRef);
-  useEnhancedEffect(() => {
-    handlePopperRefRef.current = handlePopperRef;
-  }, [handlePopperRef]);
-  reactExports.useImperativeHandle(popperRefProp, () => popperRef.current, []);
-  const rtlPlacement = flipPlacement(initialPlacement, direction);
-  const [placement, setPlacement] = reactExports.useState(rtlPlacement);
-  const [resolvedAnchorElement, setResolvedAnchorElement] = reactExports.useState(resolveAnchorEl(anchorEl));
-  reactExports.useEffect(() => {
-    if (popperRef.current) {
-      popperRef.current.forceUpdate();
-    }
-  });
-  reactExports.useEffect(() => {
-    if (anchorEl) {
-      setResolvedAnchorElement(resolveAnchorEl(anchorEl));
-    }
-  }, [anchorEl]);
-  useEnhancedEffect(() => {
-    if (!resolvedAnchorElement || !open) {
-      return void 0;
-    }
-    const handlePopperUpdate = (data) => {
-      setPlacement(data.placement);
-    };
-    let popperModifiers = [{
-      name: "preventOverflow",
-      options: {
-        altBoundary: disablePortal
-      }
-    }, {
-      name: "flip",
-      options: {
-        altBoundary: disablePortal
-      }
-    }, {
-      name: "onUpdate",
-      enabled: true,
-      phase: "afterWrite",
-      fn: ({
-        state
-      }) => {
-        handlePopperUpdate(state);
-      }
-    }];
-    if (modifiers != null) {
-      popperModifiers = popperModifiers.concat(modifiers);
-    }
-    if (popperOptions && popperOptions.modifiers != null) {
-      popperModifiers = popperModifiers.concat(popperOptions.modifiers);
-    }
-    const popper = createPopper(resolvedAnchorElement, tooltipRef.current, {
-      placement: rtlPlacement,
-      ...popperOptions,
-      modifiers: popperModifiers
-    });
-    handlePopperRefRef.current(popper);
-    return () => {
-      popper.destroy();
-      handlePopperRefRef.current(null);
-    };
-  }, [resolvedAnchorElement, disablePortal, modifiers, open, popperOptions, rtlPlacement]);
-  const childProps = {
-    placement
-  };
-  if (TransitionProps !== null) {
-    childProps.TransitionProps = TransitionProps;
-  }
-  const classes = useUtilityClasses$8(props);
-  const Root = slots.root ?? "div";
-  const rootProps = useSlotProps({
-    elementType: Root,
-    externalSlotProps: slotProps.root,
-    externalForwardedProps: other,
-    additionalProps: {
-      role: "tooltip",
-      ref: ownRef
-    },
-    ownerState: props,
-    className: classes.root
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root, {
-    ...rootProps,
-    children: typeof children === "function" ? children(childProps) : children
-  });
-});
-const Popper$1 = /* @__PURE__ */ reactExports.forwardRef(function Popper2(props, forwardedRef) {
-  const {
-    anchorEl,
-    children,
-    container: containerProp,
-    direction = "ltr",
-    disablePortal = false,
-    keepMounted = false,
-    modifiers,
-    open,
-    placement = "bottom",
-    popperOptions = defaultPopperOptions,
-    popperRef,
-    style,
-    transition = false,
-    slotProps = {},
-    slots = {},
-    ...other
-  } = props;
-  const [exited, setExited] = reactExports.useState(true);
-  const handleEnter = () => {
-    setExited(false);
-  };
-  const handleExited = () => {
-    setExited(true);
-  };
-  if (!keepMounted && !open && (!transition || exited)) {
-    return null;
-  }
-  let container;
-  if (containerProp) {
-    container = containerProp;
-  } else if (anchorEl) {
-    const resolvedAnchorEl = resolveAnchorEl(anchorEl);
-    container = resolvedAnchorEl && isHTMLElement(resolvedAnchorEl) ? ownerDocument(resolvedAnchorEl).body : ownerDocument(null).body;
-  }
-  const display = !open && keepMounted && (!transition || exited) ? "none" : void 0;
-  const transitionProps = transition ? {
-    in: open,
-    onEnter: handleEnter,
-    onExited: handleExited
-  } : void 0;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, {
-    disablePortal,
-    container,
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(PopperTooltip, {
-      anchorEl,
-      direction,
-      disablePortal,
-      modifiers,
-      ref: forwardedRef,
-      open: transition ? !exited : open,
-      placement,
-      popperOptions,
-      popperRef,
-      slotProps,
-      slots,
-      ...other,
-      style: {
-        // Prevents scroll issue, waiting for Popper.js to add this style once initiated.
-        position: "fixed",
-        // Fix Popper.js display issue
-        top: 0,
-        left: 0,
-        display,
-        ...style
-      },
-      TransitionProps: transitionProps,
-      children
-    })
-  });
-});
-
-const PopperRoot = styled(Popper$1, {
-  name: "MuiPopper",
-  slot: "Root"
-})({});
-const Popper = /* @__PURE__ */ reactExports.forwardRef(function Popper2(inProps, ref) {
-  const isRtl = useRtl();
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiPopper"
-  });
-  const {
-    anchorEl,
-    component,
-    components,
-    componentsProps,
-    container,
-    disablePortal,
-    keepMounted,
-    modifiers,
-    open,
-    placement,
-    popperOptions,
-    popperRef,
-    transition,
-    slots,
-    slotProps,
-    ...other
-  } = props;
-  const RootComponent = slots?.root ?? components?.Root;
-  const otherProps = {
-    anchorEl,
-    container,
-    disablePortal,
-    keepMounted,
-    modifiers,
-    open,
-    placement,
-    popperOptions,
-    popperRef,
-    transition,
-    ...other
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(PopperRoot, {
-    as: component,
-    direction: isRtl ? "rtl" : "ltr",
-    slots: {
-      root: RootComponent
-    },
-    slotProps: slotProps ?? componentsProps,
-    ...otherProps,
-    ref
-  });
-});
-
-function mapEventPropToEvent(eventProp) {
-  return eventProp.substring(2).toLowerCase();
-}
-function clickedRootScrollbar(event, doc) {
-  return doc.documentElement.clientWidth < event.clientX || doc.documentElement.clientHeight < event.clientY;
-}
-function ClickAwayListener(props) {
-  const {
-    children,
-    disableReactTree = false,
-    mouseEvent = "onClick",
-    onClickAway,
-    touchEvent = "onTouchEnd"
-  } = props;
-  const movedRef = reactExports.useRef(false);
-  const nodeRef = reactExports.useRef(null);
-  const activatedRef = reactExports.useRef(false);
-  const syntheticEventRef = reactExports.useRef(false);
-  reactExports.useEffect(() => {
-    setTimeout(() => {
-      activatedRef.current = true;
-    }, 0);
-    return () => {
-      activatedRef.current = false;
-    };
-  }, []);
-  const handleRef = useForkRef(getReactElementRef(children), nodeRef);
-  const handleClickAway = useEventCallback((event) => {
-    const insideReactTree = syntheticEventRef.current;
-    syntheticEventRef.current = false;
-    const doc = ownerDocument(nodeRef.current);
-    if (!activatedRef.current || !nodeRef.current || "clientX" in event && clickedRootScrollbar(event, doc)) {
-      return;
-    }
-    if (movedRef.current) {
-      movedRef.current = false;
-      return;
-    }
-    let insideDOM;
-    if (event.composedPath) {
-      insideDOM = event.composedPath().includes(nodeRef.current);
-    } else {
-      insideDOM = !doc.documentElement.contains(
-        // @ts-expect-error returns `false` as intended when not dispatched from a Node
-        event.target
-      ) || nodeRef.current.contains(
-        // @ts-expect-error returns `false` as intended when not dispatched from a Node
-        event.target
-      );
-    }
-    if (!insideDOM && (disableReactTree || !insideReactTree)) {
-      onClickAway(event);
-    }
-  });
-  const createHandleSynthetic = (handlerName) => (event) => {
-    syntheticEventRef.current = true;
-    const childrenPropsHandler = children.props[handlerName];
-    if (childrenPropsHandler) {
-      childrenPropsHandler(event);
-    }
-  };
-  const childrenProps = {
-    ref: handleRef
-  };
-  if (touchEvent !== false) {
-    childrenProps[touchEvent] = createHandleSynthetic(touchEvent);
-  }
-  reactExports.useEffect(() => {
-    if (touchEvent !== false) {
-      const mappedTouchEvent = mapEventPropToEvent(touchEvent);
-      const doc = ownerDocument(nodeRef.current);
-      const handleTouchMove = () => {
-        movedRef.current = true;
-      };
-      doc.addEventListener(mappedTouchEvent, handleClickAway);
-      doc.addEventListener("touchmove", handleTouchMove);
-      return () => {
-        doc.removeEventListener(mappedTouchEvent, handleClickAway);
-        doc.removeEventListener("touchmove", handleTouchMove);
-      };
-    }
-    return void 0;
-  }, [handleClickAway, touchEvent]);
-  if (mouseEvent !== false) {
-    childrenProps[mouseEvent] = createHandleSynthetic(mouseEvent);
-  }
-  reactExports.useEffect(() => {
-    if (mouseEvent !== false) {
-      const mappedMouseEvent = mapEventPropToEvent(mouseEvent);
-      const doc = ownerDocument(nodeRef.current);
-      doc.addEventListener(mappedMouseEvent, handleClickAway);
-      return () => {
-        doc.removeEventListener(mappedMouseEvent, handleClickAway);
-      };
-    }
-    return void 0;
-  }, [handleClickAway, mouseEvent]);
-  return /* @__PURE__ */ reactExports.cloneElement(children, childrenProps);
-}
-
-const Container = createContainer({
-  createStyledComponent: styled("div", {
-    name: "MuiContainer",
-    slot: "Root",
-    overridesResolver: (props, styles) => {
-      const {
-        ownerState
-      } = props;
-      return [styles.root, styles[`maxWidth${capitalize(String(ownerState.maxWidth))}`], ownerState.fixed && styles.fixed, ownerState.disableGutters && styles.disableGutters];
-    }
-  }),
-  useThemeProps: (inProps) => useDefaultProps({
-    props: inProps,
-    name: "MuiContainer"
-  })
-});
-
-function getFabUtilityClass(slot) {
-  return generateUtilityClass('MuiFab', slot);
-}
-const fabClasses = generateUtilityClasses('MuiFab', ['root', 'primary', 'secondary', 'extended', 'circular', 'focusVisible', 'disabled', 'colorInherit', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'info', 'error', 'warning', 'success']);
-
-const useUtilityClasses$7 = (ownerState) => {
-  const {
-    color,
-    variant,
-    classes,
-    size
-  } = ownerState;
-  const slots = {
-    root: ["root", variant, `size${capitalize(size)}`, color === "inherit" ? "colorInherit" : color]
-  };
-  const composedClasses = composeClasses(slots, getFabUtilityClass, classes);
-  return {
-    ...classes,
-    // forward the focused, disabled, etc. classes to the ButtonBase
-    ...composedClasses
-  };
-};
-const FabRoot = styled(ButtonBase, {
-  name: "MuiFab",
-  slot: "Root",
-  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[ownerState.variant], styles[`size${capitalize(ownerState.size)}`], ownerState.color === "inherit" && styles.colorInherit, styles[capitalize(ownerState.size)], styles[ownerState.color]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  ...theme.typography.button,
-  minHeight: 36,
-  transition: theme.transitions.create(["background-color", "box-shadow", "border-color"], {
-    duration: theme.transitions.duration.short
-  }),
-  borderRadius: "50%",
-  padding: 0,
-  minWidth: 0,
-  width: 56,
-  height: 56,
-  zIndex: (theme.vars || theme).zIndex.fab,
-  boxShadow: (theme.vars || theme).shadows[6],
-  "&:active": {
-    boxShadow: (theme.vars || theme).shadows[12]
-  },
-  color: theme.vars ? theme.vars.palette.grey[900] : theme.palette.getContrastText?.(theme.palette.grey[300]),
-  backgroundColor: (theme.vars || theme).palette.grey[300],
-  "&:hover": {
-    backgroundColor: (theme.vars || theme).palette.grey.A100,
-    // Reset on touch devices, it doesn't add specificity
-    "@media (hover: none)": {
-      backgroundColor: (theme.vars || theme).palette.grey[300]
-    },
-    textDecoration: "none"
-  },
-  [`&.${fabClasses.focusVisible}`]: {
-    boxShadow: (theme.vars || theme).shadows[6]
-  },
-  variants: [{
-    props: {
-      size: "small"
-    },
-    style: {
-      width: 40,
-      height: 40
-    }
-  }, {
-    props: {
-      size: "medium"
-    },
-    style: {
-      width: 48,
-      height: 48
-    }
-  }, {
-    props: {
-      variant: "extended"
-    },
-    style: {
-      borderRadius: 48 / 2,
-      padding: "0 16px",
-      width: "auto",
-      minHeight: "auto",
-      minWidth: 48,
-      height: 48
-    }
-  }, {
-    props: {
-      variant: "extended",
-      size: "small"
-    },
-    style: {
-      width: "auto",
-      padding: "0 8px",
-      borderRadius: 34 / 2,
-      minWidth: 34,
-      height: 34
-    }
-  }, {
-    props: {
-      variant: "extended",
-      size: "medium"
-    },
-    style: {
-      width: "auto",
-      padding: "0 16px",
-      borderRadius: 40 / 2,
-      minWidth: 40,
-      height: 40
-    }
-  }, {
-    props: {
-      color: "inherit"
-    },
-    style: {
-      color: "inherit"
-    }
-  }]
-})), memoTheme(({
-  theme
-}) => ({
-  variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark", "contrastText"])).map(([color]) => ({
-    props: {
-      color
-    },
-    style: {
-      color: (theme.vars || theme).palette[color].contrastText,
-      backgroundColor: (theme.vars || theme).palette[color].main,
-      "&:hover": {
-        backgroundColor: (theme.vars || theme).palette[color].dark,
-        // Reset on touch devices, it doesn't add specificity
-        "@media (hover: none)": {
-          backgroundColor: (theme.vars || theme).palette[color].main
-        }
-      }
-    }
-  }))]
-})), memoTheme(({
-  theme
-}) => ({
-  [`&.${fabClasses.disabled}`]: {
-    color: (theme.vars || theme).palette.action.disabled,
-    boxShadow: (theme.vars || theme).shadows[0],
-    backgroundColor: (theme.vars || theme).palette.action.disabledBackground
-  }
-})));
-const Fab = /* @__PURE__ */ reactExports.forwardRef(function Fab2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiFab"
-  });
-  const {
-    children,
-    className,
-    color = "default",
-    component = "button",
-    disabled = false,
-    disableFocusRipple = false,
-    focusVisibleClassName,
-    size = "large",
-    variant = "circular",
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    color,
-    component,
-    disabled,
-    disableFocusRipple,
-    size,
-    variant
-  };
-  const classes = useUtilityClasses$7(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(FabRoot, {
-    className: clsx(classes.root, className),
-    component,
-    disabled,
-    focusRipple: !disableFocusRipple,
-    focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
-    ownerState,
-    ref,
-    ...other,
-    classes,
-    children
-  });
-});
-
-function useSnackbar(parameters = {}) {
-  const {
-    autoHideDuration = null,
-    disableWindowBlurListener = false,
-    onClose,
-    open,
-    resumeHideDuration
-  } = parameters;
-  const timerAutoHide = useTimeout();
-  reactExports.useEffect(() => {
-    if (!open) {
-      return undefined;
-    }
-
-    /**
-     * @param {KeyboardEvent} nativeEvent
-     */
-    function handleKeyDown(nativeEvent) {
-      if (!nativeEvent.defaultPrevented) {
-        if (nativeEvent.key === 'Escape') {
-          // not calling `preventDefault` since we don't know if people may ignore this event e.g. a permanently open snackbar
-          onClose?.(nativeEvent, 'escapeKeyDown');
-        }
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open, onClose]);
-  const handleClose = useEventCallback((event, reason) => {
-    onClose?.(event, reason);
-  });
-  const setAutoHideTimer = useEventCallback(autoHideDurationParam => {
-    if (!onClose || autoHideDurationParam == null) {
-      return;
-    }
-    timerAutoHide.start(autoHideDurationParam, () => {
-      handleClose(null, 'timeout');
-    });
-  });
-  reactExports.useEffect(() => {
-    if (open) {
-      setAutoHideTimer(autoHideDuration);
-    }
-    return timerAutoHide.clear;
-  }, [open, autoHideDuration, setAutoHideTimer, timerAutoHide]);
-  const handleClickAway = event => {
-    onClose?.(event, 'clickaway');
-  };
-
-  // Pause the timer when the user is interacting with the Snackbar
-  // or when the user hide the window.
-  const handlePause = timerAutoHide.clear;
-
-  // Restart the timer when the user is no longer interacting with the Snackbar
-  // or when the window is shown back.
-  const handleResume = reactExports.useCallback(() => {
-    if (autoHideDuration != null) {
-      setAutoHideTimer(resumeHideDuration != null ? resumeHideDuration : autoHideDuration * 0.5);
-    }
-  }, [autoHideDuration, resumeHideDuration, setAutoHideTimer]);
-  const createHandleBlur = otherHandlers => event => {
-    const onBlurCallback = otherHandlers.onBlur;
-    onBlurCallback?.(event);
-    handleResume();
-  };
-  const createHandleFocus = otherHandlers => event => {
-    const onFocusCallback = otherHandlers.onFocus;
-    onFocusCallback?.(event);
-    handlePause();
-  };
-  const createMouseEnter = otherHandlers => event => {
-    const onMouseEnterCallback = otherHandlers.onMouseEnter;
-    onMouseEnterCallback?.(event);
-    handlePause();
-  };
-  const createMouseLeave = otherHandlers => event => {
-    const onMouseLeaveCallback = otherHandlers.onMouseLeave;
-    onMouseLeaveCallback?.(event);
-    handleResume();
-  };
-  reactExports.useEffect(() => {
-    // TODO: window global should be refactored here
-    if (!disableWindowBlurListener && open) {
-      window.addEventListener('focus', handleResume);
-      window.addEventListener('blur', handlePause);
-      return () => {
-        window.removeEventListener('focus', handleResume);
-        window.removeEventListener('blur', handlePause);
-      };
-    }
-    return undefined;
-  }, [disableWindowBlurListener, open, handleResume, handlePause]);
-  const getRootProps = (externalProps = {}) => {
-    const externalEventHandlers = {
-      ...extractEventHandlers(parameters),
-      ...extractEventHandlers(externalProps)
-    };
-    return {
-      // ClickAwayListener adds an `onClick` prop which results in the alert not being announced.
-      // See https://github.com/mui/material-ui/issues/29080
-      role: 'presentation',
-      ...externalProps,
-      ...externalEventHandlers,
-      onBlur: createHandleBlur(externalEventHandlers),
-      onFocus: createHandleFocus(externalEventHandlers),
-      onMouseEnter: createMouseEnter(externalEventHandlers),
-      onMouseLeave: createMouseLeave(externalEventHandlers)
-    };
-  };
-  return {
-    getRootProps,
-    onClickAway: handleClickAway
-  };
-}
-
-function getSnackbarContentUtilityClass(slot) {
-  return generateUtilityClass('MuiSnackbarContent', slot);
-}
-generateUtilityClasses('MuiSnackbarContent', ['root', 'message', 'action']);
-
-const useUtilityClasses$6 = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"],
-    action: ["action"],
-    message: ["message"]
-  };
-  return composeClasses(slots, getSnackbarContentUtilityClass, classes);
-};
-const SnackbarContentRoot = styled(Paper, {
-  name: "MuiSnackbarContent",
-  slot: "Root"
-})(memoTheme(({
-  theme
-}) => {
-  const emphasis = theme.palette.mode === "light" ? 0.8 : 0.98;
-  return {
-    ...theme.typography.body2,
-    color: theme.vars ? theme.vars.palette.SnackbarContent.color : theme.palette.getContrastText(emphasize(theme.palette.background.default, emphasis)),
-    backgroundColor: theme.vars ? theme.vars.palette.SnackbarContent.bg : emphasize(theme.palette.background.default, emphasis),
-    display: "flex",
-    alignItems: "center",
-    flexWrap: "wrap",
-    padding: "6px 16px",
-    flexGrow: 1,
-    [theme.breakpoints.up("sm")]: {
-      flexGrow: "initial",
-      minWidth: 288
-    }
-  };
-}));
-const SnackbarContentMessage = styled("div", {
-  name: "MuiSnackbarContent",
-  slot: "Message"
-})({
-  padding: "8px 0"
-});
-const SnackbarContentAction = styled("div", {
-  name: "MuiSnackbarContent",
-  slot: "Action"
-})({
-  display: "flex",
-  alignItems: "center",
-  marginLeft: "auto",
-  paddingLeft: 16,
-  marginRight: -8
-});
-const SnackbarContent = /* @__PURE__ */ reactExports.forwardRef(function SnackbarContent2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiSnackbarContent"
-  });
-  const {
-    action,
-    className,
-    message,
-    role = "alert",
-    ...other
-  } = props;
-  const ownerState = props;
-  const classes = useUtilityClasses$6(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(SnackbarContentRoot, {
-    role,
-    elevation: 6,
-    className: clsx(classes.root, className),
-    ownerState,
-    ref,
-    ...other,
-    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(SnackbarContentMessage, {
-      className: classes.message,
-      ownerState,
-      children: message
-    }), action ? /* @__PURE__ */ jsxRuntimeExports.jsx(SnackbarContentAction, {
-      className: classes.action,
-      ownerState,
-      children: action
-    }) : null]
-  });
-});
-
-function getSnackbarUtilityClass(slot) {
-  return generateUtilityClass('MuiSnackbar', slot);
-}
-generateUtilityClasses('MuiSnackbar', ['root', 'anchorOriginTopCenter', 'anchorOriginBottomCenter', 'anchorOriginTopRight', 'anchorOriginBottomRight', 'anchorOriginTopLeft', 'anchorOriginBottomLeft']);
-
-const useUtilityClasses$5 = (ownerState) => {
-  const {
-    classes,
-    anchorOrigin
-  } = ownerState;
-  const slots = {
-    root: ["root", `anchorOrigin${capitalize(anchorOrigin.vertical)}${capitalize(anchorOrigin.horizontal)}`]
-  };
-  return composeClasses(slots, getSnackbarUtilityClass, classes);
-};
-const SnackbarRoot = styled("div", {
-  name: "MuiSnackbar",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[`anchorOrigin${capitalize(ownerState.anchorOrigin.vertical)}${capitalize(ownerState.anchorOrigin.horizontal)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  zIndex: (theme.vars || theme).zIndex.snackbar,
-  position: "fixed",
-  display: "flex",
-  left: 8,
-  right: 8,
-  justifyContent: "center",
-  alignItems: "center",
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.anchorOrigin.vertical === "top",
-    style: {
-      top: 8,
-      [theme.breakpoints.up("sm")]: {
-        top: 24
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.anchorOrigin.vertical !== "top",
-    style: {
-      bottom: 8,
-      [theme.breakpoints.up("sm")]: {
-        bottom: 24
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.anchorOrigin.horizontal === "left",
-    style: {
-      justifyContent: "flex-start",
-      [theme.breakpoints.up("sm")]: {
-        left: 24,
-        right: "auto"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.anchorOrigin.horizontal === "right",
-    style: {
-      justifyContent: "flex-end",
-      [theme.breakpoints.up("sm")]: {
-        right: 24,
-        left: "auto"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.anchorOrigin.horizontal === "center",
-    style: {
-      [theme.breakpoints.up("sm")]: {
-        left: "50%",
-        right: "auto",
-        transform: "translateX(-50%)"
-      }
-    }
-  }]
-})));
-const Snackbar = /* @__PURE__ */ reactExports.forwardRef(function Snackbar2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiSnackbar"
-  });
-  const theme = useTheme();
-  const defaultTransitionDuration = {
-    enter: theme.transitions.duration.enteringScreen,
-    exit: theme.transitions.duration.leavingScreen
-  };
-  const {
-    action,
-    anchorOrigin: {
-      vertical,
-      horizontal
-    } = {
-      vertical: "bottom",
-      horizontal: "left"
-    },
-    autoHideDuration = null,
-    children,
-    className,
-    ClickAwayListenerProps: ClickAwayListenerPropsProp,
-    ContentProps: ContentPropsProp,
-    disableWindowBlurListener = false,
-    message,
-    onBlur,
-    onClose,
-    onFocus,
-    onMouseEnter,
-    onMouseLeave,
-    open,
-    resumeHideDuration,
-    slots = {},
-    slotProps = {},
-    TransitionComponent: TransitionComponentProp,
-    transitionDuration = defaultTransitionDuration,
-    TransitionProps: {
-      onEnter,
-      onExited,
-      ...TransitionPropsProp
-    } = {},
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    anchorOrigin: {
-      vertical,
-      horizontal
-    },
-    autoHideDuration,
-    disableWindowBlurListener,
-    TransitionComponent: TransitionComponentProp,
-    transitionDuration
-  };
-  const classes = useUtilityClasses$5(ownerState);
-  const {
-    getRootProps,
-    onClickAway
-  } = useSnackbar({
-    ...ownerState
-  });
-  const [exited, setExited] = reactExports.useState(true);
-  const handleExited = (node) => {
-    setExited(true);
-    if (onExited) {
-      onExited(node);
-    }
-  };
-  const handleEnter = (node, isAppearing) => {
-    setExited(false);
-    if (onEnter) {
-      onEnter(node, isAppearing);
-    }
-  };
-  const externalForwardedProps = {
-    slots: {
-      transition: TransitionComponentProp,
-      ...slots
-    },
-    slotProps: {
-      content: ContentPropsProp,
-      clickAwayListener: ClickAwayListenerPropsProp,
-      transition: TransitionPropsProp,
-      ...slotProps
-    }
-  };
-  const [Root, rootProps] = useSlot("root", {
-    ref,
-    className: [classes.root, className],
-    elementType: SnackbarRoot,
-    getSlotProps: getRootProps,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    ownerState
-  });
-  const [ClickAwaySlot, {
-    ownerState: clickAwayOwnerStateProp,
-    ...clickAwayListenerProps
-  }] = useSlot("clickAwayListener", {
-    elementType: ClickAwayListener,
-    externalForwardedProps,
-    getSlotProps: (handlers) => ({
-      onClickAway: (...params) => {
-        const event = params[0];
-        handlers.onClickAway?.(...params);
-        if (event?.defaultMuiPrevented) {
-          return;
-        }
-        onClickAway(...params);
-      }
-    }),
-    ownerState
-  });
-  const [ContentSlot, contentSlotProps] = useSlot("content", {
-    elementType: SnackbarContent,
-    shouldForwardComponentProp: true,
-    externalForwardedProps,
-    additionalProps: {
-      message,
-      action
-    },
-    ownerState
-  });
-  const [TransitionSlot, transitionProps] = useSlot("transition", {
-    elementType: Grow,
-    externalForwardedProps,
-    getSlotProps: (handlers) => ({
-      onEnter: (...params) => {
-        handlers.onEnter?.(...params);
-        handleEnter(...params);
-      },
-      onExited: (...params) => {
-        handlers.onExited?.(...params);
-        handleExited(...params);
-      }
-    }),
-    additionalProps: {
-      appear: true,
-      in: open,
-      timeout: transitionDuration,
-      direction: vertical === "top" ? "down" : "up"
-    },
-    ownerState
-  });
-  if (!open && exited) {
-    return null;
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(ClickAwaySlot, {
-    ...clickAwayListenerProps,
-    ...slots.clickAwayListener && {
-      ownerState: clickAwayOwnerStateProp
-    },
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root, {
-      ...rootProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionSlot, {
-        ...transitionProps,
-        children: children || /* @__PURE__ */ jsxRuntimeExports.jsx(ContentSlot, {
-          ...contentSlotProps
-        })
-      })
-    })
-  });
-});
-
-const styles = {
-  entering: {
-    transform: "none"
-  },
-  entered: {
-    transform: "none"
-  }
-};
-const Zoom = /* @__PURE__ */ reactExports.forwardRef(function Zoom2(props, ref) {
-  const theme = useTheme();
-  const defaultTimeout = {
-    enter: theme.transitions.duration.enteringScreen,
-    exit: theme.transitions.duration.leavingScreen
-  };
-  const {
-    addEndListener,
-    appear = true,
-    children,
-    easing,
-    in: inProp,
-    onEnter,
-    onEntered,
-    onEntering,
-    onExit,
-    onExited,
-    onExiting,
-    style,
-    timeout = defaultTimeout,
-    // eslint-disable-next-line react/prop-types
-    TransitionComponent = Transition,
-    ...other
-  } = props;
-  const nodeRef = reactExports.useRef(null);
-  const handleRef = useForkRef(nodeRef, getReactElementRef(children), ref);
-  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
-    if (callback) {
-      const node = nodeRef.current;
-      if (maybeIsAppearing === void 0) {
-        callback(node);
-      } else {
-        callback(node, maybeIsAppearing);
-      }
-    }
-  };
-  const handleEntering = normalizedTransitionCallback(onEntering);
-  const handleEnter = normalizedTransitionCallback((node, isAppearing) => {
-    reflow(node);
-    const transitionProps = getTransitionProps({
-      style,
-      timeout,
-      easing
-    }, {
-      mode: "enter"
-    });
-    node.style.webkitTransition = theme.transitions.create("transform", transitionProps);
-    node.style.transition = theme.transitions.create("transform", transitionProps);
-    if (onEnter) {
-      onEnter(node, isAppearing);
-    }
-  });
-  const handleEntered = normalizedTransitionCallback(onEntered);
-  const handleExiting = normalizedTransitionCallback(onExiting);
-  const handleExit = normalizedTransitionCallback((node) => {
-    const transitionProps = getTransitionProps({
-      style,
-      timeout,
-      easing
-    }, {
-      mode: "exit"
-    });
-    node.style.webkitTransition = theme.transitions.create("transform", transitionProps);
-    node.style.transition = theme.transitions.create("transform", transitionProps);
-    if (onExit) {
-      onExit(node);
-    }
-  });
-  const handleExited = normalizedTransitionCallback(onExited);
-  const handleAddEndListener = (next) => {
-    if (addEndListener) {
-      addEndListener(nodeRef.current, next);
-    }
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionComponent, {
-    appear,
-    in: inProp,
-    nodeRef,
-    onEnter: handleEnter,
-    onEntered: handleEntered,
-    onEntering: handleEntering,
-    onExit: handleExit,
-    onExited: handleExited,
-    onExiting: handleExiting,
-    addEndListener: handleAddEndListener,
-    timeout,
-    ...other,
-    children: (state, {
-      ownerState,
-      ...restChildProps
-    }) => {
-      return /* @__PURE__ */ reactExports.cloneElement(children, {
-        style: {
-          transform: "scale(0)",
-          visibility: state === "exited" && !inProp ? "hidden" : void 0,
-          ...styles[state],
-          ...style,
-          ...children.props.style
-        },
-        ref: handleRef,
-        ...restChildProps
-      });
-    }
-  });
-});
-
-function getSpeedDialUtilityClass(slot) {
-  return generateUtilityClass('MuiSpeedDial', slot);
-}
-const speedDialClasses = generateUtilityClasses('MuiSpeedDial', ['root', 'fab', 'directionUp', 'directionDown', 'directionLeft', 'directionRight', 'actions', 'actionsClosed']);
-
-const useUtilityClasses$4 = (ownerState) => {
-  const {
-    classes,
-    open,
-    direction
-  } = ownerState;
-  const slots = {
-    root: ["root", `direction${capitalize(direction)}`],
-    fab: ["fab"],
-    actions: ["actions", !open && "actionsClosed"]
-  };
-  return composeClasses(slots, getSpeedDialUtilityClass, classes);
-};
-function getOrientation(direction) {
-  if (direction === "up" || direction === "down") {
-    return "vertical";
-  }
-  if (direction === "right" || direction === "left") {
-    return "horizontal";
-  }
-  return void 0;
-}
-const dialRadius = 32;
-const spacingActions = 16;
-const SpeedDialRoot = styled("div", {
-  name: "MuiSpeedDial",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[`direction${capitalize(ownerState.direction)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  zIndex: (theme.vars || theme).zIndex.speedDial,
-  display: "flex",
-  alignItems: "center",
-  pointerEvents: "none",
-  variants: [{
-    props: {
-      direction: "up"
-    },
-    style: {
-      flexDirection: "column-reverse",
-      [`& .${speedDialClasses.actions}`]: {
-        flexDirection: "column-reverse",
-        marginBottom: -dialRadius,
-        paddingBottom: spacingActions + dialRadius
-      }
-    }
-  }, {
-    props: {
-      direction: "down"
-    },
-    style: {
-      flexDirection: "column",
-      [`& .${speedDialClasses.actions}`]: {
-        flexDirection: "column",
-        marginTop: -dialRadius,
-        paddingTop: spacingActions + dialRadius
-      }
-    }
-  }, {
-    props: {
-      direction: "left"
-    },
-    style: {
-      flexDirection: "row-reverse",
-      [`& .${speedDialClasses.actions}`]: {
-        flexDirection: "row-reverse",
-        marginRight: -dialRadius,
-        paddingRight: spacingActions + dialRadius
-      }
-    }
-  }, {
-    props: {
-      direction: "right"
-    },
-    style: {
-      flexDirection: "row",
-      [`& .${speedDialClasses.actions}`]: {
-        flexDirection: "row",
-        marginLeft: -dialRadius,
-        paddingLeft: spacingActions + dialRadius
-      }
-    }
-  }]
-})));
-const SpeedDialFab = styled(Fab, {
-  name: "MuiSpeedDial",
-  slot: "Fab"
-})({
-  pointerEvents: "auto"
-});
-const SpeedDialActions = styled("div", {
-  name: "MuiSpeedDial",
-  slot: "Actions",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.actions, !ownerState.open && styles.actionsClosed];
-  }
-})({
-  display: "flex",
-  pointerEvents: "auto",
-  variants: [{
-    props: ({
-      ownerState
-    }) => !ownerState.open,
-    style: {
-      transition: "top 0s linear 0.2s",
-      pointerEvents: "none"
-    }
-  }]
-});
-const SpeedDial = /* @__PURE__ */ reactExports.forwardRef(function SpeedDial2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiSpeedDial"
-  });
-  const theme = useTheme();
-  const defaultTransitionDuration = {
-    enter: theme.transitions.duration.enteringScreen,
-    exit: theme.transitions.duration.leavingScreen
-  };
-  const {
-    ariaLabel,
-    FabProps: {
-      ref: origDialButtonRef,
-      ...FabProps
-    } = {},
-    children: childrenProp,
-    className,
-    direction = "up",
-    hidden = false,
-    icon,
-    onBlur,
-    onClose,
-    onFocus,
-    onKeyDown,
-    onMouseEnter,
-    onMouseLeave,
-    onOpen,
-    open: openProp,
-    openIcon,
-    slots = {},
-    slotProps = {},
-    TransitionComponent: TransitionComponentProp,
-    TransitionProps: TransitionPropsProp,
-    transitionDuration = defaultTransitionDuration,
-    ...other
-  } = props;
-  const [open, setOpenState] = useControlled({
-    controlled: openProp,
-    default: false,
-    name: "SpeedDial",
-    state: "open"
-  });
-  const ownerState = {
-    ...props,
-    open,
-    direction
-  };
-  const classes = useUtilityClasses$4(ownerState);
-  const eventTimer = useTimeout();
-  const focusedAction = reactExports.useRef(0);
-  const nextItemArrowKey = reactExports.useRef();
-  const actions = reactExports.useRef([]);
-  actions.current = [actions.current[0]];
-  const handleOwnFabRef = reactExports.useCallback((fabFef) => {
-    actions.current[0] = fabFef;
-  }, []);
-  const handleFabRef = useForkRef(origDialButtonRef, handleOwnFabRef);
-  const createHandleSpeedDialActionButtonRef = (dialActionIndex, origButtonRef) => {
-    return (buttonRef) => {
-      actions.current[dialActionIndex + 1] = buttonRef;
-      if (origButtonRef) {
-        origButtonRef(buttonRef);
-      }
-    };
-  };
-  const handleKeyDown = (event) => {
-    if (onKeyDown) {
-      onKeyDown(event);
-    }
-    const key = event.key.replace("Arrow", "").toLowerCase();
-    const {
-      current: nextItemArrowKeyCurrent = key
-    } = nextItemArrowKey;
-    if (event.key === "Escape") {
-      setOpenState(false);
-      actions.current[0].focus();
-      if (onClose) {
-        onClose(event, "escapeKeyDown");
-      }
-      return;
-    }
-    if (getOrientation(key) === getOrientation(nextItemArrowKeyCurrent) && getOrientation(key) !== void 0) {
-      event.preventDefault();
-      const actionStep = key === nextItemArrowKeyCurrent ? 1 : -1;
-      const nextAction = clamp(focusedAction.current + actionStep, 0, actions.current.length - 1);
-      actions.current[nextAction].focus();
-      focusedAction.current = nextAction;
-      nextItemArrowKey.current = nextItemArrowKeyCurrent;
-    }
-  };
-  reactExports.useEffect(() => {
-    if (!open) {
-      focusedAction.current = 0;
-      nextItemArrowKey.current = void 0;
-    }
-  }, [open]);
-  const handleClose = (event) => {
-    if (event.type === "mouseleave" && onMouseLeave) {
-      onMouseLeave(event);
-    }
-    if (event.type === "blur" && onBlur) {
-      onBlur(event);
-    }
-    eventTimer.clear();
-    if (event.type === "blur") {
-      eventTimer.start(0, () => {
-        setOpenState(false);
-        if (onClose) {
-          onClose(event, "blur");
-        }
-      });
-    } else {
-      setOpenState(false);
-      if (onClose) {
-        onClose(event, "mouseLeave");
-      }
-    }
-  };
-  const handleClick = (event) => {
-    if (FabProps.onClick) {
-      FabProps.onClick(event);
-    }
-    eventTimer.clear();
-    if (open) {
-      setOpenState(false);
-      if (onClose) {
-        onClose(event, "toggle");
-      }
-    } else {
-      setOpenState(true);
-      if (onOpen) {
-        onOpen(event, "toggle");
-      }
-    }
-  };
-  const handleOpen = (event) => {
-    if (event.type === "mouseenter" && onMouseEnter) {
-      onMouseEnter(event);
-    }
-    if (event.type === "focus" && onFocus) {
-      onFocus(event);
-    }
-    eventTimer.clear();
-    if (!open) {
-      eventTimer.start(0, () => {
-        setOpenState(true);
-        if (onOpen) {
-          const eventMap = {
-            focus: "focus",
-            mouseenter: "mouseEnter"
-          };
-          onOpen(event, eventMap[event.type]);
-        }
-      });
-    }
-  };
-  const id = ariaLabel.replace(/^[^a-z]+|[^\w:.-]+/gi, "");
-  const allItems = reactExports.Children.toArray(childrenProp).filter((child) => {
-    return /* @__PURE__ */ reactExports.isValidElement(child);
-  });
-  const children = allItems.map((child, index) => {
-    const {
-      FabProps: {
-        ref: origButtonRef,
-        ...ChildFabProps
-      } = {},
-      tooltipPlacement: tooltipPlacementProp
-    } = child.props;
-    const tooltipPlacement = tooltipPlacementProp || (getOrientation(direction) === "vertical" ? "left" : "top");
-    return /* @__PURE__ */ reactExports.cloneElement(child, {
-      FabProps: {
-        ...ChildFabProps,
-        ref: createHandleSpeedDialActionButtonRef(index, origButtonRef)
-      },
-      delay: 30 * (open ? index : allItems.length - index),
-      open,
-      tooltipPlacement,
-      id: `${id}-action-${index}`
-    });
-  });
-  const backwardCompatibleSlots = {
-    transition: TransitionComponentProp,
-    ...slots
-  };
-  const backwardCompatibleSlotProps = {
-    transition: TransitionPropsProp,
-    ...slotProps
-  };
-  const externalForwardedProps = {
-    slots: backwardCompatibleSlots,
-    slotProps: backwardCompatibleSlotProps
-  };
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    elementType: SpeedDialRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    ownerState,
-    ref,
-    className: clsx(classes.root, className),
-    additionalProps: {
-      role: "presentation"
-    },
-    getSlotProps: (handlers) => ({
-      ...handlers,
-      onKeyDown: (event) => {
-        handlers.onKeyDown?.(event);
-        handleKeyDown(event);
-      },
-      onBlur: (event) => {
-        handlers.onBlur?.(event);
-        handleClose(event);
-      },
-      onFocus: (event) => {
-        handlers.onFocus?.(event);
-        handleOpen(event);
-      },
-      onMouseEnter: (event) => {
-        handlers.onMouseEnter?.(event);
-        handleOpen(event);
-      },
-      onMouseLeave: (event) => {
-        handlers.onMouseLeave?.(event);
-        handleClose(event);
-      }
-    })
-  });
-  const [TransitionSlot, transitionProps] = useSlot("transition", {
-    elementType: Zoom,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
-    ...rootSlotProps,
-    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(TransitionSlot, {
-      in: !hidden,
-      timeout: transitionDuration,
-      unmountOnExit: true,
-      ...transitionProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(SpeedDialFab, {
-        color: "primary",
-        "aria-label": ariaLabel,
-        "aria-haspopup": "true",
-        "aria-expanded": open,
-        "aria-controls": `${id}-actions`,
-        ...FabProps,
-        onClick: handleClick,
-        className: clsx(classes.fab, FabProps.className),
-        ref: handleFabRef,
-        ownerState,
-        children: /* @__PURE__ */ reactExports.isValidElement(icon) && isMuiElement(icon, ["SpeedDialIcon"]) ? /* @__PURE__ */ reactExports.cloneElement(icon, {
-          open
-        }) : icon
-      })
-    }), /* @__PURE__ */ jsxRuntimeExports.jsx(SpeedDialActions, {
-      id: `${id}-actions`,
-      role: "menu",
-      "aria-orientation": getOrientation(direction),
-      className: clsx(classes.actions, !open && classes.actionsClosed),
-      ownerState,
-      children
-    })]
-  });
-});
-
-function getTooltipUtilityClass(slot) {
-  return generateUtilityClass('MuiTooltip', slot);
-}
-const tooltipClasses = generateUtilityClasses('MuiTooltip', ['popper', 'popperInteractive', 'popperArrow', 'popperClose', 'tooltip', 'tooltipArrow', 'touch', 'tooltipPlacementLeft', 'tooltipPlacementRight', 'tooltipPlacementTop', 'tooltipPlacementBottom', 'arrow']);
-
-function round(value) {
-  return Math.round(value * 1e5) / 1e5;
-}
-const useUtilityClasses$3 = (ownerState) => {
-  const {
-    classes,
-    disableInteractive,
-    arrow,
-    touch,
-    placement
-  } = ownerState;
-  const slots = {
-    popper: ["popper", !disableInteractive && "popperInteractive", arrow && "popperArrow"],
-    tooltip: ["tooltip", arrow && "tooltipArrow", touch && "touch", `tooltipPlacement${capitalize(placement.split("-")[0])}`],
-    arrow: ["arrow"]
-  };
-  return composeClasses(slots, getTooltipUtilityClass, classes);
-};
-const TooltipPopper = styled(Popper, {
-  name: "MuiTooltip",
-  slot: "Popper",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.popper, !ownerState.disableInteractive && styles.popperInteractive, ownerState.arrow && styles.popperArrow, !ownerState.open && styles.popperClose];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  zIndex: (theme.vars || theme).zIndex.tooltip,
-  pointerEvents: "none",
-  variants: [{
-    props: ({
-      ownerState
-    }) => !ownerState.disableInteractive,
-    style: {
-      pointerEvents: "auto"
-    }
-  }, {
-    props: ({
-      open
-    }) => !open,
-    style: {
-      pointerEvents: "none"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.arrow,
-    style: {
-      [`&[data-popper-placement*="bottom"] .${tooltipClasses.arrow}`]: {
-        top: 0,
-        marginTop: "-0.71em",
-        "&::before": {
-          transformOrigin: "0 100%"
-        }
-      },
-      [`&[data-popper-placement*="top"] .${tooltipClasses.arrow}`]: {
-        bottom: 0,
-        marginBottom: "-0.71em",
-        "&::before": {
-          transformOrigin: "100% 0"
-        }
-      },
-      [`&[data-popper-placement*="right"] .${tooltipClasses.arrow}`]: {
-        height: "1em",
-        width: "0.71em",
-        "&::before": {
-          transformOrigin: "100% 100%"
-        }
-      },
-      [`&[data-popper-placement*="left"] .${tooltipClasses.arrow}`]: {
-        height: "1em",
-        width: "0.71em",
-        "&::before": {
-          transformOrigin: "0 0"
-        }
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.arrow && !ownerState.isRtl,
-    style: {
-      [`&[data-popper-placement*="right"] .${tooltipClasses.arrow}`]: {
-        left: 0,
-        marginLeft: "-0.71em"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.arrow && !!ownerState.isRtl,
-    style: {
-      [`&[data-popper-placement*="right"] .${tooltipClasses.arrow}`]: {
-        right: 0,
-        marginRight: "-0.71em"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.arrow && !ownerState.isRtl,
-    style: {
-      [`&[data-popper-placement*="left"] .${tooltipClasses.arrow}`]: {
-        right: 0,
-        marginRight: "-0.71em"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.arrow && !!ownerState.isRtl,
-    style: {
-      [`&[data-popper-placement*="left"] .${tooltipClasses.arrow}`]: {
-        left: 0,
-        marginLeft: "-0.71em"
-      }
-    }
-  }]
-})));
-const TooltipTooltip = styled("div", {
-  name: "MuiTooltip",
-  slot: "Tooltip",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.tooltip, ownerState.touch && styles.touch, ownerState.arrow && styles.tooltipArrow, styles[`tooltipPlacement${capitalize(ownerState.placement.split("-")[0])}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  backgroundColor: theme.vars ? theme.vars.palette.Tooltip.bg : alpha(theme.palette.grey[700], 0.92),
-  borderRadius: (theme.vars || theme).shape.borderRadius,
-  color: (theme.vars || theme).palette.common.white,
-  fontFamily: theme.typography.fontFamily,
-  padding: "4px 8px",
-  fontSize: theme.typography.pxToRem(11),
-  maxWidth: 300,
-  margin: 2,
-  wordWrap: "break-word",
-  fontWeight: theme.typography.fontWeightMedium,
-  [`.${tooltipClasses.popper}[data-popper-placement*="left"] &`]: {
-    transformOrigin: "right center"
-  },
-  [`.${tooltipClasses.popper}[data-popper-placement*="right"] &`]: {
-    transformOrigin: "left center"
-  },
-  [`.${tooltipClasses.popper}[data-popper-placement*="top"] &`]: {
-    transformOrigin: "center bottom",
-    marginBottom: "14px"
-  },
-  [`.${tooltipClasses.popper}[data-popper-placement*="bottom"] &`]: {
-    transformOrigin: "center top",
-    marginTop: "14px"
-  },
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.arrow,
-    style: {
-      position: "relative",
-      margin: 0
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.touch,
-    style: {
-      padding: "8px 16px",
-      fontSize: theme.typography.pxToRem(14),
-      lineHeight: `${round(16 / 14)}em`,
-      fontWeight: theme.typography.fontWeightRegular
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !ownerState.isRtl,
-    style: {
-      [`.${tooltipClasses.popper}[data-popper-placement*="left"] &`]: {
-        marginRight: "14px"
-      },
-      [`.${tooltipClasses.popper}[data-popper-placement*="right"] &`]: {
-        marginLeft: "14px"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !ownerState.isRtl && ownerState.touch,
-    style: {
-      [`.${tooltipClasses.popper}[data-popper-placement*="left"] &`]: {
-        marginRight: "24px"
-      },
-      [`.${tooltipClasses.popper}[data-popper-placement*="right"] &`]: {
-        marginLeft: "24px"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !!ownerState.isRtl,
-    style: {
-      [`.${tooltipClasses.popper}[data-popper-placement*="left"] &`]: {
-        marginLeft: "14px"
-      },
-      [`.${tooltipClasses.popper}[data-popper-placement*="right"] &`]: {
-        marginRight: "14px"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => !!ownerState.isRtl && ownerState.touch,
-    style: {
-      [`.${tooltipClasses.popper}[data-popper-placement*="left"] &`]: {
-        marginLeft: "24px"
-      },
-      [`.${tooltipClasses.popper}[data-popper-placement*="right"] &`]: {
-        marginRight: "24px"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.touch,
-    style: {
-      [`.${tooltipClasses.popper}[data-popper-placement*="top"] &`]: {
-        marginBottom: "24px"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.touch,
-    style: {
-      [`.${tooltipClasses.popper}[data-popper-placement*="bottom"] &`]: {
-        marginTop: "24px"
-      }
-    }
-  }]
-})));
-const TooltipArrow = styled("span", {
-  name: "MuiTooltip",
-  slot: "Arrow"
-})(memoTheme(({
-  theme
-}) => ({
-  overflow: "hidden",
-  position: "absolute",
-  width: "1em",
-  height: "0.71em",
-  boxSizing: "border-box",
-  color: theme.vars ? theme.vars.palette.Tooltip.bg : alpha(theme.palette.grey[700], 0.9),
-  "&::before": {
-    content: '""',
-    margin: "auto",
-    display: "block",
-    width: "100%",
-    height: "100%",
-    backgroundColor: "currentColor",
-    transform: "rotate(45deg)"
-  }
-})));
-let hystersisOpen = false;
-const hystersisTimer = new Timeout();
-let cursorPosition = {
-  x: 0,
-  y: 0
-};
-function composeEventHandler(handler, eventHandler) {
-  return (event, ...params) => {
-    if (eventHandler) {
-      eventHandler(event, ...params);
-    }
-    handler(event, ...params);
-  };
-}
-const Tooltip = /* @__PURE__ */ reactExports.forwardRef(function Tooltip2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiTooltip"
-  });
-  const {
-    arrow = false,
-    children: childrenProp,
-    classes: classesProp,
-    components = {},
-    componentsProps = {},
-    describeChild = false,
-    disableFocusListener = false,
-    disableHoverListener = false,
-    disableInteractive: disableInteractiveProp = false,
-    disableTouchListener = false,
-    enterDelay = 100,
-    enterNextDelay = 0,
-    enterTouchDelay = 700,
-    followCursor = false,
-    id: idProp,
-    leaveDelay = 0,
-    leaveTouchDelay = 1500,
-    onClose,
-    onOpen,
-    open: openProp,
-    placement = "bottom",
-    PopperComponent: PopperComponentProp,
-    PopperProps = {},
-    slotProps = {},
-    slots = {},
-    title,
-    TransitionComponent: TransitionComponentProp,
-    TransitionProps,
-    ...other
-  } = props;
-  const children = /* @__PURE__ */ reactExports.isValidElement(childrenProp) ? childrenProp : /* @__PURE__ */ jsxRuntimeExports.jsx("span", {
-    children: childrenProp
-  });
-  const theme = useTheme();
-  const isRtl = useRtl();
-  const [childNode, setChildNode] = reactExports.useState();
-  const [arrowRef, setArrowRef] = reactExports.useState(null);
-  const ignoreNonTouchEvents = reactExports.useRef(false);
-  const disableInteractive = disableInteractiveProp || followCursor;
-  const closeTimer = useTimeout();
-  const enterTimer = useTimeout();
-  const leaveTimer = useTimeout();
-  const touchTimer = useTimeout();
-  const [openState, setOpenState] = useControlled({
-    controlled: openProp,
-    default: false,
-    name: "Tooltip",
-    state: "open"
-  });
-  let open = openState;
-  const id = useId(idProp);
-  const prevUserSelect = reactExports.useRef();
-  const stopTouchInteraction = useEventCallback(() => {
-    if (prevUserSelect.current !== void 0) {
-      document.body.style.WebkitUserSelect = prevUserSelect.current;
-      prevUserSelect.current = void 0;
-    }
-    touchTimer.clear();
-  });
-  reactExports.useEffect(() => stopTouchInteraction, [stopTouchInteraction]);
-  const handleOpen = (event) => {
-    hystersisTimer.clear();
-    hystersisOpen = true;
-    setOpenState(true);
-    if (onOpen && !open) {
-      onOpen(event);
-    }
-  };
-  const handleClose = useEventCallback(
-    /**
-     * @param {React.SyntheticEvent | Event} event
-     */
-    (event) => {
-      hystersisTimer.start(800 + leaveDelay, () => {
-        hystersisOpen = false;
-      });
-      setOpenState(false);
-      if (onClose && open) {
-        onClose(event);
-      }
-      closeTimer.start(theme.transitions.duration.shortest, () => {
-        ignoreNonTouchEvents.current = false;
-      });
-    }
-  );
-  const handleMouseOver = (event) => {
-    if (ignoreNonTouchEvents.current && event.type !== "touchstart") {
-      return;
-    }
-    if (childNode) {
-      childNode.removeAttribute("title");
-    }
-    enterTimer.clear();
-    leaveTimer.clear();
-    if (enterDelay || hystersisOpen && enterNextDelay) {
-      enterTimer.start(hystersisOpen ? enterNextDelay : enterDelay, () => {
-        handleOpen(event);
-      });
-    } else {
-      handleOpen(event);
-    }
-  };
-  const handleMouseLeave = (event) => {
-    enterTimer.clear();
-    leaveTimer.start(leaveDelay, () => {
-      handleClose(event);
-    });
-  };
-  const [, setChildIsFocusVisible] = reactExports.useState(false);
-  const handleBlur = (event) => {
-    if (!isFocusVisible(event.target)) {
-      setChildIsFocusVisible(false);
-      handleMouseLeave(event);
-    }
-  };
-  const handleFocus = (event) => {
-    if (!childNode) {
-      setChildNode(event.currentTarget);
-    }
-    if (isFocusVisible(event.target)) {
-      setChildIsFocusVisible(true);
-      handleMouseOver(event);
-    }
-  };
-  const detectTouchStart = (event) => {
-    ignoreNonTouchEvents.current = true;
-    const childrenProps2 = children.props;
-    if (childrenProps2.onTouchStart) {
-      childrenProps2.onTouchStart(event);
-    }
-  };
-  const handleTouchStart = (event) => {
-    detectTouchStart(event);
-    leaveTimer.clear();
-    closeTimer.clear();
-    stopTouchInteraction();
-    prevUserSelect.current = document.body.style.WebkitUserSelect;
-    document.body.style.WebkitUserSelect = "none";
-    touchTimer.start(enterTouchDelay, () => {
-      document.body.style.WebkitUserSelect = prevUserSelect.current;
-      handleMouseOver(event);
-    });
-  };
-  const handleTouchEnd = (event) => {
-    if (children.props.onTouchEnd) {
-      children.props.onTouchEnd(event);
-    }
-    stopTouchInteraction();
-    leaveTimer.start(leaveTouchDelay, () => {
-      handleClose(event);
-    });
-  };
-  reactExports.useEffect(() => {
-    if (!open) {
-      return void 0;
-    }
-    function handleKeyDown(nativeEvent) {
-      if (nativeEvent.key === "Escape") {
-        handleClose(nativeEvent);
-      }
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleClose, open]);
-  const handleRef = useForkRef(getReactElementRef(children), setChildNode, ref);
-  if (!title && title !== 0) {
-    open = false;
-  }
-  const popperRef = reactExports.useRef();
-  const handleMouseMove = (event) => {
-    const childrenProps2 = children.props;
-    if (childrenProps2.onMouseMove) {
-      childrenProps2.onMouseMove(event);
-    }
-    cursorPosition = {
-      x: event.clientX,
-      y: event.clientY
-    };
-    if (popperRef.current) {
-      popperRef.current.update();
-    }
-  };
-  const nameOrDescProps = {};
-  const titleIsString = typeof title === "string";
-  if (describeChild) {
-    nameOrDescProps.title = !open && titleIsString && !disableHoverListener ? title : null;
-    nameOrDescProps["aria-describedby"] = open ? id : null;
-  } else {
-    nameOrDescProps["aria-label"] = titleIsString ? title : null;
-    nameOrDescProps["aria-labelledby"] = open && !titleIsString ? id : null;
-  }
-  const childrenProps = {
-    ...nameOrDescProps,
-    ...other,
-    ...children.props,
-    className: clsx(other.className, children.props.className),
-    onTouchStart: detectTouchStart,
-    ref: handleRef,
-    ...followCursor ? {
-      onMouseMove: handleMouseMove
-    } : {}
-  };
-  const interactiveWrapperListeners = {};
-  if (!disableTouchListener) {
-    childrenProps.onTouchStart = handleTouchStart;
-    childrenProps.onTouchEnd = handleTouchEnd;
-  }
-  if (!disableHoverListener) {
-    childrenProps.onMouseOver = composeEventHandler(handleMouseOver, childrenProps.onMouseOver);
-    childrenProps.onMouseLeave = composeEventHandler(handleMouseLeave, childrenProps.onMouseLeave);
-    if (!disableInteractive) {
-      interactiveWrapperListeners.onMouseOver = handleMouseOver;
-      interactiveWrapperListeners.onMouseLeave = handleMouseLeave;
-    }
-  }
-  if (!disableFocusListener) {
-    childrenProps.onFocus = composeEventHandler(handleFocus, childrenProps.onFocus);
-    childrenProps.onBlur = composeEventHandler(handleBlur, childrenProps.onBlur);
-    if (!disableInteractive) {
-      interactiveWrapperListeners.onFocus = handleFocus;
-      interactiveWrapperListeners.onBlur = handleBlur;
-    }
-  }
-  const ownerState = {
-    ...props,
-    isRtl,
-    arrow,
-    disableInteractive,
-    placement,
-    PopperComponentProp,
-    touch: ignoreNonTouchEvents.current
-  };
-  const resolvedPopperProps = typeof slotProps.popper === "function" ? slotProps.popper(ownerState) : slotProps.popper;
-  const popperOptions = reactExports.useMemo(() => {
-    let tooltipModifiers = [{
-      name: "arrow",
-      enabled: Boolean(arrowRef),
-      options: {
-        element: arrowRef,
-        padding: 4
-      }
-    }];
-    if (PopperProps.popperOptions?.modifiers) {
-      tooltipModifiers = tooltipModifiers.concat(PopperProps.popperOptions.modifiers);
-    }
-    if (resolvedPopperProps?.popperOptions?.modifiers) {
-      tooltipModifiers = tooltipModifiers.concat(resolvedPopperProps.popperOptions.modifiers);
-    }
-    return {
-      ...PopperProps.popperOptions,
-      ...resolvedPopperProps?.popperOptions,
-      modifiers: tooltipModifiers
-    };
-  }, [arrowRef, PopperProps.popperOptions, resolvedPopperProps?.popperOptions]);
-  const classes = useUtilityClasses$3(ownerState);
-  const resolvedTransitionProps = typeof slotProps.transition === "function" ? slotProps.transition(ownerState) : slotProps.transition;
-  const externalForwardedProps = {
-    slots: {
-      popper: components.Popper,
-      transition: components.Transition ?? TransitionComponentProp,
-      tooltip: components.Tooltip,
-      arrow: components.Arrow,
-      ...slots
-    },
-    slotProps: {
-      arrow: slotProps.arrow ?? componentsProps.arrow,
-      popper: {
-        ...PopperProps,
-        ...resolvedPopperProps ?? componentsProps.popper
-      },
-      // resolvedPopperProps can be spread because it's already an object
-      tooltip: slotProps.tooltip ?? componentsProps.tooltip,
-      transition: {
-        ...TransitionProps,
-        ...resolvedTransitionProps ?? componentsProps.transition
-      }
-    }
-  };
-  const [PopperSlot, popperSlotProps] = useSlot("popper", {
-    elementType: TooltipPopper,
-    externalForwardedProps,
-    ownerState,
-    className: clsx(classes.popper, PopperProps?.className)
-  });
-  const [TransitionSlot, transitionSlotProps] = useSlot("transition", {
-    elementType: Grow,
-    externalForwardedProps,
-    ownerState
-  });
-  const [TooltipSlot, tooltipSlotProps] = useSlot("tooltip", {
-    elementType: TooltipTooltip,
-    className: classes.tooltip,
-    externalForwardedProps,
-    ownerState
-  });
-  const [ArrowSlot, arrowSlotProps] = useSlot("arrow", {
-    elementType: TooltipArrow,
-    className: classes.arrow,
-    externalForwardedProps,
-    ownerState,
-    ref: setArrowRef
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(reactExports.Fragment, {
-    children: [/* @__PURE__ */ reactExports.cloneElement(children, childrenProps), /* @__PURE__ */ jsxRuntimeExports.jsx(PopperSlot, {
-      as: PopperComponentProp ?? Popper,
-      placement,
-      anchorEl: followCursor ? {
-        getBoundingClientRect: () => ({
-          top: cursorPosition.y,
-          left: cursorPosition.x,
-          right: cursorPosition.x,
-          bottom: cursorPosition.y,
-          width: 0,
-          height: 0
-        })
-      } : childNode,
-      popperRef,
-      open: childNode ? open : false,
-      id,
-      transition: true,
-      ...interactiveWrapperListeners,
-      ...popperSlotProps,
-      popperOptions,
-      children: ({
-        TransitionProps: TransitionPropsInner
-      }) => /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionSlot, {
-        timeout: theme.transitions.duration.shorter,
-        ...TransitionPropsInner,
-        ...transitionSlotProps,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TooltipSlot, {
-          ...tooltipSlotProps,
-          children: [title, arrow ? /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowSlot, {
-            ...arrowSlotProps
-          }) : null]
-        })
-      })
-    })]
-  });
-});
-
-function getSpeedDialActionUtilityClass(slot) {
-  return generateUtilityClass('MuiSpeedDialAction', slot);
-}
-const speedDialActionClasses = generateUtilityClasses('MuiSpeedDialAction', ['fab', 'fabClosed', 'staticTooltip', 'staticTooltipClosed', 'staticTooltipLabel', 'tooltipPlacementLeft', 'tooltipPlacementRight']);
-
-const useUtilityClasses$2 = (ownerState) => {
-  const {
-    open,
-    tooltipPlacement,
-    classes
-  } = ownerState;
-  const slots = {
-    fab: ["fab", !open && "fabClosed"],
-    staticTooltip: ["staticTooltip", `tooltipPlacement${capitalize(tooltipPlacement)}`, !open && "staticTooltipClosed"],
-    staticTooltipLabel: ["staticTooltipLabel"]
-  };
-  return composeClasses(slots, getSpeedDialActionUtilityClass, classes);
-};
-const SpeedDialActionFab = styled(Fab, {
-  name: "MuiSpeedDialAction",
-  slot: "Fab",
-  skipVariantsResolver: false,
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.fab, !ownerState.open && styles.fabClosed];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  margin: 8,
-  color: (theme.vars || theme).palette.text.secondary,
-  backgroundColor: (theme.vars || theme).palette.background.paper,
-  "&:hover": {
-    backgroundColor: theme.vars ? theme.vars.palette.SpeedDialAction.fabHoverBg : emphasize(theme.palette.background.paper, 0.15)
-  },
-  transition: `${theme.transitions.create("transform", {
-    duration: theme.transitions.duration.shorter
-  })}, opacity 0.8s`,
-  opacity: 1,
-  variants: [{
-    props: ({
-      ownerState
-    }) => !ownerState.open,
-    style: {
-      opacity: 0,
-      transform: "scale(0)"
-    }
-  }]
-})));
-const SpeedDialActionStaticTooltip = styled("span", {
-  name: "MuiSpeedDialAction",
-  slot: "StaticTooltip",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.staticTooltip, !ownerState.open && styles.staticTooltipClosed, styles[`tooltipPlacement${capitalize(ownerState.tooltipPlacement)}`]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  position: "relative",
-  display: "flex",
-  alignItems: "center",
-  [`& .${speedDialActionClasses.staticTooltipLabel}`]: {
-    transition: theme.transitions.create(["transform", "opacity"], {
-      duration: theme.transitions.duration.shorter
-    }),
-    opacity: 1
-  },
-  variants: [{
-    props: ({
-      ownerState
-    }) => !ownerState.open,
-    style: {
-      [`& .${speedDialActionClasses.staticTooltipLabel}`]: {
-        opacity: 0,
-        transform: "scale(0.5)"
-      }
-    }
-  }, {
-    props: {
-      tooltipPlacement: "left"
-    },
-    style: {
-      [`& .${speedDialActionClasses.staticTooltipLabel}`]: {
-        transformOrigin: "100% 50%",
-        right: "100%",
-        marginRight: 8
-      }
-    }
-  }, {
-    props: {
-      tooltipPlacement: "right"
-    },
-    style: {
-      [`& .${speedDialActionClasses.staticTooltipLabel}`]: {
-        transformOrigin: "0% 50%",
-        left: "100%",
-        marginLeft: 8
-      }
-    }
-  }]
-})));
-const SpeedDialActionStaticTooltipLabel = styled("span", {
-  name: "MuiSpeedDialAction",
-  slot: "StaticTooltipLabel"
-})(memoTheme(({
-  theme
-}) => ({
-  position: "absolute",
-  ...theme.typography.body1,
-  backgroundColor: (theme.vars || theme).palette.background.paper,
-  borderRadius: (theme.vars || theme).shape.borderRadius,
-  boxShadow: (theme.vars || theme).shadows[1],
-  color: (theme.vars || theme).palette.text.secondary,
-  padding: "4px 16px",
-  wordBreak: "keep-all"
-})));
-const SpeedDialAction = /* @__PURE__ */ reactExports.forwardRef(function SpeedDialAction2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiSpeedDialAction"
-  });
-  const {
-    className,
-    delay = 0,
-    FabProps = {},
-    icon,
-    id,
-    open,
-    TooltipClasses,
-    tooltipOpen: tooltipOpenProp = false,
-    tooltipPlacement = "left",
-    tooltipTitle,
-    slots = {},
-    slotProps = {},
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    tooltipPlacement
-  };
-  const classes = useUtilityClasses$2(ownerState);
-  const externalForwardedProps = {
-    slots,
-    slotProps: {
-      fab: FabProps,
-      ...slotProps,
-      tooltip: mergeSlotProps$1(typeof slotProps.tooltip === "function" ? slotProps.tooltip(ownerState) : slotProps.tooltip, {
-        title: tooltipTitle,
-        open: tooltipOpenProp,
-        placement: tooltipPlacement,
-        classes: TooltipClasses
-      })
-    }
-  };
-  const [tooltipOpen, setTooltipOpen] = reactExports.useState(externalForwardedProps.slotProps.tooltip?.open);
-  const handleTooltipClose = () => {
-    setTooltipOpen(false);
-  };
-  const handleTooltipOpen = () => {
-    setTooltipOpen(true);
-  };
-  const transitionStyle = {
-    transitionDelay: `${delay}ms`
-  };
-  const [FabSlot, fabSlotProps] = useSlot("fab", {
-    elementType: SpeedDialActionFab,
-    externalForwardedProps,
-    ownerState,
-    shouldForwardComponentProp: true,
-    className: clsx(classes.fab, className),
-    additionalProps: {
-      style: transitionStyle,
-      tabIndex: -1,
-      role: "menuitem",
-      size: "small"
-    }
-  });
-  const [TooltipSlot, tooltipSlotProps] = useSlot("tooltip", {
-    elementType: Tooltip,
-    externalForwardedProps,
-    shouldForwardComponentProp: true,
-    ref,
-    additionalProps: {
-      id
-    },
-    ownerState,
-    getSlotProps: (handlers) => ({
-      ...handlers,
-      onClose: (event) => {
-        handlers.onClose?.(event);
-        handleTooltipClose();
-      },
-      onOpen: (event) => {
-        handlers.onOpen?.(event);
-        handleTooltipOpen();
-      }
-    })
-  });
-  const [StaticTooltipSlot, staticTooltipSlotProps] = useSlot("staticTooltip", {
-    elementType: SpeedDialActionStaticTooltip,
-    externalForwardedProps,
-    ownerState,
-    ref,
-    className: classes.staticTooltip,
-    additionalProps: {
-      id
-    }
-  });
-  const [StaticTooltipLabelSlot, staticTooltipLabelSlotProps] = useSlot("staticTooltipLabel", {
-    elementType: SpeedDialActionStaticTooltipLabel,
-    externalForwardedProps,
-    ownerState,
-    className: classes.staticTooltipLabel,
-    additionalProps: {
-      style: transitionStyle,
-      id: `${id}-label`
-    }
-  });
-  const fab = /* @__PURE__ */ jsxRuntimeExports.jsx(FabSlot, {
-    ...fabSlotProps,
-    children: icon
-  });
-  if (tooltipSlotProps.open) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(StaticTooltipSlot, {
-      ...staticTooltipSlotProps,
-      ...other,
-      children: [/* @__PURE__ */ jsxRuntimeExports.jsx(StaticTooltipLabelSlot, {
-        ...staticTooltipLabelSlotProps,
-        children: tooltipSlotProps.title
-      }), /* @__PURE__ */ reactExports.cloneElement(fab, {
-        "aria-labelledby": `${id}-label`
-      })]
-    });
-  }
-  if (!open && tooltipOpen) {
-    setTooltipOpen(false);
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipSlot, {
-    ...tooltipSlotProps,
-    title: tooltipSlotProps.title,
-    open: open && tooltipOpen,
-    placement: tooltipSlotProps.placement,
-    classes: tooltipSlotProps.classes,
-    ...other,
-    children: fab
-  });
-});
-
-const AddIcon$1 = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
-  d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
-}));
-
-function getSpeedDialIconUtilityClass(slot) {
-  return generateUtilityClass('MuiSpeedDialIcon', slot);
-}
-const speedDialIconClasses = generateUtilityClasses('MuiSpeedDialIcon', ['root', 'icon', 'iconOpen', 'iconWithOpenIconOpen', 'openIcon', 'openIconOpen']);
-
-const useUtilityClasses$1 = (ownerState) => {
-  const {
-    classes,
-    open,
-    openIcon
-  } = ownerState;
-  const slots = {
-    root: ["root"],
-    icon: ["icon", open && "iconOpen", openIcon && open && "iconWithOpenIconOpen"],
-    openIcon: ["openIcon", open && "openIconOpen"]
-  };
-  return composeClasses(slots, getSpeedDialIconUtilityClass, classes);
-};
-const SpeedDialIconRoot = styled("span", {
-  name: "MuiSpeedDialIcon",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [{
-      [`& .${speedDialIconClasses.icon}`]: styles.icon
-    }, {
-      [`& .${speedDialIconClasses.icon}`]: ownerState.open && styles.iconOpen
-    }, {
-      [`& .${speedDialIconClasses.icon}`]: ownerState.open && ownerState.openIcon && styles.iconWithOpenIconOpen
-    }, {
-      [`& .${speedDialIconClasses.openIcon}`]: styles.openIcon
-    }, {
-      [`& .${speedDialIconClasses.openIcon}`]: ownerState.open && styles.openIconOpen
-    }, styles.root];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  height: 24,
-  [`& .${speedDialIconClasses.icon}`]: {
-    transition: theme.transitions.create(["transform", "opacity"], {
-      duration: theme.transitions.duration.short
-    })
-  },
-  [`& .${speedDialIconClasses.openIcon}`]: {
-    position: "absolute",
-    transition: theme.transitions.create(["transform", "opacity"], {
-      duration: theme.transitions.duration.short
-    }),
-    opacity: 0,
-    transform: "rotate(-45deg)"
-  },
-  variants: [{
-    props: ({
-      ownerState
-    }) => ownerState.open,
-    style: {
-      [`& .${speedDialIconClasses.icon}`]: {
-        transform: "rotate(45deg)"
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.open && ownerState.openIcon,
-    style: {
-      [`& .${speedDialIconClasses.icon}`]: {
-        opacity: 0
-      }
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.open,
-    style: {
-      [`& .${speedDialIconClasses.openIcon}`]: {
-        transform: "rotate(0deg)",
-        opacity: 1
-      }
-    }
-  }]
-})));
-const SpeedDialIcon = /* @__PURE__ */ reactExports.forwardRef(function SpeedDialIcon2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiSpeedDialIcon"
-  });
-  const {
-    className,
-    icon: iconProp,
-    open,
-    openIcon: openIconProp,
-    ...other
-  } = props;
-  const ownerState = props;
-  const classes = useUtilityClasses$1(ownerState);
-  function formatIcon(icon, newClassName) {
-    if (/* @__PURE__ */ reactExports.isValidElement(icon)) {
-      return /* @__PURE__ */ reactExports.cloneElement(icon, {
-        className: newClassName
-      });
-    }
-    return icon;
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(SpeedDialIconRoot, {
-    className: clsx(classes.root, className),
-    ref,
-    ownerState,
-    ...other,
-    children: [openIconProp ? formatIcon(openIconProp, classes.openIcon) : null, iconProp ? formatIcon(iconProp, classes.icon) : /* @__PURE__ */ jsxRuntimeExports.jsx(AddIcon$1, {
-      className: classes.icon
-    })]
-  });
-});
-SpeedDialIcon.muiName = "SpeedDialIcon";
-
-function getToolbarUtilityClass(slot) {
-  return generateUtilityClass('MuiToolbar', slot);
-}
-generateUtilityClasses('MuiToolbar', ['root', 'gutters', 'regular', 'dense']);
-
-const useUtilityClasses = (ownerState) => {
-  const {
-    classes,
-    disableGutters,
-    variant
-  } = ownerState;
-  const slots = {
-    root: ["root", !disableGutters && "gutters", variant]
-  };
-  return composeClasses(slots, getToolbarUtilityClass, classes);
-};
-const ToolbarRoot = styled("div", {
-  name: "MuiToolbar",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, !ownerState.disableGutters && styles.gutters, styles[ownerState.variant]];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  position: "relative",
-  display: "flex",
-  alignItems: "center",
-  variants: [{
-    props: ({
-      ownerState
-    }) => !ownerState.disableGutters,
-    style: {
-      paddingLeft: theme.spacing(2),
-      paddingRight: theme.spacing(2),
-      [theme.breakpoints.up("sm")]: {
-        paddingLeft: theme.spacing(3),
-        paddingRight: theme.spacing(3)
-      }
-    }
-  }, {
-    props: {
-      variant: "dense"
-    },
-    style: {
-      minHeight: 48
-    }
-  }, {
-    props: {
-      variant: "regular"
-    },
-    style: theme.mixins.toolbar
-  }]
-})));
-const Toolbar = /* @__PURE__ */ reactExports.forwardRef(function Toolbar2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiToolbar"
-  });
-  const {
-    className,
-    component = "div",
-    disableGutters = false,
-    variant = "regular",
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    component,
-    disableGutters,
-    variant
-  };
-  const classes = useUtilityClasses(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(ToolbarRoot, {
-    as: component,
-    className: clsx(classes.root, className),
-    ref,
-    ownerState,
-    ...other
-  });
-});
-
-const ImportWords32Icon = createSvgIcon(
-  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-    "svg",
-    {
-      width: "800px",
-      height: "800px",
-      viewBox: "0 0 24 24",
-      fill: "none",
-      xmlns: "http://www.w3.org/2000/svg",
-      children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "5.5", y: "5.5", width: "13", height: "13", rx: "1", stroke: "#000000" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 16H16.5", stroke: "#000000", strokeLinecap: "round" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.5 16H13", stroke: "#000000", strokeLinecap: "round" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 16H9.5", stroke: "#000000", strokeLinecap: "round" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 13.3333H16.5", stroke: "#000000", strokeLinecap: "round" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.5 13.3333H13", stroke: "#000000", strokeLinecap: "round" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 13.3334H9.5", stroke: "#000000", strokeLinecap: "round" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 10.6667H16.5", stroke: "#000000", strokeLinecap: "round" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.5 10.6667H13", stroke: "#000000", strokeLinecap: "round" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 10.6667H9.5", stroke: "#000000", strokeLinecap: "round" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 8H16.5", stroke: "#000000", strokeLinecap: "round" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.5 8H13", stroke: "#000000", strokeLinecap: "round" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 8H9.5", stroke: "#000000", strokeLinecap: "round" })
-      ]
-    }
-  ));
-const GenerateWords32Icon = createSvgIcon(
-  /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "svg",
-    {
-      fill: "#000000",
-      version: "1.1",
-      id: "Capa_1",
-      xmlns: "http://www.w3.org/2000/svg",
-      width: "800px",
-      height: "800px",
-      viewBox: "0 0 33.645 33.645",
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx("g", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "path",
-        {
-          d: "M11.521,8.591L10.76,8.603l-0.023-1.689l0.759-0.011c0.443-0.006,0.752,0.016,0.923,0.068\n		c0.172,0.052,0.307,0.143,0.399,0.27c0.093,0.126,0.143,0.282,0.145,0.465c0.003,0.174-0.043,0.331-0.137,0.466\n		c-0.095,0.135-0.235,0.238-0.424,0.307C12.212,8.548,11.918,8.586,11.521,8.591z M12.551,9.703\n		c-0.192-0.071-0.484-0.103-0.878-0.097l-0.896,0.013l0.021,1.499c0.005,0.213,0.017,0.337,0.029,0.374\n		c0.017,0.046,0.046,0.079,0.083,0.094c0.039,0.019,0.142,0.027,0.31,0.025l0.507-0.008c0.292-0.004,0.534-0.038,0.729-0.094\n		c0.192-0.058,0.354-0.173,0.487-0.347c0.133-0.175,0.196-0.383,0.193-0.625c-0.003-0.205-0.052-0.377-0.149-0.52\n		C12.887,9.879,12.747,9.773,12.551,9.703z M31.32,27.991l-5.513,5.396c-0.175,0.171-0.401,0.258-0.629,0.258\n		c-0.232,0-0.467-0.091-0.644-0.271c-0.348-0.354-0.342-0.925,0.015-1.271l4.227-4.137L26.45,25.59l-2.751,2.691\n		c-0.175,0.171-0.401,0.257-0.629,0.257c-0.232,0-0.467-0.09-0.644-0.271c-0.349-0.355-0.342-0.926,0.015-1.272l2.751-2.691\n		l-7.738-7.907c-3.665,3.017-9.109,2.782-12.491-0.672c-3.57-3.647-3.508-9.519,0.141-13.088c3.647-3.57,9.521-3.507,13.092,0.141\n		c3.332,3.406,3.495,8.75,0.534,12.35L31.32,27.991z M16.754,15.68l-0.614-0.628c-1.229,0.968-2.768,1.561-4.45,1.585\n		c-4.082,0.061-7.44-3.197-7.5-7.28c-0.062-4.08,3.197-7.438,7.279-7.5c4.08-0.06,7.438,3.2,7.498,7.281\n		c0.025,1.748-0.561,3.36-1.555,4.64l0.611,0.625c2.573-3.213,2.406-7.914-0.544-10.93C14.29,0.212,9.061,0.156,5.799,3.347\n		c-3.258,3.188-3.312,8.417-0.124,11.677C8.676,18.091,13.483,18.319,16.754,15.68z M13.176,12.59\n		c0.196-0.041,0.37-0.091,0.519-0.153c0.402-0.168,0.713-0.409,0.928-0.722c0.216-0.312,0.325-0.652,0.32-1.02\n		c-0.004-0.307-0.083-0.584-0.232-0.832c-0.151-0.248-0.349-0.439-0.6-0.575c-0.172-0.097-0.423-0.186-0.749-0.263\n		c0.301-0.106,0.544-0.24,0.726-0.4c0.184-0.16,0.321-0.343,0.414-0.55c0.095-0.207,0.14-0.425,0.137-0.652\n		c-0.005-0.315-0.101-0.603-0.289-0.863c-0.188-0.26-0.457-0.458-0.803-0.593c-0.135-0.053-0.294-0.091-0.468-0.122l-0.021-1.221\n		l-1.172,0.018l0.019,1.139l-0.753,0.012l-0.019-1.14L9.959,4.67l0.018,1.14L8.188,5.836l0.014,0.958L8.474,6.79\n		c0.185-0.003,0.307,0.012,0.37,0.043c0.064,0.032,0.111,0.078,0.14,0.132C9.011,7.021,9.026,7.153,9.03,7.358l0.058,3.863\n		c0.003,0.202-0.007,0.332-0.034,0.39C9.03,11.67,8.985,11.715,8.92,11.747c-0.062,0.033-0.185,0.05-0.37,0.053l-0.271,0.004\n		l0.014,0.958l1.79-0.026l0.017,1.14l1.176-0.017l-0.019-1.14l0.666-0.009c0.03-0.001,0.06-0.002,0.086-0.002l0.019,1.14\n		l1.173-0.017L13.176,12.59z"
-        }
-      ) })
-    }
-  ));
 
 const scriptRel = 'modulepreload';const assetsURL = function(dep, importerUrl) { return new URL(dep, importerUrl).href };const seen = {};const __vitePreload = function preload(baseModule, deps, importerUrl) {
   let promise = Promise.resolve();
@@ -44645,63 +39503,783 @@ function useRegisterSW(options = {}) {
   };
 }
 
+const Grid = createGrid({
+  createStyledComponent: styled("div", {
+    name: "MuiGrid",
+    slot: "Root",
+    overridesResolver: (props, styles) => {
+      const {
+        ownerState
+      } = props;
+      return [styles.root, ownerState.container && styles.container];
+    }
+  }),
+  componentName: "MuiGrid",
+  useThemeProps: (inProps) => useDefaultProps({
+    props: inProps,
+    name: "MuiGrid"
+  }),
+  useTheme
+});
+
+function useSnackbar(parameters = {}) {
+  const {
+    autoHideDuration = null,
+    disableWindowBlurListener = false,
+    onClose,
+    open,
+    resumeHideDuration
+  } = parameters;
+  const timerAutoHide = useTimeout();
+  reactExports.useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    /**
+     * @param {KeyboardEvent} nativeEvent
+     */
+    function handleKeyDown(nativeEvent) {
+      if (!nativeEvent.defaultPrevented) {
+        if (nativeEvent.key === 'Escape') {
+          // not calling `preventDefault` since we don't know if people may ignore this event e.g. a permanently open snackbar
+          onClose?.(nativeEvent, 'escapeKeyDown');
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, onClose]);
+  const handleClose = useEventCallback((event, reason) => {
+    onClose?.(event, reason);
+  });
+  const setAutoHideTimer = useEventCallback(autoHideDurationParam => {
+    if (!onClose || autoHideDurationParam == null) {
+      return;
+    }
+    timerAutoHide.start(autoHideDurationParam, () => {
+      handleClose(null, 'timeout');
+    });
+  });
+  reactExports.useEffect(() => {
+    if (open) {
+      setAutoHideTimer(autoHideDuration);
+    }
+    return timerAutoHide.clear;
+  }, [open, autoHideDuration, setAutoHideTimer, timerAutoHide]);
+  const handleClickAway = event => {
+    onClose?.(event, 'clickaway');
+  };
+
+  // Pause the timer when the user is interacting with the Snackbar
+  // or when the user hide the window.
+  const handlePause = timerAutoHide.clear;
+
+  // Restart the timer when the user is no longer interacting with the Snackbar
+  // or when the window is shown back.
+  const handleResume = reactExports.useCallback(() => {
+    if (autoHideDuration != null) {
+      setAutoHideTimer(resumeHideDuration != null ? resumeHideDuration : autoHideDuration * 0.5);
+    }
+  }, [autoHideDuration, resumeHideDuration, setAutoHideTimer]);
+  const createHandleBlur = otherHandlers => event => {
+    const onBlurCallback = otherHandlers.onBlur;
+    onBlurCallback?.(event);
+    handleResume();
+  };
+  const createHandleFocus = otherHandlers => event => {
+    const onFocusCallback = otherHandlers.onFocus;
+    onFocusCallback?.(event);
+    handlePause();
+  };
+  const createMouseEnter = otherHandlers => event => {
+    const onMouseEnterCallback = otherHandlers.onMouseEnter;
+    onMouseEnterCallback?.(event);
+    handlePause();
+  };
+  const createMouseLeave = otherHandlers => event => {
+    const onMouseLeaveCallback = otherHandlers.onMouseLeave;
+    onMouseLeaveCallback?.(event);
+    handleResume();
+  };
+  reactExports.useEffect(() => {
+    // TODO: window global should be refactored here
+    if (!disableWindowBlurListener && open) {
+      window.addEventListener('focus', handleResume);
+      window.addEventListener('blur', handlePause);
+      return () => {
+        window.removeEventListener('focus', handleResume);
+        window.removeEventListener('blur', handlePause);
+      };
+    }
+    return undefined;
+  }, [disableWindowBlurListener, open, handleResume, handlePause]);
+  const getRootProps = (externalProps = {}) => {
+    const externalEventHandlers = {
+      ...extractEventHandlers(parameters),
+      ...extractEventHandlers(externalProps)
+    };
+    return {
+      // ClickAwayListener adds an `onClick` prop which results in the alert not being announced.
+      // See https://github.com/mui/material-ui/issues/29080
+      role: 'presentation',
+      ...externalProps,
+      ...externalEventHandlers,
+      onBlur: createHandleBlur(externalEventHandlers),
+      onFocus: createHandleFocus(externalEventHandlers),
+      onMouseEnter: createMouseEnter(externalEventHandlers),
+      onMouseLeave: createMouseLeave(externalEventHandlers)
+    };
+  };
+  return {
+    getRootProps,
+    onClickAway: handleClickAway
+  };
+}
+
+function mapEventPropToEvent(eventProp) {
+  return eventProp.substring(2).toLowerCase();
+}
+function clickedRootScrollbar(event, doc) {
+  return doc.documentElement.clientWidth < event.clientX || doc.documentElement.clientHeight < event.clientY;
+}
+function ClickAwayListener(props) {
+  const {
+    children,
+    disableReactTree = false,
+    mouseEvent = "onClick",
+    onClickAway,
+    touchEvent = "onTouchEnd"
+  } = props;
+  const movedRef = reactExports.useRef(false);
+  const nodeRef = reactExports.useRef(null);
+  const activatedRef = reactExports.useRef(false);
+  const syntheticEventRef = reactExports.useRef(false);
+  reactExports.useEffect(() => {
+    setTimeout(() => {
+      activatedRef.current = true;
+    }, 0);
+    return () => {
+      activatedRef.current = false;
+    };
+  }, []);
+  const handleRef = useForkRef(getReactElementRef(children), nodeRef);
+  const handleClickAway = useEventCallback((event) => {
+    const insideReactTree = syntheticEventRef.current;
+    syntheticEventRef.current = false;
+    const doc = ownerDocument(nodeRef.current);
+    if (!activatedRef.current || !nodeRef.current || "clientX" in event && clickedRootScrollbar(event, doc)) {
+      return;
+    }
+    if (movedRef.current) {
+      movedRef.current = false;
+      return;
+    }
+    let insideDOM;
+    if (event.composedPath) {
+      insideDOM = event.composedPath().includes(nodeRef.current);
+    } else {
+      insideDOM = !doc.documentElement.contains(
+        // @ts-expect-error returns `false` as intended when not dispatched from a Node
+        event.target
+      ) || nodeRef.current.contains(
+        // @ts-expect-error returns `false` as intended when not dispatched from a Node
+        event.target
+      );
+    }
+    if (!insideDOM && (disableReactTree || !insideReactTree)) {
+      onClickAway(event);
+    }
+  });
+  const createHandleSynthetic = (handlerName) => (event) => {
+    syntheticEventRef.current = true;
+    const childrenPropsHandler = children.props[handlerName];
+    if (childrenPropsHandler) {
+      childrenPropsHandler(event);
+    }
+  };
+  const childrenProps = {
+    ref: handleRef
+  };
+  if (touchEvent !== false) {
+    childrenProps[touchEvent] = createHandleSynthetic(touchEvent);
+  }
+  reactExports.useEffect(() => {
+    if (touchEvent !== false) {
+      const mappedTouchEvent = mapEventPropToEvent(touchEvent);
+      const doc = ownerDocument(nodeRef.current);
+      const handleTouchMove = () => {
+        movedRef.current = true;
+      };
+      doc.addEventListener(mappedTouchEvent, handleClickAway);
+      doc.addEventListener("touchmove", handleTouchMove);
+      return () => {
+        doc.removeEventListener(mappedTouchEvent, handleClickAway);
+        doc.removeEventListener("touchmove", handleTouchMove);
+      };
+    }
+    return void 0;
+  }, [handleClickAway, touchEvent]);
+  if (mouseEvent !== false) {
+    childrenProps[mouseEvent] = createHandleSynthetic(mouseEvent);
+  }
+  reactExports.useEffect(() => {
+    if (mouseEvent !== false) {
+      const mappedMouseEvent = mapEventPropToEvent(mouseEvent);
+      const doc = ownerDocument(nodeRef.current);
+      doc.addEventListener(mappedMouseEvent, handleClickAway);
+      return () => {
+        doc.removeEventListener(mappedMouseEvent, handleClickAway);
+      };
+    }
+    return void 0;
+  }, [handleClickAway, mouseEvent]);
+  return /* @__PURE__ */ reactExports.cloneElement(children, childrenProps);
+}
+
+function getSnackbarContentUtilityClass(slot) {
+  return generateUtilityClass('MuiSnackbarContent', slot);
+}
+generateUtilityClasses('MuiSnackbarContent', ['root', 'message', 'action']);
+
+const useUtilityClasses$5 = (ownerState) => {
+  const {
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root"],
+    action: ["action"],
+    message: ["message"]
+  };
+  return composeClasses(slots, getSnackbarContentUtilityClass, classes);
+};
+const SnackbarContentRoot = styled(Paper, {
+  name: "MuiSnackbarContent",
+  slot: "Root"
+})(memoTheme(({
+  theme
+}) => {
+  const emphasis = theme.palette.mode === "light" ? 0.8 : 0.98;
+  return {
+    ...theme.typography.body2,
+    color: theme.vars ? theme.vars.palette.SnackbarContent.color : theme.palette.getContrastText(emphasize(theme.palette.background.default, emphasis)),
+    backgroundColor: theme.vars ? theme.vars.palette.SnackbarContent.bg : emphasize(theme.palette.background.default, emphasis),
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    padding: "6px 16px",
+    flexGrow: 1,
+    [theme.breakpoints.up("sm")]: {
+      flexGrow: "initial",
+      minWidth: 288
+    }
+  };
+}));
+const SnackbarContentMessage = styled("div", {
+  name: "MuiSnackbarContent",
+  slot: "Message"
+})({
+  padding: "8px 0"
+});
+const SnackbarContentAction = styled("div", {
+  name: "MuiSnackbarContent",
+  slot: "Action"
+})({
+  display: "flex",
+  alignItems: "center",
+  marginLeft: "auto",
+  paddingLeft: 16,
+  marginRight: -8
+});
+const SnackbarContent = /* @__PURE__ */ reactExports.forwardRef(function SnackbarContent2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiSnackbarContent"
+  });
+  const {
+    action,
+    className,
+    message,
+    role = "alert",
+    ...other
+  } = props;
+  const ownerState = props;
+  const classes = useUtilityClasses$5(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(SnackbarContentRoot, {
+    role,
+    elevation: 6,
+    className: clsx(classes.root, className),
+    ownerState,
+    ref,
+    ...other,
+    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(SnackbarContentMessage, {
+      className: classes.message,
+      ownerState,
+      children: message
+    }), action ? /* @__PURE__ */ jsxRuntimeExports.jsx(SnackbarContentAction, {
+      className: classes.action,
+      ownerState,
+      children: action
+    }) : null]
+  });
+});
+
+function getSnackbarUtilityClass(slot) {
+  return generateUtilityClass('MuiSnackbar', slot);
+}
+generateUtilityClasses('MuiSnackbar', ['root', 'anchorOriginTopCenter', 'anchorOriginBottomCenter', 'anchorOriginTopRight', 'anchorOriginBottomRight', 'anchorOriginTopLeft', 'anchorOriginBottomLeft']);
+
+const useUtilityClasses$4 = (ownerState) => {
+  const {
+    classes,
+    anchorOrigin
+  } = ownerState;
+  const slots = {
+    root: ["root", `anchorOrigin${capitalize(anchorOrigin.vertical)}${capitalize(anchorOrigin.horizontal)}`]
+  };
+  return composeClasses(slots, getSnackbarUtilityClass, classes);
+};
+const SnackbarRoot = styled("div", {
+  name: "MuiSnackbar",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[`anchorOrigin${capitalize(ownerState.anchorOrigin.vertical)}${capitalize(ownerState.anchorOrigin.horizontal)}`]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  zIndex: (theme.vars || theme).zIndex.snackbar,
+  position: "fixed",
+  display: "flex",
+  left: 8,
+  right: 8,
+  justifyContent: "center",
+  alignItems: "center",
+  variants: [{
+    props: ({
+      ownerState
+    }) => ownerState.anchorOrigin.vertical === "top",
+    style: {
+      top: 8,
+      [theme.breakpoints.up("sm")]: {
+        top: 24
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.anchorOrigin.vertical !== "top",
+    style: {
+      bottom: 8,
+      [theme.breakpoints.up("sm")]: {
+        bottom: 24
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.anchorOrigin.horizontal === "left",
+    style: {
+      justifyContent: "flex-start",
+      [theme.breakpoints.up("sm")]: {
+        left: 24,
+        right: "auto"
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.anchorOrigin.horizontal === "right",
+    style: {
+      justifyContent: "flex-end",
+      [theme.breakpoints.up("sm")]: {
+        right: 24,
+        left: "auto"
+      }
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.anchorOrigin.horizontal === "center",
+    style: {
+      [theme.breakpoints.up("sm")]: {
+        left: "50%",
+        right: "auto",
+        transform: "translateX(-50%)"
+      }
+    }
+  }]
+})));
+const Snackbar = /* @__PURE__ */ reactExports.forwardRef(function Snackbar2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiSnackbar"
+  });
+  const theme = useTheme();
+  const defaultTransitionDuration = {
+    enter: theme.transitions.duration.enteringScreen,
+    exit: theme.transitions.duration.leavingScreen
+  };
+  const {
+    action,
+    anchorOrigin: {
+      vertical,
+      horizontal
+    } = {
+      vertical: "bottom",
+      horizontal: "left"
+    },
+    autoHideDuration = null,
+    children,
+    className,
+    ClickAwayListenerProps: ClickAwayListenerPropsProp,
+    ContentProps: ContentPropsProp,
+    disableWindowBlurListener = false,
+    message,
+    onBlur,
+    onClose,
+    onFocus,
+    onMouseEnter,
+    onMouseLeave,
+    open,
+    resumeHideDuration,
+    slots = {},
+    slotProps = {},
+    TransitionComponent: TransitionComponentProp,
+    transitionDuration = defaultTransitionDuration,
+    TransitionProps: {
+      onEnter,
+      onExited,
+      ...TransitionPropsProp
+    } = {},
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    anchorOrigin: {
+      vertical,
+      horizontal
+    },
+    autoHideDuration,
+    disableWindowBlurListener,
+    TransitionComponent: TransitionComponentProp,
+    transitionDuration
+  };
+  const classes = useUtilityClasses$4(ownerState);
+  const {
+    getRootProps,
+    onClickAway
+  } = useSnackbar({
+    ...ownerState
+  });
+  const [exited, setExited] = reactExports.useState(true);
+  const handleExited = (node) => {
+    setExited(true);
+    if (onExited) {
+      onExited(node);
+    }
+  };
+  const handleEnter = (node, isAppearing) => {
+    setExited(false);
+    if (onEnter) {
+      onEnter(node, isAppearing);
+    }
+  };
+  const externalForwardedProps = {
+    slots: {
+      transition: TransitionComponentProp,
+      ...slots
+    },
+    slotProps: {
+      content: ContentPropsProp,
+      clickAwayListener: ClickAwayListenerPropsProp,
+      transition: TransitionPropsProp,
+      ...slotProps
+    }
+  };
+  const [Root, rootProps] = useSlot("root", {
+    ref,
+    className: [classes.root, className],
+    elementType: SnackbarRoot,
+    getSlotProps: getRootProps,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other
+    },
+    ownerState
+  });
+  const [ClickAwaySlot, {
+    ownerState: clickAwayOwnerStateProp,
+    ...clickAwayListenerProps
+  }] = useSlot("clickAwayListener", {
+    elementType: ClickAwayListener,
+    externalForwardedProps,
+    getSlotProps: (handlers) => ({
+      onClickAway: (...params) => {
+        const event = params[0];
+        handlers.onClickAway?.(...params);
+        if (event?.defaultMuiPrevented) {
+          return;
+        }
+        onClickAway(...params);
+      }
+    }),
+    ownerState
+  });
+  const [ContentSlot, contentSlotProps] = useSlot("content", {
+    elementType: SnackbarContent,
+    shouldForwardComponentProp: true,
+    externalForwardedProps,
+    additionalProps: {
+      message,
+      action
+    },
+    ownerState
+  });
+  const [TransitionSlot, transitionProps] = useSlot("transition", {
+    elementType: Grow,
+    externalForwardedProps,
+    getSlotProps: (handlers) => ({
+      onEnter: (...params) => {
+        handlers.onEnter?.(...params);
+        handleEnter(...params);
+      },
+      onExited: (...params) => {
+        handlers.onExited?.(...params);
+        handleExited(...params);
+      }
+    }),
+    additionalProps: {
+      appear: true,
+      in: open,
+      timeout: transitionDuration,
+      direction: vertical === "top" ? "down" : "up"
+    },
+    ownerState
+  });
+  if (!open && exited) {
+    return null;
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ClickAwaySlot, {
+    ...clickAwayListenerProps,
+    ...slots.clickAwayListener && {
+      ownerState: clickAwayOwnerStateProp
+    },
+    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root, {
+      ...rootProps,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionSlot, {
+        ...transitionProps,
+        children: children || /* @__PURE__ */ jsxRuntimeExports.jsx(ContentSlot, {
+          ...contentSlotProps
+        })
+      })
+    })
+  });
+});
+
 const AddIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
   d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"
 }));
 
-const FixedButtons = reactExports.memo(
-  ({ dispatch }) => {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(WalletsCtx, { value: { dispatch }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      SpeedDial,
-      {
-        ariaLabel: "SpeedDial actions",
-        sx: { position: "fixed", right: 32, bottom: 18 },
-        icon: /* @__PURE__ */ jsxRuntimeExports.jsx(SpeedDialIcon, {}),
-        FabProps: { color: "primary" },
-        direction: "up",
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            SpeedDialAction,
-            {
-              icon: /* @__PURE__ */ jsxRuntimeExports.jsx(WalletDlg, { type: "add", children: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(AddIcon, { onClick: triggerOpen }) }),
-              slotProps: { tooltip: { placement: "left", title: "添加钱包" } }
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            SpeedDialAction,
-            {
-              icon: /* @__PURE__ */ jsxRuntimeExports.jsx(XinyinDlg, { type: "import", children: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(ImportWords32Icon, { onClick: triggerOpen }) }),
-              slotProps: {
-                tooltip: { placement: "left", title: "导入助记词" }
-              }
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            SpeedDialAction,
-            {
-              icon: /* @__PURE__ */ jsxRuntimeExports.jsx(XinyinDlg, { type: "generate", children: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(GenerateWords32Icon, { color: "action", onClick: triggerOpen }) }),
-              slotProps: {
-                tooltip: { placement: "left", title: "生成助记词" }
-              }
-            }
-          )
-        ]
+function getFabUtilityClass(slot) {
+  return generateUtilityClass('MuiFab', slot);
+}
+const fabClasses = generateUtilityClasses('MuiFab', ['root', 'primary', 'secondary', 'extended', 'circular', 'focusVisible', 'disabled', 'colorInherit', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'info', 'error', 'warning', 'success']);
+
+const useUtilityClasses$3 = (ownerState) => {
+  const {
+    color,
+    variant,
+    classes,
+    size
+  } = ownerState;
+  const slots = {
+    root: ["root", variant, `size${capitalize(size)}`, color === "inherit" ? "colorInherit" : color]
+  };
+  const composedClasses = composeClasses(slots, getFabUtilityClass, classes);
+  return {
+    ...classes,
+    // forward the focused, disabled, etc. classes to the ButtonBase
+    ...composedClasses
+  };
+};
+const FabRoot = styled(ButtonBase, {
+  name: "MuiFab",
+  slot: "Root",
+  shouldForwardProp: (prop) => rootShouldForwardProp(prop) || prop === "classes",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[ownerState.variant], styles[`size${capitalize(ownerState.size)}`], ownerState.color === "inherit" && styles.colorInherit, styles[capitalize(ownerState.size)], styles[ownerState.color]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  ...theme.typography.button,
+  minHeight: 36,
+  transition: theme.transitions.create(["background-color", "box-shadow", "border-color"], {
+    duration: theme.transitions.duration.short
+  }),
+  borderRadius: "50%",
+  padding: 0,
+  minWidth: 0,
+  width: 56,
+  height: 56,
+  zIndex: (theme.vars || theme).zIndex.fab,
+  boxShadow: (theme.vars || theme).shadows[6],
+  "&:active": {
+    boxShadow: (theme.vars || theme).shadows[12]
+  },
+  color: theme.vars ? theme.vars.palette.grey[900] : theme.palette.getContrastText?.(theme.palette.grey[300]),
+  backgroundColor: (theme.vars || theme).palette.grey[300],
+  "&:hover": {
+    backgroundColor: (theme.vars || theme).palette.grey.A100,
+    // Reset on touch devices, it doesn't add specificity
+    "@media (hover: none)": {
+      backgroundColor: (theme.vars || theme).palette.grey[300]
+    },
+    textDecoration: "none"
+  },
+  [`&.${fabClasses.focusVisible}`]: {
+    boxShadow: (theme.vars || theme).shadows[6]
+  },
+  variants: [{
+    props: {
+      size: "small"
+    },
+    style: {
+      width: 40,
+      height: 40
+    }
+  }, {
+    props: {
+      size: "medium"
+    },
+    style: {
+      width: 48,
+      height: 48
+    }
+  }, {
+    props: {
+      variant: "extended"
+    },
+    style: {
+      borderRadius: 48 / 2,
+      padding: "0 16px",
+      width: "auto",
+      minHeight: "auto",
+      minWidth: 48,
+      height: 48
+    }
+  }, {
+    props: {
+      variant: "extended",
+      size: "small"
+    },
+    style: {
+      width: "auto",
+      padding: "0 8px",
+      borderRadius: 34 / 2,
+      minWidth: 34,
+      height: 34
+    }
+  }, {
+    props: {
+      variant: "extended",
+      size: "medium"
+    },
+    style: {
+      width: "auto",
+      padding: "0 16px",
+      borderRadius: 40 / 2,
+      minWidth: 40,
+      height: 40
+    }
+  }, {
+    props: {
+      color: "inherit"
+    },
+    style: {
+      color: "inherit"
+    }
+  }]
+})), memoTheme(({
+  theme
+}) => ({
+  variants: [...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["dark", "contrastText"])).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      color: (theme.vars || theme).palette[color].contrastText,
+      backgroundColor: (theme.vars || theme).palette[color].main,
+      "&:hover": {
+        backgroundColor: (theme.vars || theme).palette[color].dark,
+        // Reset on touch devices, it doesn't add specificity
+        "@media (hover: none)": {
+          backgroundColor: (theme.vars || theme).palette[color].main
+        }
       }
-    ) });
+    }
+  }))]
+})), memoTheme(({
+  theme
+}) => ({
+  [`&.${fabClasses.disabled}`]: {
+    color: (theme.vars || theme).palette.action.disabled,
+    boxShadow: (theme.vars || theme).shadows[0],
+    backgroundColor: (theme.vars || theme).palette.action.disabledBackground
   }
-);
-FixedButtons.displayName = "FixedButtons";
-const WalletListWrapper = reactExports.memo(
-  ({
-    wallets,
-    dispatch
-  }) => {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(WalletsCtx, { value: { wallets, dispatch }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(WalletList, {}) });
-  }
-);
-WalletListWrapper.displayName = "WalletListWrapper";
-function WalletApp() {
-  const [wallets, dispatch] = e(walletsReducer, initWallets());
+})));
+const Fab = /* @__PURE__ */ reactExports.forwardRef(function Fab2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiFab"
+  });
+  const {
+    children,
+    className,
+    color = "default",
+    component = "button",
+    disabled = false,
+    disableFocusRipple = false,
+    focusVisibleClassName,
+    size = "large",
+    variant = "circular",
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    color,
+    component,
+    disabled,
+    disableFocusRipple,
+    size,
+    variant
+  };
+  const classes = useUtilityClasses$3(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(FabRoot, {
+    className: clsx(classes.root, className),
+    component,
+    disabled,
+    focusRipple: !disableFocusRipple,
+    focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName),
+    ownerState,
+    ref,
+    ...other,
+    classes,
+    children
+  });
+});
+
+function WalletList() {
+  const { wallets } = reactExports.useContext(WalletsCtx);
   const {
     needRefresh: [needRefresh],
     offlineReady: [offlineReady, setOfflineReady],
@@ -44728,13 +40306,845 @@ function WalletApp() {
         message: "应用安装完成！现在可以离线使用了"
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(WalletListWrapper, { wallets, dispatch }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(FixedButtons, { dispatch })
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Fab, { sx: { position: "fixed", right: 16, bottom: 16 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(WalletDlg, { type: "add", children: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(AddIcon, { onClick: triggerOpen, color: "primary" }) }) }),
+    (!wallets || wallets.length === 0) && /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { variant: "h6", sx: { textAlign: "center" }, children: "没有可用的钱包" }),
+    wallets && wallets.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(Grid, { container: true, spacing: 1, children: wallets.map((wallet) => /* @__PURE__ */ jsxRuntimeExports.jsx(Grid, { size: { xs: 12, md: 4 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Wallet,
+      {
+        address: wallet.address,
+        name: wallet.name
+      },
+      wallet.address
+    ) }, wallet.address)) })
   ] });
 }
+
+function getAppBarUtilityClass(slot) {
+  return generateUtilityClass('MuiAppBar', slot);
+}
+generateUtilityClasses('MuiAppBar', ['root', 'positionFixed', 'positionAbsolute', 'positionSticky', 'positionStatic', 'positionRelative', 'colorDefault', 'colorPrimary', 'colorSecondary', 'colorInherit', 'colorTransparent', 'colorError', 'colorInfo', 'colorSuccess', 'colorWarning']);
+
+const useUtilityClasses$2 = (ownerState) => {
+  const {
+    color,
+    position,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", `color${capitalize(color)}`, `position${capitalize(position)}`]
+  };
+  return composeClasses(slots, getAppBarUtilityClass, classes);
+};
+const joinVars = (var1, var2) => var1 ? `${var1?.replace(")", "")}, ${var2})` : var2;
+const AppBarRoot = styled(Paper, {
+  name: "MuiAppBar",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[`position${capitalize(ownerState.position)}`], styles[`color${capitalize(ownerState.color)}`]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  display: "flex",
+  flexDirection: "column",
+  width: "100%",
+  boxSizing: "border-box",
+  // Prevent padding issue with the Modal and fixed positioned AppBar.
+  flexShrink: 0,
+  variants: [{
+    props: {
+      position: "fixed"
+    },
+    style: {
+      position: "fixed",
+      zIndex: (theme.vars || theme).zIndex.appBar,
+      top: 0,
+      left: "auto",
+      right: 0,
+      "@media print": {
+        // Prevent the app bar to be visible on each printed page.
+        position: "absolute"
+      }
+    }
+  }, {
+    props: {
+      position: "absolute"
+    },
+    style: {
+      position: "absolute",
+      zIndex: (theme.vars || theme).zIndex.appBar,
+      top: 0,
+      left: "auto",
+      right: 0
+    }
+  }, {
+    props: {
+      position: "sticky"
+    },
+    style: {
+      position: "sticky",
+      zIndex: (theme.vars || theme).zIndex.appBar,
+      top: 0,
+      left: "auto",
+      right: 0
+    }
+  }, {
+    props: {
+      position: "static"
+    },
+    style: {
+      position: "static"
+    }
+  }, {
+    props: {
+      position: "relative"
+    },
+    style: {
+      position: "relative"
+    }
+  }, {
+    props: {
+      color: "inherit"
+    },
+    style: {
+      "--AppBar-color": "inherit"
+    }
+  }, {
+    props: {
+      color: "default"
+    },
+    style: {
+      "--AppBar-background": theme.vars ? theme.vars.palette.AppBar.defaultBg : theme.palette.grey[100],
+      "--AppBar-color": theme.vars ? theme.vars.palette.text.primary : theme.palette.getContrastText(theme.palette.grey[100]),
+      ...theme.applyStyles("dark", {
+        "--AppBar-background": theme.vars ? theme.vars.palette.AppBar.defaultBg : theme.palette.grey[900],
+        "--AppBar-color": theme.vars ? theme.vars.palette.text.primary : theme.palette.getContrastText(theme.palette.grey[900])
+      })
+    }
+  }, ...Object.entries(theme.palette).filter(createSimplePaletteValueFilter(["contrastText"])).map(([color]) => ({
+    props: {
+      color
+    },
+    style: {
+      "--AppBar-background": (theme.vars ?? theme).palette[color].main,
+      "--AppBar-color": (theme.vars ?? theme).palette[color].contrastText
+    }
+  })), {
+    props: (props) => props.enableColorOnDark === true && !["inherit", "transparent"].includes(props.color),
+    style: {
+      backgroundColor: "var(--AppBar-background)",
+      color: "var(--AppBar-color)"
+    }
+  }, {
+    props: (props) => props.enableColorOnDark === false && !["inherit", "transparent"].includes(props.color),
+    style: {
+      backgroundColor: "var(--AppBar-background)",
+      color: "var(--AppBar-color)",
+      ...theme.applyStyles("dark", {
+        backgroundColor: theme.vars ? joinVars(theme.vars.palette.AppBar.darkBg, "var(--AppBar-background)") : null,
+        color: theme.vars ? joinVars(theme.vars.palette.AppBar.darkColor, "var(--AppBar-color)") : null
+      })
+    }
+  }, {
+    props: {
+      color: "transparent"
+    },
+    style: {
+      "--AppBar-background": "transparent",
+      "--AppBar-color": "inherit",
+      backgroundColor: "var(--AppBar-background)",
+      color: "var(--AppBar-color)",
+      ...theme.applyStyles("dark", {
+        backgroundImage: "none"
+      })
+    }
+  }]
+})));
+const AppBar = /* @__PURE__ */ reactExports.forwardRef(function AppBar2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiAppBar"
+  });
+  const {
+    className,
+    color = "primary",
+    enableColorOnDark = false,
+    position = "fixed",
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    color,
+    position,
+    enableColorOnDark
+  };
+  const classes = useUtilityClasses$2(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(AppBarRoot, {
+    square: true,
+    component: "header",
+    ownerState,
+    elevation: 4,
+    className: clsx(classes.root, className, position === "fixed" && "mui-fixed"),
+    ref,
+    ...other
+  });
+});
+
+function getToolbarUtilityClass(slot) {
+  return generateUtilityClass('MuiToolbar', slot);
+}
+generateUtilityClasses('MuiToolbar', ['root', 'gutters', 'regular', 'dense']);
+
+const useUtilityClasses$1 = (ownerState) => {
+  const {
+    classes,
+    disableGutters,
+    variant
+  } = ownerState;
+  const slots = {
+    root: ["root", !disableGutters && "gutters", variant]
+  };
+  return composeClasses(slots, getToolbarUtilityClass, classes);
+};
+const ToolbarRoot = styled("div", {
+  name: "MuiToolbar",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, !ownerState.disableGutters && styles.gutters, styles[ownerState.variant]];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  position: "relative",
+  display: "flex",
+  alignItems: "center",
+  variants: [{
+    props: ({
+      ownerState
+    }) => !ownerState.disableGutters,
+    style: {
+      paddingLeft: theme.spacing(2),
+      paddingRight: theme.spacing(2),
+      [theme.breakpoints.up("sm")]: {
+        paddingLeft: theme.spacing(3),
+        paddingRight: theme.spacing(3)
+      }
+    }
+  }, {
+    props: {
+      variant: "dense"
+    },
+    style: {
+      minHeight: 48
+    }
+  }, {
+    props: {
+      variant: "regular"
+    },
+    style: theme.mixins.toolbar
+  }]
+})));
+const Toolbar = /* @__PURE__ */ reactExports.forwardRef(function Toolbar2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiToolbar"
+  });
+  const {
+    className,
+    component = "div",
+    disableGutters = false,
+    variant = "regular",
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    component,
+    disableGutters,
+    variant
+  };
+  const classes = useUtilityClasses$1(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ToolbarRoot, {
+    as: component,
+    className: clsx(classes.root, className),
+    ref,
+    ownerState,
+    ...other
+  });
+});
+
+const Container = createContainer({
+  createStyledComponent: styled("div", {
+    name: "MuiContainer",
+    slot: "Root",
+    overridesResolver: (props, styles) => {
+      const {
+        ownerState
+      } = props;
+      return [styles.root, styles[`maxWidth${capitalize(String(ownerState.maxWidth))}`], ownerState.fixed && styles.fixed, ownerState.disableGutters && styles.disableGutters];
+    }
+  }),
+  useThemeProps: (inProps) => useDefaultProps({
+    props: inProps,
+    name: "MuiContainer"
+  })
+});
+
+function getInputAdornmentUtilityClass(slot) {
+  return generateUtilityClass('MuiInputAdornment', slot);
+}
+const inputAdornmentClasses = generateUtilityClasses('MuiInputAdornment', ['root', 'filled', 'standard', 'outlined', 'positionStart', 'positionEnd', 'disablePointerEvents', 'hiddenLabel', 'sizeSmall']);
+
+var _span;
+const overridesResolver = (props, styles) => {
+  const {
+    ownerState
+  } = props;
+  return [styles.root, styles[`position${capitalize(ownerState.position)}`], ownerState.disablePointerEvents === true && styles.disablePointerEvents, styles[ownerState.variant]];
+};
+const useUtilityClasses = (ownerState) => {
+  const {
+    classes,
+    disablePointerEvents,
+    hiddenLabel,
+    position,
+    size,
+    variant
+  } = ownerState;
+  const slots = {
+    root: ["root", disablePointerEvents && "disablePointerEvents", position && `position${capitalize(position)}`, variant, hiddenLabel && "hiddenLabel", size && `size${capitalize(size)}`]
+  };
+  return composeClasses(slots, getInputAdornmentUtilityClass, classes);
+};
+const InputAdornmentRoot = styled("div", {
+  name: "MuiInputAdornment",
+  slot: "Root",
+  overridesResolver
+})(memoTheme(({
+  theme
+}) => ({
+  display: "flex",
+  maxHeight: "2em",
+  alignItems: "center",
+  whiteSpace: "nowrap",
+  color: (theme.vars || theme).palette.action.active,
+  variants: [{
+    props: {
+      variant: "filled"
+    },
+    style: {
+      [`&.${inputAdornmentClasses.positionStart}&:not(.${inputAdornmentClasses.hiddenLabel})`]: {
+        marginTop: 16
+      }
+    }
+  }, {
+    props: {
+      position: "start"
+    },
+    style: {
+      marginRight: 8
+    }
+  }, {
+    props: {
+      position: "end"
+    },
+    style: {
+      marginLeft: 8
+    }
+  }, {
+    props: {
+      disablePointerEvents: true
+    },
+    style: {
+      pointerEvents: "none"
+    }
+  }]
+})));
+const InputAdornment = /* @__PURE__ */ reactExports.forwardRef(function InputAdornment2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiInputAdornment"
+  });
+  const {
+    children,
+    className,
+    component = "div",
+    disablePointerEvents = false,
+    disableTypography = false,
+    position,
+    variant: variantProp,
+    ...other
+  } = props;
+  const muiFormControl = useFormControl() || {};
+  let variant = variantProp;
+  if (variantProp && muiFormControl.variant) ;
+  if (muiFormControl && !variant) {
+    variant = muiFormControl.variant;
+  }
+  const ownerState = {
+    ...props,
+    hiddenLabel: muiFormControl.hiddenLabel,
+    size: muiFormControl.size,
+    disablePointerEvents,
+    position,
+    variant
+  };
+  const classes = useUtilityClasses(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(FormControlContext.Provider, {
+    value: null,
+    children: /* @__PURE__ */ jsxRuntimeExports.jsx(InputAdornmentRoot, {
+      as: component,
+      ownerState,
+      className: clsx(classes.root, className),
+      ref,
+      ...other,
+      children: typeof children === "string" && !disableTypography ? /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, {
+        color: "textSecondary",
+        children
+      }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(reactExports.Fragment, {
+        children: [position === "start" ? (
+          /* notranslate needed while Google Translate will not fix zero-width space issue */
+          _span || (_span = /* @__PURE__ */ jsxRuntimeExports.jsx("span", {
+            className: "notranslate",
+            "aria-hidden": true,
+            children: "​"
+          }))
+        ) : null, children]
+      })
+    })
+  });
+});
+
+const ImportWords32Icon = createSvgIcon(
+  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      width: "800px",
+      height: "800px",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      xmlns: "http://www.w3.org/2000/svg",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "5.5", y: "5.5", width: "13", height: "13", rx: "1", stroke: "#000000" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 16H16.5", stroke: "#000000", strokeLinecap: "round" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.5 16H13", stroke: "#000000", strokeLinecap: "round" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 16H9.5", stroke: "#000000", strokeLinecap: "round" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 13.3333H16.5", stroke: "#000000", strokeLinecap: "round" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.5 13.3333H13", stroke: "#000000", strokeLinecap: "round" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 13.3334H9.5", stroke: "#000000", strokeLinecap: "round" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 10.6667H16.5", stroke: "#000000", strokeLinecap: "round" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.5 10.6667H13", stroke: "#000000", strokeLinecap: "round" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 10.6667H9.5", stroke: "#000000", strokeLinecap: "round" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 8H16.5", stroke: "#000000", strokeLinecap: "round" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.5 8H13", stroke: "#000000", strokeLinecap: "round" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 8H9.5", stroke: "#000000", strokeLinecap: "round" })
+      ]
+    }
+  ));
+const GenerateWords32Icon = createSvgIcon(
+  /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "svg",
+    {
+      fill: "#000000",
+      version: "1.1",
+      id: "Capa_1",
+      xmlns: "http://www.w3.org/2000/svg",
+      width: "800px",
+      height: "800px",
+      viewBox: "0 0 33.645 33.645",
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx("g", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "path",
+        {
+          d: "M11.521,8.591L10.76,8.603l-0.023-1.689l0.759-0.011c0.443-0.006,0.752,0.016,0.923,0.068\n		c0.172,0.052,0.307,0.143,0.399,0.27c0.093,0.126,0.143,0.282,0.145,0.465c0.003,0.174-0.043,0.331-0.137,0.466\n		c-0.095,0.135-0.235,0.238-0.424,0.307C12.212,8.548,11.918,8.586,11.521,8.591z M12.551,9.703\n		c-0.192-0.071-0.484-0.103-0.878-0.097l-0.896,0.013l0.021,1.499c0.005,0.213,0.017,0.337,0.029,0.374\n		c0.017,0.046,0.046,0.079,0.083,0.094c0.039,0.019,0.142,0.027,0.31,0.025l0.507-0.008c0.292-0.004,0.534-0.038,0.729-0.094\n		c0.192-0.058,0.354-0.173,0.487-0.347c0.133-0.175,0.196-0.383,0.193-0.625c-0.003-0.205-0.052-0.377-0.149-0.52\n		C12.887,9.879,12.747,9.773,12.551,9.703z M31.32,27.991l-5.513,5.396c-0.175,0.171-0.401,0.258-0.629,0.258\n		c-0.232,0-0.467-0.091-0.644-0.271c-0.348-0.354-0.342-0.925,0.015-1.271l4.227-4.137L26.45,25.59l-2.751,2.691\n		c-0.175,0.171-0.401,0.257-0.629,0.257c-0.232,0-0.467-0.09-0.644-0.271c-0.349-0.355-0.342-0.926,0.015-1.272l2.751-2.691\n		l-7.738-7.907c-3.665,3.017-9.109,2.782-12.491-0.672c-3.57-3.647-3.508-9.519,0.141-13.088c3.647-3.57,9.521-3.507,13.092,0.141\n		c3.332,3.406,3.495,8.75,0.534,12.35L31.32,27.991z M16.754,15.68l-0.614-0.628c-1.229,0.968-2.768,1.561-4.45,1.585\n		c-4.082,0.061-7.44-3.197-7.5-7.28c-0.062-4.08,3.197-7.438,7.279-7.5c4.08-0.06,7.438,3.2,7.498,7.281\n		c0.025,1.748-0.561,3.36-1.555,4.64l0.611,0.625c2.573-3.213,2.406-7.914-0.544-10.93C14.29,0.212,9.061,0.156,5.799,3.347\n		c-3.258,3.188-3.312,8.417-0.124,11.677C8.676,18.091,13.483,18.319,16.754,15.68z M13.176,12.59\n		c0.196-0.041,0.37-0.091,0.519-0.153c0.402-0.168,0.713-0.409,0.928-0.722c0.216-0.312,0.325-0.652,0.32-1.02\n		c-0.004-0.307-0.083-0.584-0.232-0.832c-0.151-0.248-0.349-0.439-0.6-0.575c-0.172-0.097-0.423-0.186-0.749-0.263\n		c0.301-0.106,0.544-0.24,0.726-0.4c0.184-0.16,0.321-0.343,0.414-0.55c0.095-0.207,0.14-0.425,0.137-0.652\n		c-0.005-0.315-0.101-0.603-0.289-0.863c-0.188-0.26-0.457-0.458-0.803-0.593c-0.135-0.053-0.294-0.091-0.468-0.122l-0.021-1.221\n		l-1.172,0.018l0.019,1.139l-0.753,0.012l-0.019-1.14L9.959,4.67l0.018,1.14L8.188,5.836l0.014,0.958L8.474,6.79\n		c0.185-0.003,0.307,0.012,0.37,0.043c0.064,0.032,0.111,0.078,0.14,0.132C9.011,7.021,9.026,7.153,9.03,7.358l0.058,3.863\n		c0.003,0.202-0.007,0.332-0.034,0.39C9.03,11.67,8.985,11.715,8.92,11.747c-0.062,0.033-0.185,0.05-0.37,0.053l-0.271,0.004\n		l0.014,0.958l1.79-0.026l0.017,1.14l1.176-0.017l-0.019-1.14l0.666-0.009c0.03-0.001,0.06-0.002,0.086-0.002l0.019,1.14\n		l1.173-0.017L13.176,12.59z"
+        }
+      ) })
+    }
+  ));
+
+const Visibility = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5M12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5m0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"
+}));
+
+const VisibilityOff = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7M2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2m4.31-.78 3.15 3.15.02-.16c0-1.66-1.34-3-3-3z"
+}));
+
+const initialWordCount = 600;
+const initialStartIndex = 8;
+function XinyinDlg({
+  type,
+  children
+}) {
+  const theme = useTheme();
+  const [open, setOpen] = reactExports.useState(false);
+  const [step, setStep] = reactExports.useState(0 /* ChooseCharset */);
+  const [isGenerating, setIsGenerating] = reactExports.useState(false);
+  const [generatedWords32, setGeneratedWords32] = reactExports.useState("");
+  const [showPassword, setShowPassword] = reactExports.useState(false);
+  const [isImporting, setIsImporting] = reactExports.useState(false);
+  const { dispatch, wallets } = reactExports.useContext(WalletsCtx);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    resetField,
+    trigger,
+    watch
+  } = useForm({
+    defaultValues: {
+      startIndex: initialStartIndex,
+      wordCount: initialWordCount,
+      xinyinText: "",
+      words32: "",
+      password: "",
+      repeatPassword: "",
+      walletName: ""
+    }
+  });
+  const title = type === "generate" ? "生成心印助记字" : "导入心印助记字";
+  function handleOpen() {
+    setOpen(true);
+    setStep(0 /* ChooseCharset */);
+    setIsGenerating(false);
+    setGeneratedWords32("");
+    setShowPassword(false);
+    setIsImporting(false);
+    reset({
+      startIndex: initialStartIndex,
+      wordCount: initialWordCount,
+      xinyinText: "",
+      words32: "",
+      password: "",
+      repeatPassword: "",
+      walletName: ""
+    });
+  }
+  function handleFormSubmit(data) {
+    if (type == "generate" && step == 1 /* InputXinyinText */) {
+      setIsGenerating(true);
+      generateWords32(data.xinyinText, data.startIndex, data.wordCount).then(
+        (w32) => {
+          setGeneratedWords32(w32);
+          setIsGenerating(false);
+        }
+      );
+    } else if (type == "import" && step == 2 /* InputWords32 */) {
+      setIsImporting(true);
+      importWords32(
+        data.words32,
+        data.xinyinText,
+        data.startIndex,
+        data.wordCount,
+        data.password
+      ).then((solanaAddress) => {
+        const w = wallets && wallets.find((w2) => w2.address === solanaAddress);
+        if (w) {
+          throw new Error(`已经导入这个该助记字，钱包名称是：'${w.name}'`);
+        }
+        if (!solanaAddress || !isValidSolanaAddress(solanaAddress)) {
+          throw new Error("导入心印助记字失败，未生成有效的钱包地址");
+        }
+        dispatch({
+          type: "add",
+          wallet: {
+            address: solanaAddress,
+            name: data.walletName
+          }
+        });
+        setOpen(false);
+      }).catch((error) => {
+        setIsImporting(false);
+        alert("导入心印助记字失败: " + (error.message || "未知错误"));
+      });
+    } else {
+      console.log("submit wrong time...");
+    }
+  }
+  function nextStep() {
+    if (step == 0 /* ChooseCharset */) {
+      trigger(["startIndex", "wordCount"]).then((r) => {
+        if (r) {
+          setStep(1 /* InputXinyinText */);
+          setGeneratedWords32("");
+        }
+      });
+    }
+    if (type == "import") {
+      if (step == 1 /* InputXinyinText */) {
+        trigger("xinyinText").then((r) => {
+          if (r) {
+            setStep(2 /* InputWords32 */);
+            resetField("password");
+            resetField("repeatPassword");
+          }
+        });
+      }
+    }
+  }
+  function validateXinyinText(text) {
+    if (!text || text.trim() === "") {
+      return "心印文本不能为空";
+    }
+    return true;
+  }
+  function validateWords32(words) {
+    if (!words || words.trim() === "") {
+      return "心印助记字不能为空";
+    }
+    if (words.length !== 32) {
+      return "心印助记字必须是32个汉字";
+    }
+    if (!/^[\u4e00-\u9fa5]+$/.test(words)) {
+      return "心印助记字必须是汉字";
+    }
+    return true;
+  }
+  function validateStartIndex(value) {
+    if (isNaN(value)) {
+      return "输入的开始序号必须是数字";
+    }
+    if (value < 1) {
+      return "开始的序号从1开始";
+    }
+    if (value + watch("wordCount") > 8105) {
+      return "选择范围不能超过8105";
+    }
+    return true;
+  }
+  function validateWordCount(value) {
+    if (isNaN(value)) {
+      return "输入的字数必须是数字";
+    }
+    if (value <= 500) {
+      return "不能少于500个汉字";
+    }
+    if (value + watch("startIndex") > 8105) {
+      return "选择范围不能超过8105";
+    }
+    return true;
+  }
+  function validateWalletName(name) {
+    if (wallets && wallets.some((w) => w.name === name)) {
+      return "钱包名称已存在";
+    }
+    return true;
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    children({ triggerOpen: handleOpen }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      Dialog,
+      {
+        open,
+        onClose: () => setOpen(false),
+        maxWidth: "sm",
+        fullWidth: true,
+        disableRestoreFocus: true,
+        disableAutoFocus: false,
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { children: title }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Stack,
+            {
+              component: "form",
+              spacing: 2,
+              sx: { paddingTop: 2 },
+              onSubmit: handleSubmit(handleFormSubmit),
+              children: [
+                step == 0 /* ChooseCharset */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    TextField,
+                    {
+                      label: "开始的序号",
+                      fullWidth: true,
+                      autoComplete: "off",
+                      ...register("startIndex", {
+                        valueAsNumber: true,
+                        validate: validateStartIndex
+                      }),
+                      error: !!errors.startIndex,
+                      helperText: errors.startIndex ? errors.startIndex.message : ""
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    TextField,
+                    {
+                      label: "字数",
+                      fullWidth: true,
+                      autoComplete: "off",
+                      ...register("wordCount", {
+                        valueAsNumber: true,
+                        validate: validateWordCount
+                      }),
+                      error: !!errors.wordCount,
+                      helperText: errors.wordCount ? errors.wordCount.message : ""
+                    }
+                  )
+                ] }),
+                step == 1 /* InputXinyinText */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { variant: "body2", color: "text.secondary", children: "请输入心印文本，只有自己知道的一句话，用于密钥派生和字表生成。建议为20字符以上，包含多种字符类型，避免使用常见语句或个人信息。例如：“星辰大海，心自无疆。”" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    Typography,
+                    {
+                      variant: "body2",
+                      color: "text.secondary",
+                      sx: {
+                        marginBottom: 1
+                      },
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          "span",
+                          {
+                            style: {
+                              color: theme.palette.error.main,
+                              fontWeight: theme.typography.fontWeightBold
+                            },
+                            children: "不要输入 "
+                          }
+                        ),
+                        "正式使用的心印文本，这里只是演示使用。"
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    TextField,
+                    {
+                      label: "心印文本",
+                      fullWidth: true,
+                      autoComplete: "off",
+                      ...register("xinyinText", { validate: validateXinyinText }),
+                      error: !!errors.xinyinText,
+                      helperText: errors.xinyinText ? errors.xinyinText.message : ""
+                    }
+                  )
+                ] }),
+                step == 2 /* InputWords32 */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    TextField,
+                    {
+                      label: "心印助记字",
+                      fullWidth: true,
+                      autoComplete: "off",
+                      ...register("words32", {
+                        validate: validateWords32
+                      }),
+                      error: !!errors.words32,
+                      helperText: errors.words32 ? errors.words32.message : "心印助记字（32个汉字）"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    TextField,
+                    {
+                      label: "钱包名称",
+                      fullWidth: true,
+                      autoComplete: "username",
+                      ...register("walletName", {
+                        required: "必须填写钱包名称",
+                        validate: validateWalletName
+                      }),
+                      error: !!errors.walletName,
+                      helperText: errors.walletName ? errors.walletName.message : "给导入的钱包起个名字"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    TextField,
+                    {
+                      label: "密码",
+                      autoComplete: "new-password",
+                      type: showPassword ? "text" : "password",
+                      fullWidth: true,
+                      ...register("password", {
+                        required: "必须填写密码",
+                        minLength: {
+                          value: 8,
+                          message: "密码至少8个字符"
+                        }
+                      }),
+                      error: !!errors.password,
+                      helperText: errors.password ? errors.password.message : "请输入密码，用于加密导入的钱包",
+                      slotProps: {
+                        input: {
+                          endAdornment: /* @__PURE__ */ jsxRuntimeExports.jsx(InputAdornment, { position: "end", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            IconButton,
+                            {
+                              onClick: () => setShowPassword((prev) => !prev),
+                              children: showPassword ? /* @__PURE__ */ jsxRuntimeExports.jsx(Visibility, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(VisibilityOff, {})
+                            }
+                          ) })
+                        }
+                      }
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    TextField,
+                    {
+                      label: "重复密码",
+                      type: showPassword ? "text" : "password",
+                      autoComplete: "new-password",
+                      fullWidth: true,
+                      ...register("repeatPassword", {
+                        required: "必须重复输入密码",
+                        validate: (value) => value === watch("password") || "两次输入的密码不一致"
+                      }),
+                      error: !!errors.repeatPassword,
+                      helperText: errors.repeatPassword ? errors.repeatPassword.message : "请重复输入密码"
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogActions, { children: [
+                  step == 0 /* ChooseCharset */ && /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: nextStep, children: "下一步" }),
+                  step == 1 /* InputXinyinText */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => setStep(0 /* ChooseCharset */), children: "上一步" }),
+                    type == "generate" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      Button,
+                      {
+                        type: "submit",
+                        variant: "contained",
+                        disabled: isGenerating,
+                        children: "生成心印助记字"
+                      }
+                    ),
+                    type == "import" && /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: nextStep, children: "下一步" })
+                  ] }),
+                  step == 2 /* InputWords32 */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => setStep(1 /* InputXinyinText */), children: "上一步" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      Button,
+                      {
+                        type: "submit",
+                        variant: "contained",
+                        disabled: isImporting,
+                        children: "导入心印助记字"
+                      }
+                    )
+                  ] })
+                ] }),
+                type == "generate" && step == 1 /* InputXinyinText */ && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(Typography, { color: "text.secondary", variant: "body2", children: [
+                    "生成的心印助记字：",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+                    "用于表示加密密钥的32个汉字，每个汉字唯一对应加密密钥中的一个字节"
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { color: "success", variant: "body2", children: generatedWords32 })
+                ] })
+              ]
+            }
+          ) })
+        ]
+      }
+    )
+  ] });
+}
+
 function App() {
   const [workerStatus, setWorkerStatus] = reactExports.useState("loading");
   const [workerError, setWorkerError] = reactExports.useState(null);
+  const [wallets, dispatch] = e(walletsReducer, initWallets());
   reactExports.useEffect(() => {
     let isMounted = true;
     waitWorkerReady().then(() => {
@@ -44749,26 +41159,28 @@ function App() {
       isMounted = false;
     };
   }, []);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Stack, { alignItems: "center", children: [
-    workerStatus === "error" && /* @__PURE__ */ jsxRuntimeExports.jsxs(Typography, { variant: "h6", mt: 2, children: [
-      "初始化失败：",
-      workerError
-    ] }),
-    workerStatus === "loading" && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgress, {}),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { variant: "h6", mt: 2, children: "正在初始化，请稍候..." })
-    ] }),
-    workerStatus === "success" && /* @__PURE__ */ jsxRuntimeExports.jsx(WalletApp, {})
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(WalletsCtx, { value: { wallets, dispatch }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(AppBar, { position: "static", sx: { mb: 2 }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Toolbar, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { sx: { bgcolor: green[600] }, children: "Xy" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { variant: "h6", sx: { ml: 1 }, flexGrow: 1, children: "数字钱包" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(XinyinDlg, { type: "generate", children: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { sx: { mr: 1 }, onClick: triggerOpen, children: /* @__PURE__ */ jsxRuntimeExports.jsx(GenerateWords32Icon, {}) }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(XinyinDlg, { type: "import", children: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { sx: { mr: 1 }, onClick: triggerOpen, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ImportWords32Icon, {}) }) })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(Stack, { alignItems: "center", children: [
+      workerStatus === "error" && /* @__PURE__ */ jsxRuntimeExports.jsxs(Typography, { variant: "h6", mt: 2, children: [
+        "初始化失败：",
+        workerError
+      ] }),
+      workerStatus === "loading" && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CircularProgress, {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { variant: "h6", mt: 2, children: "正在初始化，请稍候..." })
+      ] }),
+      workerStatus === "success" && /* @__PURE__ */ jsxRuntimeExports.jsx(WalletList, {})
+    ] })
   ] });
 }
 
 ReactDOM$1.createRoot(document.getElementById("root")).render(
-  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { sx: { padding: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(AppBar, { position: "static", sx: { mb: 2 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Toolbar, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Stack, { direction: "row", alignItems: "center", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { sx: { bgcolor: green[600] }, children: "Xy" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Typography, { variant: "h6", sx: { ml: 1 }, children: "数字钱包" })
-    ] }) }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(App, {})
-  ] }) }) }) })
+  /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { sx: { padding: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) })
 );
-//# sourceMappingURL=index-BgMqWX0N.js.map
+//# sourceMappingURL=index-D3DGg0Q7.js.map
