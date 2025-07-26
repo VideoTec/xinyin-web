@@ -4,15 +4,11 @@ import { rotate360deg } from "./customStyle";
 import { useConfirm } from "material-ui-confirm";
 import { getAccountInfo, getBalance } from "./rpc/solanaRpc";
 import { transfer, loopGetTransferStatus } from "./rpc/transfer";
-import { shortSolanaAddress, getErrorMsg, shortTransferID } from "./rpc/utils";
-import Accordion from "@mui/material/Accordion";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import AccordionDetails from "@mui/material/AccordionDetails";
+import { getErrorMsg, shortTransferID } from "./rpc/utils";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
 import Collapse from "@mui/material/Collapse";
-import CircularProgress from "@mui/material/CircularProgress";
 import TransferDlg from "./transferDlg";
 import Alert from "@mui/material/Alert";
 import Chip from "@mui/material/Chip";
@@ -22,8 +18,10 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
-import Typography from "@mui/material/Typography";
 import WalletDlg from "./walletDlg";
+import Card from "@mui/material/Card";
+import CardHeader from "@mui/material/CardHeader";
+import CardActions from "@mui/material/CardActions";
 
 enum TransferStatus {
   /** 初始化 */
@@ -36,43 +34,6 @@ enum TransferStatus {
   Success,
   /** 转账失败 */
   Failed,
-}
-
-type TitleActionsProps = {
-  address: string;
-  name: string;
-  className?: string;
-  onDelete: () => void;
-};
-
-function TitleActions(props: TitleActionsProps) {
-  const { address, name, onDelete, ...rest } = props;
-
-  return (
-    <Stack direction={"row"} alignItems={"center"}>
-      <WalletDlg initAddress={address} initName={name} type="modify">
-        {({ triggerOpen }) => (
-          <EditIcon
-            style={{ marginRight: 12 }}
-            {...rest}
-            className={rest.className}
-            onClick={(e) => {
-              e.stopPropagation();
-              triggerOpen();
-            }}
-          />
-        )}
-      </WalletDlg>
-      <DeleteIcon
-        {...rest}
-        className={rest.className}
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-      />
-    </Stack>
-  );
 }
 
 export function Wallet({ address, name }: { address: string; name: string }) {
@@ -194,85 +155,97 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   }
 
   //TODO : 地址点击，弹窗，显示完整地址
+  //TODO: transferMessage 点击，跳转 solscan.io
   return (
-    <Accordion key={address}>
-      <AccordionSummary aria-controls="panel1-content" id="panel1-header">
-        <Chip
-          sx={{ width: "100%", justifyContent: "space-between" }}
-          label={name}
-          avatar={<Avatar>W</Avatar>}
-          color="primary"
-          variant="outlined"
-          deleteIcon={
-            <TitleActions
-              name={name}
-              address={address}
-              onDelete={handleDelete}
-            />
-          }
-          onDelete={() => {}}
-        />
-      </AccordionSummary>
-      <AccordionDetails
-        sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
-      >
-        <Chip
-          label={shortSolanaAddress(address)}
-          variant="outlined"
-          color="success"
-        />
-        {accountLoading ? (
-          <CircularProgress
-            sx={{ color: "primary.main", marginTop: 4, marginBottom: 2 }}
-          />
-        ) : isNoneAccount ? (
-          <>
-            <Typography
-              variant="h6"
-              color="error"
-              sx={{ marginTop: 4, marginBottom: 4 }}
-            >
-              未找到账户信息
-            </Typography>
-            <IconButton onClick={loadAccount} color="primary">
-              <RefreshIcon />
-            </IconButton>
-          </>
-        ) : (
-          <>
+    <Card key={address}>
+      <CardHeader
+        title={
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent={"space-between"}
+          >
             <Chip
-              label={balance}
-              variant="outlined"
+              label={name}
               color="primary"
-              sx={{ marginTop: 4, marginBottom: 2 }}
-              avatar={<Avatar>SOL</Avatar>}
-              onDelete={() => {
-                if (!balanceLoading) loadBalance();
-              }}
+              variant="outlined"
               deleteIcon={
-                <RefreshIcon
-                  sx={{ animation: balanceLoading ? rotate360deg : undefined }}
-                />
+                <WalletDlg initAddress={address} initName={name} type="modify">
+                  {({ triggerOpen }) => (
+                    <EditIcon
+                      style={{ marginRight: 12 }}
+                      onClick={triggerOpen}
+                    />
+                  )}
+                </WalletDlg>
               }
+              onDelete={() => {}}
             />
-            <TransferDlg
-              fromAddress={address}
-              fromName={name}
-              onResult={handleTransfer}
-              renderOpenBtn={({ triggerOpen }) => (
-                <Button
-                  variant="outlined"
-                  onClick={triggerOpen}
-                  id="transfer-btn"
-                  disabled={isTransferring || balanceLoading}
-                >
-                  转账
-                </Button>
-              )}
-            />
-          </>
-        )}
-      </AccordionDetails>
+            {isNoneAccount ? (
+              <Chip
+                label={accountLoading ? "加载中..." : "空账户"}
+                variant="outlined"
+                color={accountLoading ? "primary" : "error"}
+                onDelete={() => {
+                  if (!accountLoading) loadAccount();
+                }}
+                deleteIcon={
+                  <RefreshIcon
+                    sx={{
+                      animation: accountLoading ? rotate360deg : undefined,
+                    }}
+                  />
+                }
+              />
+            ) : (
+              <Chip
+                label={balance}
+                variant="outlined"
+                color="primary"
+                avatar={<Avatar>SOL</Avatar>}
+                onDelete={() => {
+                  if (!balanceLoading) loadBalance();
+                }}
+                deleteIcon={
+                  <RefreshIcon
+                    sx={{
+                      animation: balanceLoading ? rotate360deg : undefined,
+                    }}
+                  />
+                }
+              />
+            )}
+          </Stack>
+        }
+        sx={{ cursor: "pointer" }}
+        onClick={() => {
+          navigator.clipboard.writeText(address).then(() => {
+            // TODO 提示 address copied
+          });
+        }}
+      />
+      <CardActions sx={{ justifyContent: "end" }}>
+        <>
+          <IconButton>
+            <DeleteIcon onClick={handleDelete} />
+          </IconButton>
+          <TransferDlg
+            fromAddress={address}
+            fromName={name}
+            onResult={handleTransfer}
+            renderOpenBtn={({ triggerOpen }) => (
+              <Button
+                variant="outlined"
+                onClick={triggerOpen}
+                id="transfer-btn"
+                disabled={isTransferring || balanceLoading || isNoneAccount}
+              >
+                转账
+              </Button>
+            )}
+          />
+        </>
+      </CardActions>
       <Collapse in={transferStatus !== TransferStatus.Init}>
         <Alert
           severity={
@@ -305,6 +278,6 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           {transferMessage}
         </Alert>
       </Collapse>
-    </Accordion>
+    </Card>
   );
 }

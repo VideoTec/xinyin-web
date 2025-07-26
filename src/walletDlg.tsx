@@ -40,8 +40,6 @@ export default function WalletDlg({
 
   const title = type === "add" ? "添加钱包" : "修改钱包";
 
-  // TODO : 这里可以添加验证逻辑，确保地址格式正确，并且 name address 没有重复
-
   function handleOpen() {
     reset({
       address: initAddress,
