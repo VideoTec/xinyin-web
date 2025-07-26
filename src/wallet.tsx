@@ -156,7 +156,6 @@ export function Wallet({ address, name }: { address: string; name: string }) {
       });
   }
 
-  //TODO : 地址点击，弹窗，显示完整地址
   //TODO: transferMessage 点击，跳转 solscan.io
   return (
     <Card key={address}>

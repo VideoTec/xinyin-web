@@ -9,6 +9,9 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import CopyIcon from "@mui/icons-material/ContentCopy";
+import CheckIcon from "@mui/icons-material/Check";
+import IconButton from "@mui/material/IconButton";
 
 export default function WalletDlg({
   initAddress = "",
@@ -24,6 +27,7 @@ export default function WalletDlg({
   const [open, setOpen] = useState(false);
   const { dispatch, wallets } = useContext(WalletsCtx)!;
   const [isPending, startTransition] = useTransition();
+  const [addressCopied, setAddressCopied] = useState(false);
   const {
     register,
     handleSubmit,
@@ -81,7 +85,6 @@ export default function WalletDlg({
     return true;
   }
 
-  // TODO: 地址栏，全选，复制 方案
   return (
     <>
       {children({ triggerOpen: handleOpen })}
@@ -106,6 +109,32 @@ export default function WalletDlg({
               })}
               error={!!errors.address}
               helperText={errors.address && errors.address.message}
+              slotProps={{
+                input: {
+                  endAdornment:
+                    type === "modify" &&
+                    (addressCopied ? (
+                      <CheckIcon color="success" fontSize="small" />
+                    ) : (
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => {
+                          navigator.clipboard
+                            .writeText(initAddress)
+                            .then(() => {
+                              setAddressCopied(true);
+                              setTimeout(() => {
+                                setAddressCopied(false);
+                              }, 1000);
+                            });
+                        }}
+                      >
+                        <CopyIcon />
+                      </IconButton>
+                    )),
+                },
+              }}
             />
             <TextField
               label="钱包名称"
