@@ -15,6 +15,13 @@ import { green } from "@mui/material/colors";
 import { IconButton } from "@mui/material";
 import { ImportWords32Icon, GenerateWords32Icon } from "./icons";
 import XinyinDlg from "./xinyinDlg";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import ToggleButton from "@mui/material/ToggleButton";
+import {
+  SolanaClusterType,
+  getCurrentCluster,
+  setSolanaCluster as gSetSolanaCluster,
+} from "./rpc/solanaRpcClient";
 
 type WorkerStatus = "loading" | "success" | "error";
 
@@ -22,6 +29,9 @@ function App() {
   const [workerStatus, setWorkerStatus] = useState<WorkerStatus>("loading");
   const [workerError, setWorkerError] = useState<string | null>(null);
   const [wallets, dispatch] = useImmerReducer(walletsReducer, initWallets());
+  const [solanaCluster, setSolanaCluster] = useState<SolanaClusterType>(
+    getCurrentCluster()
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -41,8 +51,6 @@ function App() {
   }, []);
 
   // TODO : 添加错误处理逻辑，确保在 worker 初始化失败时给出友好的提示
-  // FIXME : FAB 按钮挡住 wallet 的处理按钮
-  // TODO : 处理 网络切换
   return (
     <WalletsCtx value={{ wallets, dispatch }}>
       <AppBar position="static" sx={{ mb: 2 }}>
@@ -64,7 +72,41 @@ function App() {
                 <ImportWords32Icon />
               </IconButton>
             )}
-          </XinyinDlg>
+          </XinyinDlg>{" "}
+          <ToggleButtonGroup
+            value={solanaCluster}
+            exclusive
+            size="small"
+            onChange={(_, newCluster) => {
+              if (newCluster) {
+                setSolanaCluster(newCluster);
+                gSetSolanaCluster(newCluster);
+              }
+            }}
+            aria-label="text alignment"
+          >
+            <ToggleButton
+              value={SolanaClusterType.mainnetBeta}
+              aria-label="left aligned"
+              sx={{ fontSize: "0.5rem" }}
+            >
+              Main
+            </ToggleButton>
+            <ToggleButton
+              value={SolanaClusterType.devnet}
+              aria-label="centered"
+              sx={{ fontSize: "0.5rem" }}
+            >
+              Devnet
+            </ToggleButton>
+            <ToggleButton
+              value={SolanaClusterType.testnet}
+              aria-label="right aligned"
+              sx={{ fontSize: "0.5rem" }}
+            >
+              Testnet
+            </ToggleButton>
+          </ToggleButtonGroup>
         </Toolbar>
       </AppBar>
       <Stack alignItems="center">

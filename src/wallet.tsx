@@ -41,6 +41,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   const confirm = useConfirm();
   const [accountLoading, setAccountLoading] = useState(true);
   const [balanceLoading, setBalanceLoading] = useState(false);
+  const [loadingError, setLoadingError] = useState<string>("");
   const [transferID, setTransferID] = useState("");
   const [owner, setOwner] = useState("");
   const [balance, setBalance] = useState("");
@@ -56,10 +57,21 @@ export function Wallet({ address, name }: { address: string; name: string }) {
 
   const loadBalance = useCallback(async () => {
     setBalanceLoading(true);
-    const balance = await getBalance(address, { encoding: "base64" });
-    const sol = balance / 1e9; // Convert lamports to SOL
-    setBalance(sol.toString());
-    setBalanceLoading(false);
+    getBalance(address, { encoding: "base64" })
+      .then((balance) => {
+        if (balance === 0) {
+          setOwner("");
+          return;
+        }
+        const sol = balance / 1e9; // Convert lamports to SOL
+        setBalance(sol.toString());
+      })
+      .catch((error) => {
+        setLoadingError(getErrorMsg(error));
+      })
+      .finally(() => {
+        setBalanceLoading(false);
+      });
   }, [address]);
 
   const loadAccount = useCallback(async () => {
@@ -72,11 +84,11 @@ export function Wallet({ address, name }: { address: string; name: string }) {
             const sol = data.lamports / 1e9; // Convert lamports to SOL
             setBalance(sol.toString());
           } else {
-            console.warn("No account info found for address:", address);
+            setLoadingError("未找到账户信息");
           }
         },
         (error) => {
-          console.error("Error fetching wallet data:", error);
+          setLoadingError(getErrorMsg(error));
         }
       )
       .finally(() => {
@@ -280,6 +292,15 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           }
         >
           {transferMessage}
+        </Alert>
+      </Collapse>
+      <Collapse in={loadingError !== ""}>
+        <Alert
+          severity="error"
+          sx={{ wordBreak: "break-word" }}
+          onClose={() => setLoadingError("")}
+        >
+          {loadingError}
         </Alert>
       </Collapse>
       <Collapse in={showAddress}>

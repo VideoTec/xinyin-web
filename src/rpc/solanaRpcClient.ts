@@ -21,6 +21,21 @@ interface JsonRpcResponse<T> {
 
 import { objectHasKey } from "./utils";
 
+export enum SolanaClusterType {
+  "mainnetBeta" = "mainnet-beta",
+  "devnet" = "devnet",
+  "testnet" = "testnet",
+}
+let currentCluster: SolanaClusterType = SolanaClusterType.devnet;
+
+export function getCurrentCluster(): SolanaClusterType {
+  return currentCluster;
+}
+
+export function setSolanaCluster(cluster: SolanaClusterType) {
+  currentCluster = cluster;
+}
+
 export async function callSolanaRpc<T>(
   method: string,
   params: unknown[]
@@ -32,7 +47,14 @@ export async function callSolanaRpc<T>(
     id: JsonRpcId++,
   };
 
-  const response = await fetch("https://api.devnet.solana.com", {
+  const url =
+    currentCluster === "mainnet-beta"
+      ? "https://api.mainnet-beta.solana.com"
+      : currentCluster === "testnet"
+      ? "https://api.testnet.solana.com"
+      : "https://api.devnet.solana.com";
+
+  const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(jsonrpc),
