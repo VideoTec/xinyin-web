@@ -46,6 +46,8 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   const [balance, setBalance] = useState("");
   const [transferStatus, setTransferStatus] = useState(TransferStatus.Init);
   const [transferMessage, setTransferMessage] = useState("");
+  const [showAddress, setShowAddress] = useState(false);
+  const [addressCopied, setAddressCopied] = useState(false);
 
   const isNoneAccount = owner === "";
   const isTransferring =
@@ -174,12 +176,17 @@ export function Wallet({ address, name }: { address: string; name: string }) {
                   {({ triggerOpen }) => (
                     <EditIcon
                       style={{ marginRight: 12 }}
-                      onClick={triggerOpen}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        triggerOpen();
+                      }}
                     />
                   )}
                 </WalletDlg>
               }
-              onDelete={() => {}}
+              onDelete={() => {
+                console.log("Delete wallet");
+              }}
             />
             {isNoneAccount ? (
               <Chip
@@ -219,9 +226,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
         }
         sx={{ cursor: "pointer" }}
         onClick={() => {
-          navigator.clipboard.writeText(address).then(() => {
-            // TODO 提示 address copied
-          });
+          setShowAddress(!showAddress);
         }}
       />
       <CardActions sx={{ justifyContent: "end" }}>
@@ -255,7 +260,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
               ? "success"
               : "info"
           }
-          sx={{ margin: 2, wordBreak: "break-word" }}
+          sx={{ wordBreak: "break-word" }}
           icon={
             isTransferring ? (
               <RefreshIcon sx={{ animation: rotate360deg }} />
@@ -276,6 +281,37 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           }
         >
           {transferMessage}
+        </Alert>
+      </Collapse>
+      <Collapse in={showAddress}>
+        <Alert
+          sx={{ wordBreak: "break-all" }}
+          action={
+            <Stack>
+              <Button size="small" onClick={() => setShowAddress(false)}>
+                隐藏
+              </Button>
+              {addressCopied ? (
+                <Chip label="copied" color="success" size="small" />
+              ) : (
+                <Button
+                  size="small"
+                  onClick={() => {
+                    navigator.clipboard.writeText(address).then(() => {
+                      setAddressCopied(true);
+                      setTimeout(() => {
+                        setAddressCopied(false);
+                      }, 1000);
+                    });
+                  }}
+                >
+                  复制
+                </Button>
+              )}
+            </Stack>
+          }
+        >
+          {address}
         </Alert>
       </Collapse>
     </Card>
