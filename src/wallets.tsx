@@ -53,7 +53,7 @@ export function WalletList() {
         </Typography>
       )}
       {wallets && wallets.length > 0 && (
-        <Gride container spacing={1}>
+        <Gride container spacing={1} width={"100%"}>
           {wallets.map((wallet) => (
             <Gride key={wallet.address} size={{ xs: 12, md: 4 }}>
               <Wallet
