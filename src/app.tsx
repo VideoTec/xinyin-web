@@ -30,7 +30,7 @@ import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 type WorkerStatus = "loading" | "success" | "error";
 
 // TODO : 添加错误处理逻辑，确保在 worker 初始化失败时给出友好的提示
-
+// TODO : speedDial 按钮，关闭时，弹出，添加钱包对话框，类似 x 的发帖效果
 const FixedButtons = memo(
   ({ dispatch }: { dispatch: Dispatch<WalletDispatchAction> }) => {
     return (

@@ -100,7 +100,15 @@ export function walletsReducer(
 ): Wallet[] {
   switch (action.type) {
     case "add": {
-      // TODO 检查钱包地址是否已存在
+      const existingIndex = draft.findIndex(
+        (wallet) => wallet.address === action.wallet.address
+      );
+      if (existingIndex !== -1) {
+        console.warn(
+          `Wallet with address ${action.wallet.address} already exists.`
+        );
+        return draft; // 如果已存在，直接返回当前状态
+      }
       const w = action.wallet;
       draft.push(w);
       // 异步更新localStorage，不阻塞UI
