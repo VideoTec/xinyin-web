@@ -18,7 +18,6 @@ import XinyinDlg from "./xinyinDlg";
 
 type WorkerStatus = "loading" | "success" | "error";
 
-// TODO : 添加错误处理逻辑，确保在 worker 初始化失败时给出友好的提示
 function App() {
   const [workerStatus, setWorkerStatus] = useState<WorkerStatus>("loading");
   const [workerError, setWorkerError] = useState<string | null>(null);
@@ -41,6 +40,9 @@ function App() {
     };
   }, []);
 
+  // TODO : 添加错误处理逻辑，确保在 worker 初始化失败时给出友好的提示
+  // FIXME : FAB 按钮挡住 wallet 的处理按钮
+  // TODO : 处理 网络切换
   return (
     <WalletsCtx value={{ wallets, dispatch }}>
       <AppBar position="static" sx={{ mb: 2 }}>

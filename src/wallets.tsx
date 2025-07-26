@@ -1,5 +1,5 @@
 import { Wallet } from "./wallet";
-import { useContext } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { WalletsCtx } from "./walletsCtx";
 // import { ImportWords32Icon, GenerateWords32Icon } from "./icons";
 import { useRegisterSW } from "virtual:pwa-register/react";
@@ -12,6 +12,7 @@ import Snackbar from "@mui/material/Snackbar";
 import WalletDlg from "./walletDlg";
 import AddIcon from "@mui/icons-material/Add";
 import Fab from "@mui/material/Fab";
+import Divider from "@mui/material/Divider";
 
 export function WalletList() {
   const { wallets } = useContext(WalletsCtx)!;
@@ -22,6 +23,28 @@ export function WalletList() {
   } = useRegisterSW({
     immediate: false,
   });
+  const [showDivider, setShowDivider] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const gridElement = gridRef.current;
+    if (!gridElement) return;
+
+    const observer = new ResizeObserver((entries) => {
+      if (entries.length > 0) {
+        const entry = entries[0];
+        const gridHeight = entry.contentRect.height;
+        const screenHeight = window.innerHeight;
+        setShowDivider(gridHeight > screenHeight - 120);
+      }
+    });
+
+    observer.observe(gridElement);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   return (
     <>
@@ -53,9 +76,9 @@ export function WalletList() {
         </Typography>
       )}
       {wallets && wallets.length > 0 && (
-        <Gride container spacing={1} width={"100%"}>
+        <Gride container spacing={1} width={"100%"} ref={gridRef}>
           {wallets.map((wallet) => (
-            <Gride key={wallet.address} size={{ xs: 12, md: 4 }}>
+            <Gride key={wallet.address} size={{ xs: 12, sm: 6, md: 4 }}>
               <Wallet
                 address={wallet.address}
                 name={wallet.name}
@@ -63,6 +86,9 @@ export function WalletList() {
               />
             </Gride>
           ))}
+          {showDivider && (
+            <Divider sx={{ width: "100%", mt: 4, mb: 2 }}>结束了</Divider>
+          )}
         </Gride>
       )}
     </>
