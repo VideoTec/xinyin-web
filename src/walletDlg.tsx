@@ -147,6 +147,7 @@ export default function WalletDlg({
                   address &&
                   isValidSolanaAddress(address) === true
                 ) {
+                  // FIXME: 自动生成钱包名称，提交时，错误交易，label 会覆盖内容
                   setValue("name", shortSolanaAddress(address));
                 }
               }}

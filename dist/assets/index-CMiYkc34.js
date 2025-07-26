@@ -28735,7 +28735,7 @@ const DialogContent = /* @__PURE__ */ reactExports.forwardRef(function DialogCon
 function getTypographyUtilityClass(slot) {
   return generateUtilityClass('MuiTypography', slot);
 }
-generateUtilityClasses('MuiTypography', ['root', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'inherit', 'button', 'caption', 'overline', 'alignLeft', 'alignRight', 'alignCenter', 'alignJustify', 'noWrap', 'gutterBottom', 'paragraph']);
+const typographyClasses = generateUtilityClasses('MuiTypography', ['root', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'inherit', 'button', 'caption', 'overline', 'alignLeft', 'alignRight', 'alignCenter', 'alignJustify', 'noWrap', 'gutterBottom', 'paragraph']);
 
 const v6Colors = {
   primary: true,
@@ -34391,740 +34391,6 @@ function loopGetTransferStatus(transferID, onProgress, onStopped, interval = 1e3
   };
 }
 
-function getCollapseUtilityClass(slot) {
-  return generateUtilityClass('MuiCollapse', slot);
-}
-generateUtilityClasses('MuiCollapse', ['root', 'horizontal', 'vertical', 'entered', 'hidden', 'wrapper', 'wrapperInner']);
-
-const useUtilityClasses$e = (ownerState) => {
-  const {
-    orientation,
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root", `${orientation}`],
-    entered: ["entered"],
-    hidden: ["hidden"],
-    wrapper: ["wrapper", `${orientation}`],
-    wrapperInner: ["wrapperInner", `${orientation}`]
-  };
-  return composeClasses(slots, getCollapseUtilityClass, classes);
-};
-const CollapseRoot = styled("div", {
-  name: "MuiCollapse",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [styles.root, styles[ownerState.orientation], ownerState.state === "entered" && styles.entered, ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px" && styles.hidden];
-  }
-})(memoTheme(({
-  theme
-}) => ({
-  height: 0,
-  overflow: "hidden",
-  transition: theme.transitions.create("height"),
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      height: "auto",
-      width: 0,
-      transition: theme.transitions.create("width")
-    }
-  }, {
-    props: {
-      state: "entered"
-    },
-    style: {
-      height: "auto",
-      overflow: "visible"
-    }
-  }, {
-    props: {
-      state: "entered",
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto"
-    }
-  }, {
-    props: ({
-      ownerState
-    }) => ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px",
-    style: {
-      visibility: "hidden"
-    }
-  }]
-})));
-const CollapseWrapper = styled("div", {
-  name: "MuiCollapse",
-  slot: "Wrapper"
-})({
-  // Hack to get children with a negative margin to not falsify the height computation.
-  display: "flex",
-  width: "100%",
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto",
-      height: "100%"
-    }
-  }]
-});
-const CollapseWrapperInner = styled("div", {
-  name: "MuiCollapse",
-  slot: "WrapperInner"
-})({
-  width: "100%",
-  variants: [{
-    props: {
-      orientation: "horizontal"
-    },
-    style: {
-      width: "auto",
-      height: "100%"
-    }
-  }]
-});
-const Collapse = /* @__PURE__ */ reactExports.forwardRef(function Collapse2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiCollapse"
-  });
-  const {
-    addEndListener,
-    children,
-    className,
-    collapsedSize: collapsedSizeProp = "0px",
-    component,
-    easing,
-    in: inProp,
-    onEnter,
-    onEntered,
-    onEntering,
-    onExit,
-    onExited,
-    onExiting,
-    orientation = "vertical",
-    style,
-    timeout = duration.standard,
-    // eslint-disable-next-line react/prop-types
-    TransitionComponent = Transition,
-    ...other
-  } = props;
-  const ownerState = {
-    ...props,
-    orientation,
-    collapsedSize: collapsedSizeProp
-  };
-  const classes = useUtilityClasses$e(ownerState);
-  const theme = useTheme();
-  const timer = useTimeout();
-  const wrapperRef = reactExports.useRef(null);
-  const autoTransitionDuration = reactExports.useRef();
-  const collapsedSize = typeof collapsedSizeProp === "number" ? `${collapsedSizeProp}px` : collapsedSizeProp;
-  const isHorizontal = orientation === "horizontal";
-  const size = isHorizontal ? "width" : "height";
-  const nodeRef = reactExports.useRef(null);
-  const handleRef = useForkRef(ref, nodeRef);
-  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
-    if (callback) {
-      const node = nodeRef.current;
-      if (maybeIsAppearing === void 0) {
-        callback(node);
-      } else {
-        callback(node, maybeIsAppearing);
-      }
-    }
-  };
-  const getWrapperSize = () => wrapperRef.current ? wrapperRef.current[isHorizontal ? "clientWidth" : "clientHeight"] : 0;
-  const handleEnter = normalizedTransitionCallback((node, isAppearing) => {
-    if (wrapperRef.current && isHorizontal) {
-      wrapperRef.current.style.position = "absolute";
-    }
-    node.style[size] = collapsedSize;
-    if (onEnter) {
-      onEnter(node, isAppearing);
-    }
-  });
-  const handleEntering = normalizedTransitionCallback((node, isAppearing) => {
-    const wrapperSize = getWrapperSize();
-    if (wrapperRef.current && isHorizontal) {
-      wrapperRef.current.style.position = "";
-    }
-    const {
-      duration: transitionDuration,
-      easing: transitionTimingFunction
-    } = getTransitionProps({
-      style,
-      timeout,
-      easing
-    }, {
-      mode: "enter"
-    });
-    if (timeout === "auto") {
-      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
-      node.style.transitionDuration = `${duration2}ms`;
-      autoTransitionDuration.current = duration2;
-    } else {
-      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
-    }
-    node.style[size] = `${wrapperSize}px`;
-    node.style.transitionTimingFunction = transitionTimingFunction;
-    if (onEntering) {
-      onEntering(node, isAppearing);
-    }
-  });
-  const handleEntered = normalizedTransitionCallback((node, isAppearing) => {
-    node.style[size] = "auto";
-    if (onEntered) {
-      onEntered(node, isAppearing);
-    }
-  });
-  const handleExit = normalizedTransitionCallback((node) => {
-    node.style[size] = `${getWrapperSize()}px`;
-    if (onExit) {
-      onExit(node);
-    }
-  });
-  const handleExited = normalizedTransitionCallback(onExited);
-  const handleExiting = normalizedTransitionCallback((node) => {
-    const wrapperSize = getWrapperSize();
-    const {
-      duration: transitionDuration,
-      easing: transitionTimingFunction
-    } = getTransitionProps({
-      style,
-      timeout,
-      easing
-    }, {
-      mode: "exit"
-    });
-    if (timeout === "auto") {
-      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
-      node.style.transitionDuration = `${duration2}ms`;
-      autoTransitionDuration.current = duration2;
-    } else {
-      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
-    }
-    node.style[size] = collapsedSize;
-    node.style.transitionTimingFunction = transitionTimingFunction;
-    if (onExiting) {
-      onExiting(node);
-    }
-  });
-  const handleAddEndListener = (next) => {
-    if (timeout === "auto") {
-      timer.start(autoTransitionDuration.current || 0, next);
-    }
-    if (addEndListener) {
-      addEndListener(nodeRef.current, next);
-    }
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionComponent, {
-    in: inProp,
-    onEnter: handleEnter,
-    onEntered: handleEntered,
-    onEntering: handleEntering,
-    onExit: handleExit,
-    onExited: handleExited,
-    onExiting: handleExiting,
-    addEndListener: handleAddEndListener,
-    nodeRef,
-    timeout: timeout === "auto" ? null : timeout,
-    ...other,
-    children: (state, {
-      ownerState: incomingOwnerState,
-      ...restChildProps
-    }) => /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseRoot, {
-      as: component,
-      className: clsx(classes.root, className, {
-        "entered": classes.entered,
-        "exited": !inProp && collapsedSize === "0px" && classes.hidden
-      }[state]),
-      style: {
-        [isHorizontal ? "minWidth" : "minHeight"]: collapsedSize,
-        ...style
-      },
-      ref: handleRef,
-      ownerState: {
-        ...ownerState,
-        state
-      },
-      ...restChildProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapper, {
-        ownerState: {
-          ...ownerState,
-          state
-        },
-        className: classes.wrapper,
-        ref: wrapperRef,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapperInner, {
-          ownerState: {
-            ...ownerState,
-            state
-          },
-          className: classes.wrapperInner,
-          children
-        })
-      })
-    })
-  });
-});
-if (Collapse) {
-  Collapse.muiSupportAuto = true;
-}
-
-const AccordionContext = /* @__PURE__ */ reactExports.createContext({});
-
-function getAccordionUtilityClass(slot) {
-  return generateUtilityClass('MuiAccordion', slot);
-}
-const accordionClasses = generateUtilityClasses('MuiAccordion', ['root', 'heading', 'rounded', 'expanded', 'disabled', 'gutters', 'region']);
-
-const useUtilityClasses$d = (ownerState) => {
-  const {
-    classes,
-    square,
-    expanded,
-    disabled,
-    disableGutters
-  } = ownerState;
-  const slots = {
-    root: ["root", !square && "rounded", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
-    heading: ["heading"],
-    region: ["region"]
-  };
-  return composeClasses(slots, getAccordionUtilityClass, classes);
-};
-const AccordionRoot = styled(Paper, {
-  name: "MuiAccordion",
-  slot: "Root",
-  overridesResolver: (props, styles) => {
-    const {
-      ownerState
-    } = props;
-    return [{
-      [`& .${accordionClasses.region}`]: styles.region
-    }, styles.root, !ownerState.square && styles.rounded, !ownerState.disableGutters && styles.gutters];
-  }
-})(memoTheme(({
-  theme
-}) => {
-  const transition = {
-    duration: theme.transitions.duration.shortest
-  };
-  return {
-    position: "relative",
-    transition: theme.transitions.create(["margin"], transition),
-    overflowAnchor: "none",
-    // Keep the same scrolling position
-    "&::before": {
-      position: "absolute",
-      left: 0,
-      top: -1,
-      right: 0,
-      height: 1,
-      content: '""',
-      opacity: 1,
-      backgroundColor: (theme.vars || theme).palette.divider,
-      transition: theme.transitions.create(["opacity", "background-color"], transition)
-    },
-    "&:first-of-type": {
-      "&::before": {
-        display: "none"
-      }
-    },
-    [`&.${accordionClasses.expanded}`]: {
-      "&::before": {
-        opacity: 0
-      },
-      "&:first-of-type": {
-        marginTop: 0
-      },
-      "&:last-of-type": {
-        marginBottom: 0
-      },
-      "& + &": {
-        "&::before": {
-          display: "none"
-        }
-      }
-    },
-    [`&.${accordionClasses.disabled}`]: {
-      backgroundColor: (theme.vars || theme).palette.action.disabledBackground
-    }
-  };
-}), memoTheme(({
-  theme
-}) => ({
-  variants: [{
-    props: (props) => !props.square,
-    style: {
-      borderRadius: 0,
-      "&:first-of-type": {
-        borderTopLeftRadius: (theme.vars || theme).shape.borderRadius,
-        borderTopRightRadius: (theme.vars || theme).shape.borderRadius
-      },
-      "&:last-of-type": {
-        borderBottomLeftRadius: (theme.vars || theme).shape.borderRadius,
-        borderBottomRightRadius: (theme.vars || theme).shape.borderRadius,
-        // Fix a rendering issue on Edge
-        "@supports (-ms-ime-align: auto)": {
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0
-        }
-      }
-    }
-  }, {
-    props: (props) => !props.disableGutters,
-    style: {
-      [`&.${accordionClasses.expanded}`]: {
-        margin: "16px 0"
-      }
-    }
-  }]
-})));
-const AccordionHeading = styled("h3", {
-  name: "MuiAccordion",
-  slot: "Heading"
-})({
-  all: "unset"
-});
-const Accordion = /* @__PURE__ */ reactExports.forwardRef(function Accordion2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordion"
-  });
-  const {
-    children: childrenProp,
-    className,
-    defaultExpanded = false,
-    disabled = false,
-    disableGutters = false,
-    expanded: expandedProp,
-    onChange,
-    square = false,
-    slots = {},
-    slotProps = {},
-    TransitionComponent: TransitionComponentProp,
-    TransitionProps: TransitionPropsProp,
-    ...other
-  } = props;
-  const [expanded, setExpandedState] = useControlled({
-    controlled: expandedProp,
-    default: defaultExpanded,
-    name: "Accordion",
-    state: "expanded"
-  });
-  const handleChange = reactExports.useCallback((event) => {
-    setExpandedState(!expanded);
-    if (onChange) {
-      onChange(event, !expanded);
-    }
-  }, [expanded, onChange, setExpandedState]);
-  const [summary, ...children] = reactExports.Children.toArray(childrenProp);
-  const contextValue = reactExports.useMemo(() => ({
-    expanded,
-    disabled,
-    disableGutters,
-    toggle: handleChange
-  }), [expanded, disabled, disableGutters, handleChange]);
-  const ownerState = {
-    ...props,
-    square,
-    disabled,
-    disableGutters,
-    expanded
-  };
-  const classes = useUtilityClasses$d(ownerState);
-  const backwardCompatibleSlots = {
-    transition: TransitionComponentProp,
-    ...slots
-  };
-  const backwardCompatibleSlotProps = {
-    transition: TransitionPropsProp,
-    ...slotProps
-  };
-  const externalForwardedProps = {
-    slots: backwardCompatibleSlots,
-    slotProps: backwardCompatibleSlotProps
-  };
-  const [RootSlot, rootProps] = useSlot("root", {
-    elementType: AccordionRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    className: clsx(classes.root, className),
-    shouldForwardComponentProp: true,
-    ownerState,
-    ref,
-    additionalProps: {
-      square
-    }
-  });
-  const [AccordionHeadingSlot, accordionProps] = useSlot("heading", {
-    elementType: AccordionHeading,
-    externalForwardedProps,
-    className: classes.heading,
-    ownerState
-  });
-  const [TransitionSlot, transitionProps] = useSlot("transition", {
-    elementType: Collapse,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
-    ...rootProps,
-    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(AccordionHeadingSlot, {
-      ...accordionProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionContext.Provider, {
-        value: contextValue,
-        children: summary
-      })
-    }), /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionSlot, {
-      in: expanded,
-      timeout: "auto",
-      ...transitionProps,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", {
-        "aria-labelledby": summary.props.id,
-        id: summary.props["aria-controls"],
-        role: "region",
-        className: classes.region,
-        children
-      })
-    })]
-  });
-});
-
-function getAccordionSummaryUtilityClass(slot) {
-  return generateUtilityClass('MuiAccordionSummary', slot);
-}
-const accordionSummaryClasses = generateUtilityClasses('MuiAccordionSummary', ['root', 'expanded', 'focusVisible', 'disabled', 'gutters', 'contentGutters', 'content', 'expandIconWrapper']);
-
-const useUtilityClasses$c = (ownerState) => {
-  const {
-    classes,
-    expanded,
-    disabled,
-    disableGutters
-  } = ownerState;
-  const slots = {
-    root: ["root", expanded && "expanded", disabled && "disabled", !disableGutters && "gutters"],
-    focusVisible: ["focusVisible"],
-    content: ["content", expanded && "expanded", !disableGutters && "contentGutters"],
-    expandIconWrapper: ["expandIconWrapper", expanded && "expanded"]
-  };
-  return composeClasses(slots, getAccordionSummaryUtilityClass, classes);
-};
-const AccordionSummaryRoot = styled(ButtonBase, {
-  name: "MuiAccordionSummary",
-  slot: "Root"
-})(memoTheme(({
-  theme
-}) => {
-  const transition = {
-    duration: theme.transitions.duration.shortest
-  };
-  return {
-    display: "flex",
-    width: "100%",
-    minHeight: 48,
-    padding: theme.spacing(0, 2),
-    transition: theme.transitions.create(["min-height", "background-color"], transition),
-    [`&.${accordionSummaryClasses.focusVisible}`]: {
-      backgroundColor: (theme.vars || theme).palette.action.focus
-    },
-    [`&.${accordionSummaryClasses.disabled}`]: {
-      opacity: (theme.vars || theme).palette.action.disabledOpacity
-    },
-    [`&:hover:not(.${accordionSummaryClasses.disabled})`]: {
-      cursor: "pointer"
-    },
-    variants: [{
-      props: (props) => !props.disableGutters,
-      style: {
-        [`&.${accordionSummaryClasses.expanded}`]: {
-          minHeight: 64
-        }
-      }
-    }]
-  };
-}));
-const AccordionSummaryContent = styled("span", {
-  name: "MuiAccordionSummary",
-  slot: "Content"
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  textAlign: "start",
-  flexGrow: 1,
-  margin: "12px 0",
-  variants: [{
-    props: (props) => !props.disableGutters,
-    style: {
-      transition: theme.transitions.create(["margin"], {
-        duration: theme.transitions.duration.shortest
-      }),
-      [`&.${accordionSummaryClasses.expanded}`]: {
-        margin: "20px 0"
-      }
-    }
-  }]
-})));
-const AccordionSummaryExpandIconWrapper = styled("span", {
-  name: "MuiAccordionSummary",
-  slot: "ExpandIconWrapper"
-})(memoTheme(({
-  theme
-}) => ({
-  display: "flex",
-  color: (theme.vars || theme).palette.action.active,
-  transform: "rotate(0deg)",
-  transition: theme.transitions.create("transform", {
-    duration: theme.transitions.duration.shortest
-  }),
-  [`&.${accordionSummaryClasses.expanded}`]: {
-    transform: "rotate(180deg)"
-  }
-})));
-const AccordionSummary = /* @__PURE__ */ reactExports.forwardRef(function AccordionSummary2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordionSummary"
-  });
-  const {
-    children,
-    className,
-    expandIcon,
-    focusVisibleClassName,
-    onClick,
-    slots,
-    slotProps,
-    ...other
-  } = props;
-  const {
-    disabled = false,
-    disableGutters,
-    expanded,
-    toggle
-  } = reactExports.useContext(AccordionContext);
-  const handleChange = (event) => {
-    if (toggle) {
-      toggle(event);
-    }
-    if (onClick) {
-      onClick(event);
-    }
-  };
-  const ownerState = {
-    ...props,
-    expanded,
-    disabled,
-    disableGutters
-  };
-  const classes = useUtilityClasses$c(ownerState);
-  const externalForwardedProps = {
-    slots,
-    slotProps
-  };
-  const [RootSlot, rootSlotProps] = useSlot("root", {
-    ref,
-    shouldForwardComponentProp: true,
-    className: clsx(classes.root, className),
-    elementType: AccordionSummaryRoot,
-    externalForwardedProps: {
-      ...externalForwardedProps,
-      ...other
-    },
-    ownerState,
-    additionalProps: {
-      focusRipple: false,
-      disableRipple: true,
-      disabled,
-      "aria-expanded": expanded,
-      focusVisibleClassName: clsx(classes.focusVisible, focusVisibleClassName)
-    },
-    getSlotProps: (handlers) => ({
-      ...handlers,
-      onClick: (event) => {
-        handlers.onClick?.(event);
-        handleChange(event);
-      }
-    })
-  });
-  const [ContentSlot, contentSlotProps] = useSlot("content", {
-    className: classes.content,
-    elementType: AccordionSummaryContent,
-    externalForwardedProps,
-    ownerState
-  });
-  const [ExpandIconWrapperSlot, expandIconWrapperSlotProps] = useSlot("expandIconWrapper", {
-    className: classes.expandIconWrapper,
-    elementType: AccordionSummaryExpandIconWrapper,
-    externalForwardedProps,
-    ownerState
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
-    ...rootSlotProps,
-    children: [/* @__PURE__ */ jsxRuntimeExports.jsx(ContentSlot, {
-      ...contentSlotProps,
-      children
-    }), expandIcon && /* @__PURE__ */ jsxRuntimeExports.jsx(ExpandIconWrapperSlot, {
-      ...expandIconWrapperSlotProps,
-      children: expandIcon
-    })]
-  });
-});
-
-function getAccordionDetailsUtilityClass(slot) {
-  return generateUtilityClass('MuiAccordionDetails', slot);
-}
-generateUtilityClasses('MuiAccordionDetails', ['root']);
-
-const useUtilityClasses$b = (ownerState) => {
-  const {
-    classes
-  } = ownerState;
-  const slots = {
-    root: ["root"]
-  };
-  return composeClasses(slots, getAccordionDetailsUtilityClass, classes);
-};
-const AccordionDetailsRoot = styled("div", {
-  name: "MuiAccordionDetails",
-  slot: "Root"
-})(memoTheme(({
-  theme
-}) => ({
-  padding: theme.spacing(1, 2, 2)
-})));
-const AccordionDetails = /* @__PURE__ */ reactExports.forwardRef(function AccordionDetails2(inProps, ref) {
-  const props = useDefaultProps({
-    props: inProps,
-    name: "MuiAccordionDetails"
-  });
-  const {
-    className,
-    ...other
-  } = props;
-  const ownerState = props;
-  const classes = useUtilityClasses$b(ownerState);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionDetailsRoot, {
-    className: clsx(classes.root, className),
-    ref,
-    ownerState,
-    ...other
-  });
-});
-
 const Stack = createStack({
   createStyledComponent: styled("div", {
     name: "MuiStack",
@@ -35141,7 +34407,7 @@ function getIconButtonUtilityClass(slot) {
 }
 const iconButtonClasses = generateUtilityClasses('MuiIconButton', ['root', 'disabled', 'colorInherit', 'colorPrimary', 'colorSecondary', 'colorError', 'colorInfo', 'colorSuccess', 'colorWarning', 'edgeStart', 'edgeEnd', 'sizeSmall', 'sizeMedium', 'sizeLarge', 'loading', 'loadingIndicator', 'loadingWrapper']);
 
-const useUtilityClasses$a = (ownerState) => {
+const useUtilityClasses$e = (ownerState) => {
   const {
     classes,
     disabled,
@@ -35326,7 +34592,7 @@ const IconButton = /* @__PURE__ */ reactExports.forwardRef(function IconButton2(
     loadingIndicator,
     size
   };
-  const classes = useUtilityClasses$a(ownerState);
+  const classes = useUtilityClasses$e(ownerState);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(IconButtonRoot, {
     id: loading ? loadingId : idProp,
     className: clsx(classes.root, className),
@@ -35350,6 +34616,295 @@ const IconButton = /* @__PURE__ */ reactExports.forwardRef(function IconButton2(
     }), children]
   });
 });
+
+function getCollapseUtilityClass(slot) {
+  return generateUtilityClass('MuiCollapse', slot);
+}
+generateUtilityClasses('MuiCollapse', ['root', 'horizontal', 'vertical', 'entered', 'hidden', 'wrapper', 'wrapperInner']);
+
+const useUtilityClasses$d = (ownerState) => {
+  const {
+    orientation,
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root", `${orientation}`],
+    entered: ["entered"],
+    hidden: ["hidden"],
+    wrapper: ["wrapper", `${orientation}`],
+    wrapperInner: ["wrapperInner", `${orientation}`]
+  };
+  return composeClasses(slots, getCollapseUtilityClass, classes);
+};
+const CollapseRoot = styled("div", {
+  name: "MuiCollapse",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, styles[ownerState.orientation], ownerState.state === "entered" && styles.entered, ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px" && styles.hidden];
+  }
+})(memoTheme(({
+  theme
+}) => ({
+  height: 0,
+  overflow: "hidden",
+  transition: theme.transitions.create("height"),
+  variants: [{
+    props: {
+      orientation: "horizontal"
+    },
+    style: {
+      height: "auto",
+      width: 0,
+      transition: theme.transitions.create("width")
+    }
+  }, {
+    props: {
+      state: "entered"
+    },
+    style: {
+      height: "auto",
+      overflow: "visible"
+    }
+  }, {
+    props: {
+      state: "entered",
+      orientation: "horizontal"
+    },
+    style: {
+      width: "auto"
+    }
+  }, {
+    props: ({
+      ownerState
+    }) => ownerState.state === "exited" && !ownerState.in && ownerState.collapsedSize === "0px",
+    style: {
+      visibility: "hidden"
+    }
+  }]
+})));
+const CollapseWrapper = styled("div", {
+  name: "MuiCollapse",
+  slot: "Wrapper"
+})({
+  // Hack to get children with a negative margin to not falsify the height computation.
+  display: "flex",
+  width: "100%",
+  variants: [{
+    props: {
+      orientation: "horizontal"
+    },
+    style: {
+      width: "auto",
+      height: "100%"
+    }
+  }]
+});
+const CollapseWrapperInner = styled("div", {
+  name: "MuiCollapse",
+  slot: "WrapperInner"
+})({
+  width: "100%",
+  variants: [{
+    props: {
+      orientation: "horizontal"
+    },
+    style: {
+      width: "auto",
+      height: "100%"
+    }
+  }]
+});
+const Collapse = /* @__PURE__ */ reactExports.forwardRef(function Collapse2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiCollapse"
+  });
+  const {
+    addEndListener,
+    children,
+    className,
+    collapsedSize: collapsedSizeProp = "0px",
+    component,
+    easing,
+    in: inProp,
+    onEnter,
+    onEntered,
+    onEntering,
+    onExit,
+    onExited,
+    onExiting,
+    orientation = "vertical",
+    style,
+    timeout = duration.standard,
+    // eslint-disable-next-line react/prop-types
+    TransitionComponent = Transition,
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    orientation,
+    collapsedSize: collapsedSizeProp
+  };
+  const classes = useUtilityClasses$d(ownerState);
+  const theme = useTheme();
+  const timer = useTimeout();
+  const wrapperRef = reactExports.useRef(null);
+  const autoTransitionDuration = reactExports.useRef();
+  const collapsedSize = typeof collapsedSizeProp === "number" ? `${collapsedSizeProp}px` : collapsedSizeProp;
+  const isHorizontal = orientation === "horizontal";
+  const size = isHorizontal ? "width" : "height";
+  const nodeRef = reactExports.useRef(null);
+  const handleRef = useForkRef(ref, nodeRef);
+  const normalizedTransitionCallback = (callback) => (maybeIsAppearing) => {
+    if (callback) {
+      const node = nodeRef.current;
+      if (maybeIsAppearing === void 0) {
+        callback(node);
+      } else {
+        callback(node, maybeIsAppearing);
+      }
+    }
+  };
+  const getWrapperSize = () => wrapperRef.current ? wrapperRef.current[isHorizontal ? "clientWidth" : "clientHeight"] : 0;
+  const handleEnter = normalizedTransitionCallback((node, isAppearing) => {
+    if (wrapperRef.current && isHorizontal) {
+      wrapperRef.current.style.position = "absolute";
+    }
+    node.style[size] = collapsedSize;
+    if (onEnter) {
+      onEnter(node, isAppearing);
+    }
+  });
+  const handleEntering = normalizedTransitionCallback((node, isAppearing) => {
+    const wrapperSize = getWrapperSize();
+    if (wrapperRef.current && isHorizontal) {
+      wrapperRef.current.style.position = "";
+    }
+    const {
+      duration: transitionDuration,
+      easing: transitionTimingFunction
+    } = getTransitionProps({
+      style,
+      timeout,
+      easing
+    }, {
+      mode: "enter"
+    });
+    if (timeout === "auto") {
+      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
+      node.style.transitionDuration = `${duration2}ms`;
+      autoTransitionDuration.current = duration2;
+    } else {
+      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
+    }
+    node.style[size] = `${wrapperSize}px`;
+    node.style.transitionTimingFunction = transitionTimingFunction;
+    if (onEntering) {
+      onEntering(node, isAppearing);
+    }
+  });
+  const handleEntered = normalizedTransitionCallback((node, isAppearing) => {
+    node.style[size] = "auto";
+    if (onEntered) {
+      onEntered(node, isAppearing);
+    }
+  });
+  const handleExit = normalizedTransitionCallback((node) => {
+    node.style[size] = `${getWrapperSize()}px`;
+    if (onExit) {
+      onExit(node);
+    }
+  });
+  const handleExited = normalizedTransitionCallback(onExited);
+  const handleExiting = normalizedTransitionCallback((node) => {
+    const wrapperSize = getWrapperSize();
+    const {
+      duration: transitionDuration,
+      easing: transitionTimingFunction
+    } = getTransitionProps({
+      style,
+      timeout,
+      easing
+    }, {
+      mode: "exit"
+    });
+    if (timeout === "auto") {
+      const duration2 = theme.transitions.getAutoHeightDuration(wrapperSize);
+      node.style.transitionDuration = `${duration2}ms`;
+      autoTransitionDuration.current = duration2;
+    } else {
+      node.style.transitionDuration = typeof transitionDuration === "string" ? transitionDuration : `${transitionDuration}ms`;
+    }
+    node.style[size] = collapsedSize;
+    node.style.transitionTimingFunction = transitionTimingFunction;
+    if (onExiting) {
+      onExiting(node);
+    }
+  });
+  const handleAddEndListener = (next) => {
+    if (timeout === "auto") {
+      timer.start(autoTransitionDuration.current || 0, next);
+    }
+    if (addEndListener) {
+      addEndListener(nodeRef.current, next);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(TransitionComponent, {
+    in: inProp,
+    onEnter: handleEnter,
+    onEntered: handleEntered,
+    onEntering: handleEntering,
+    onExit: handleExit,
+    onExited: handleExited,
+    onExiting: handleExiting,
+    addEndListener: handleAddEndListener,
+    nodeRef,
+    timeout: timeout === "auto" ? null : timeout,
+    ...other,
+    children: (state, {
+      ownerState: incomingOwnerState,
+      ...restChildProps
+    }) => /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseRoot, {
+      as: component,
+      className: clsx(classes.root, className, {
+        "entered": classes.entered,
+        "exited": !inProp && collapsedSize === "0px" && classes.hidden
+      }[state]),
+      style: {
+        [isHorizontal ? "minWidth" : "minHeight"]: collapsedSize,
+        ...style
+      },
+      ref: handleRef,
+      ownerState: {
+        ...ownerState,
+        state
+      },
+      ...restChildProps,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapper, {
+        ownerState: {
+          ...ownerState,
+          state
+        },
+        className: classes.wrapper,
+        ref: wrapperRef,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CollapseWrapperInner, {
+          ownerState: {
+            ...ownerState,
+            state
+          },
+          className: classes.wrapperInner,
+          children
+        })
+      })
+    })
+  });
+});
+if (Collapse) {
+  Collapse.muiSupportAuto = true;
+}
 
 var isCheckBoxInput = (element) => element.type === 'checkbox';
 
@@ -37663,7 +37218,7 @@ const overridesResolver$1 = (props, styles) => {
   } = props;
   return [styles.root, ownerState.dense && styles.dense, ownerState.divider && styles.divider, !ownerState.disableGutters && styles.gutters];
 };
-const useUtilityClasses$9 = (ownerState) => {
+const useUtilityClasses$c = (ownerState) => {
   const {
     disabled,
     dense,
@@ -37821,7 +37376,7 @@ const MenuItem = /* @__PURE__ */ reactExports.forwardRef(function MenuItem2(inPr
     divider,
     disableGutters
   };
-  const classes = useUtilityClasses$9(props);
+  const classes = useUtilityClasses$c(props);
   const handleRef = useForkRef(menuItemRef, ref);
   let tabIndex;
   if (!props.disabled) {
@@ -37995,7 +37550,7 @@ const ClearIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
   d: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 }));
 
-const useUtilityClasses$8 = (ownerState) => {
+const useUtilityClasses$b = (ownerState) => {
   const {
     variant,
     color,
@@ -38147,7 +37702,7 @@ const Alert = /* @__PURE__ */ reactExports.forwardRef(function Alert2(inProps, r
     variant,
     colorSeverity: color || severity
   };
-  const classes = useUtilityClasses$8(ownerState);
+  const classes = useUtilityClasses$b(ownerState);
   const externalForwardedProps = {
     slots: {
       closeButton: components.CloseButton,
@@ -38240,7 +37795,7 @@ function getChipUtilityClass(slot) {
 }
 const chipClasses = generateUtilityClasses('MuiChip', ['root', 'sizeSmall', 'sizeMedium', 'colorDefault', 'colorError', 'colorInfo', 'colorPrimary', 'colorSecondary', 'colorSuccess', 'colorWarning', 'disabled', 'clickable', 'clickableColorPrimary', 'clickableColorSecondary', 'deletable', 'deletableColorPrimary', 'deletableColorSecondary', 'outlined', 'filled', 'outlinedPrimary', 'outlinedSecondary', 'filledPrimary', 'filledSecondary', 'avatar', 'avatarSmall', 'avatarMedium', 'avatarColorPrimary', 'avatarColorSecondary', 'icon', 'iconSmall', 'iconMedium', 'iconColorPrimary', 'iconColorSecondary', 'label', 'labelSmall', 'labelMedium', 'deleteIcon', 'deleteIconSmall', 'deleteIconMedium', 'deleteIconColorPrimary', 'deleteIconColorSecondary', 'deleteIconOutlinedColorPrimary', 'deleteIconOutlinedColorSecondary', 'deleteIconFilledColorPrimary', 'deleteIconFilledColorSecondary', 'focusVisible']);
 
-const useUtilityClasses$7 = (ownerState) => {
+const useUtilityClasses$a = (ownerState) => {
   const {
     classes,
     disabled,
@@ -38634,7 +38189,7 @@ const Chip = /* @__PURE__ */ reactExports.forwardRef(function Chip2(inProps, ref
     clickable,
     variant
   };
-  const classes = useUtilityClasses$7(ownerState);
+  const classes = useUtilityClasses$a(ownerState);
   const moreProps = component === ButtonBase ? {
     component: ComponentProp || "div",
     focusVisibleClassName: classes.focusVisible,
@@ -38729,7 +38284,7 @@ function getAvatarUtilityClass(slot) {
 }
 generateUtilityClasses('MuiAvatar', ['root', 'colorDefault', 'circular', 'rounded', 'square', 'img', 'fallback']);
 
-const useUtilityClasses$6 = (ownerState) => {
+const useUtilityClasses$9 = (ownerState) => {
   const {
     classes,
     variant,
@@ -38892,7 +38447,7 @@ const Avatar = /* @__PURE__ */ reactExports.forwardRef(function Avatar2(inProps,
   const hasImgNotFailing = hasImg && loaded !== "error";
   ownerState.colorDefault = !hasImgNotFailing;
   delete ownerState.ownerState;
-  const classes = useUtilityClasses$6(ownerState);
+  const classes = useUtilityClasses$9(ownerState);
   const [RootSlot, rootSlotProps] = useSlot("root", {
     ref,
     className: clsx(classes.root, className),
@@ -38970,6 +38525,14 @@ const ErrorIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
   d: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m1 15h-2v-2h2zm0-4h-2V7h2z"
 }));
 
+const CopyIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 16H8V7h11z"
+}));
+
+const CheckIcon = createSvgIcon(/*#__PURE__*/jsxRuntimeExports.jsx("path", {
+  d: "M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+}));
+
 function WalletDlg({
   initAddress = "",
   initName = "",
@@ -38979,6 +38542,7 @@ function WalletDlg({
   const [open, setOpen] = reactExports.useState(false);
   const { dispatch, wallets } = reactExports.useContext(WalletsCtx);
   const [isPending, startTransition] = reactExports.useTransition();
+  const [addressCopied, setAddressCopied] = reactExports.useState(false);
   const {
     register,
     handleSubmit,
@@ -39049,7 +38613,27 @@ function WalletDlg({
                   validate: validateAddress
                 }),
                 error: !!errors.address,
-                helperText: errors.address && errors.address.message
+                helperText: errors.address && errors.address.message,
+                slotProps: {
+                  input: {
+                    endAdornment: type === "modify" && (addressCopied ? /* @__PURE__ */ jsxRuntimeExports.jsx(CheckIcon, { color: "success", fontSize: "small" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      IconButton,
+                      {
+                        size: "small",
+                        color: "primary",
+                        onClick: () => {
+                          navigator.clipboard.writeText(initAddress).then(() => {
+                            setAddressCopied(true);
+                            setTimeout(() => {
+                              setAddressCopied(false);
+                            }, 1e3);
+                          });
+                        },
+                        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CopyIcon, {})
+                      }
+                    ))
+                  }
+                }
               }
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -39083,34 +38667,287 @@ function WalletDlg({
   ] });
 }
 
-function TitleActions(props) {
-  const { address, name, onDelete, ...rest } = props;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Stack, { direction: "row", alignItems: "center", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(WalletDlg, { initAddress: address, initName: name, type: "modify", children: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-      EditIcon,
-      {
-        style: { marginRight: 12 },
-        ...rest,
-        className: rest.className,
-        onClick: (e) => {
-          e.stopPropagation();
-          triggerOpen();
-        }
-      }
-    ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      DeleteIcon,
-      {
-        ...rest,
-        className: rest.className,
-        onClick: (e) => {
-          e.stopPropagation();
-          onDelete();
-        }
-      }
-    )
-  ] });
+function getCardUtilityClass(slot) {
+  return generateUtilityClass('MuiCard', slot);
 }
+generateUtilityClasses('MuiCard', ['root']);
+
+const useUtilityClasses$8 = (ownerState) => {
+  const {
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root"]
+  };
+  return composeClasses(slots, getCardUtilityClass, classes);
+};
+const CardRoot = styled(Paper, {
+  name: "MuiCard",
+  slot: "Root"
+})({
+  overflow: "hidden"
+});
+const Card = /* @__PURE__ */ reactExports.forwardRef(function Card2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiCard"
+  });
+  const {
+    className,
+    raised = false,
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    raised
+  };
+  const classes = useUtilityClasses$8(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(CardRoot, {
+    className: clsx(classes.root, className),
+    elevation: raised ? 8 : void 0,
+    ref,
+    ownerState,
+    ...other
+  });
+});
+
+function getCardHeaderUtilityClass(slot) {
+  return generateUtilityClass('MuiCardHeader', slot);
+}
+const cardHeaderClasses = generateUtilityClasses('MuiCardHeader', ['root', 'avatar', 'action', 'content', 'title', 'subheader']);
+
+const useUtilityClasses$7 = (ownerState) => {
+  const {
+    classes
+  } = ownerState;
+  const slots = {
+    root: ["root"],
+    avatar: ["avatar"],
+    action: ["action"],
+    content: ["content"],
+    title: ["title"],
+    subheader: ["subheader"]
+  };
+  return composeClasses(slots, getCardHeaderUtilityClass, classes);
+};
+const CardHeaderRoot = styled("div", {
+  name: "MuiCardHeader",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    return [{
+      [`& .${cardHeaderClasses.title}`]: styles.title
+    }, {
+      [`& .${cardHeaderClasses.subheader}`]: styles.subheader
+    }, styles.root];
+  }
+})({
+  display: "flex",
+  alignItems: "center",
+  padding: 16
+});
+const CardHeaderAvatar = styled("div", {
+  name: "MuiCardHeader",
+  slot: "Avatar"
+})({
+  display: "flex",
+  flex: "0 0 auto",
+  marginRight: 16
+});
+const CardHeaderAction = styled("div", {
+  name: "MuiCardHeader",
+  slot: "Action"
+})({
+  flex: "0 0 auto",
+  alignSelf: "flex-start",
+  marginTop: -4,
+  marginRight: -8,
+  marginBottom: -4
+});
+const CardHeaderContent = styled("div", {
+  name: "MuiCardHeader",
+  slot: "Content"
+})({
+  flex: "1 1 auto",
+  [`.${typographyClasses.root}:where(& .${cardHeaderClasses.title})`]: {
+    display: "block"
+  },
+  [`.${typographyClasses.root}:where(& .${cardHeaderClasses.subheader})`]: {
+    display: "block"
+  }
+});
+const CardHeader = /* @__PURE__ */ reactExports.forwardRef(function CardHeader2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiCardHeader"
+  });
+  const {
+    action,
+    avatar,
+    component = "div",
+    disableTypography = false,
+    subheader: subheaderProp,
+    subheaderTypographyProps,
+    title: titleProp,
+    titleTypographyProps,
+    slots = {},
+    slotProps = {},
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    component,
+    disableTypography
+  };
+  const classes = useUtilityClasses$7(ownerState);
+  const externalForwardedProps = {
+    slots,
+    slotProps: {
+      title: titleTypographyProps,
+      subheader: subheaderTypographyProps,
+      ...slotProps
+    }
+  };
+  let title = titleProp;
+  const [TitleSlot, titleSlotProps] = useSlot("title", {
+    className: classes.title,
+    elementType: Typography,
+    externalForwardedProps,
+    ownerState,
+    additionalProps: {
+      variant: avatar ? "body2" : "h5",
+      component: "span"
+    }
+  });
+  if (title != null && title.type !== Typography && !disableTypography) {
+    title = /* @__PURE__ */ jsxRuntimeExports.jsx(TitleSlot, {
+      ...titleSlotProps,
+      children: title
+    });
+  }
+  let subheader = subheaderProp;
+  const [SubheaderSlot, subheaderSlotProps] = useSlot("subheader", {
+    className: classes.subheader,
+    elementType: Typography,
+    externalForwardedProps,
+    ownerState,
+    additionalProps: {
+      variant: avatar ? "body2" : "body1",
+      color: "textSecondary",
+      component: "span"
+    }
+  });
+  if (subheader != null && subheader.type !== Typography && !disableTypography) {
+    subheader = /* @__PURE__ */ jsxRuntimeExports.jsx(SubheaderSlot, {
+      ...subheaderSlotProps,
+      children: subheader
+    });
+  }
+  const [RootSlot, rootSlotProps] = useSlot("root", {
+    ref,
+    className: classes.root,
+    elementType: CardHeaderRoot,
+    externalForwardedProps: {
+      ...externalForwardedProps,
+      ...other,
+      component
+    },
+    ownerState
+  });
+  const [AvatarSlot, avatarSlotProps] = useSlot("avatar", {
+    className: classes.avatar,
+    elementType: CardHeaderAvatar,
+    externalForwardedProps,
+    ownerState
+  });
+  const [ContentSlot, contentSlotProps] = useSlot("content", {
+    className: classes.content,
+    elementType: CardHeaderContent,
+    externalForwardedProps,
+    ownerState
+  });
+  const [ActionSlot, actionSlotProps] = useSlot("action", {
+    className: classes.action,
+    elementType: CardHeaderAction,
+    externalForwardedProps,
+    ownerState
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(RootSlot, {
+    ...rootSlotProps,
+    children: [avatar && /* @__PURE__ */ jsxRuntimeExports.jsx(AvatarSlot, {
+      ...avatarSlotProps,
+      children: avatar
+    }), /* @__PURE__ */ jsxRuntimeExports.jsxs(ContentSlot, {
+      ...contentSlotProps,
+      children: [title, subheader]
+    }), action && /* @__PURE__ */ jsxRuntimeExports.jsx(ActionSlot, {
+      ...actionSlotProps,
+      children: action
+    })]
+  });
+});
+
+function getCardActionsUtilityClass(slot) {
+  return generateUtilityClass('MuiCardActions', slot);
+}
+generateUtilityClasses('MuiCardActions', ['root', 'spacing']);
+
+const useUtilityClasses$6 = (ownerState) => {
+  const {
+    classes,
+    disableSpacing
+  } = ownerState;
+  const slots = {
+    root: ["root", !disableSpacing && "spacing"]
+  };
+  return composeClasses(slots, getCardActionsUtilityClass, classes);
+};
+const CardActionsRoot = styled("div", {
+  name: "MuiCardActions",
+  slot: "Root",
+  overridesResolver: (props, styles) => {
+    const {
+      ownerState
+    } = props;
+    return [styles.root, !ownerState.disableSpacing && styles.spacing];
+  }
+})({
+  display: "flex",
+  alignItems: "center",
+  padding: 8,
+  variants: [{
+    props: {
+      disableSpacing: false
+    },
+    style: {
+      "& > :not(style) ~ :not(style)": {
+        marginLeft: 8
+      }
+    }
+  }]
+});
+const CardActions = /* @__PURE__ */ reactExports.forwardRef(function CardActions2(inProps, ref) {
+  const props = useDefaultProps({
+    props: inProps,
+    name: "MuiCardActions"
+  });
+  const {
+    disableSpacing = false,
+    className,
+    ...other
+  } = props;
+  const ownerState = {
+    ...props,
+    disableSpacing
+  };
+  const classes = useUtilityClasses$6(ownerState);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(CardActionsRoot, {
+    className: clsx(classes.root, className),
+    ownerState,
+    ref,
+    ...other
+  });
+});
+
 function Wallet({ address, name }) {
   const { dispatch } = reactExports.useContext(WalletsCtx);
   const confirm = useConfirm();
@@ -39121,6 +38958,8 @@ function Wallet({ address, name }) {
   const [balance, setBalance] = reactExports.useState("");
   const [transferStatus, setTransferStatus] = reactExports.useState(0 /* Init */);
   const [transferMessage, setTransferMessage] = reactExports.useState("");
+  const [showAddress, setShowAddress] = reactExports.useState(false);
+  const [addressCopied, setAddressCopied] = reactExports.useState(false);
   const isNoneAccount = owner === "";
   const isTransferring = transferStatus === 1 /* InRPC */ || transferStatus === 2 /* LoopStatus */;
   const loadBalance = reactExports.useCallback(async () => {
@@ -39208,103 +39047,111 @@ function Wallet({ address, name }) {
       setTransferMessage(`发起转账失败，错误信息: ${getErrorMsg(error)}`);
     });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Accordion, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionSummary, { "aria-controls": "panel1-content", id: "panel1-header", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Chip,
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      CardHeader,
       {
-        sx: { width: "100%", justifyContent: "space-between" },
-        label: name,
-        avatar: /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { children: "W" }),
-        color: "primary",
-        variant: "outlined",
-        deleteIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          TitleActions,
+        title: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Stack,
           {
-            name,
-            address,
-            onDelete: handleDelete
+            direction: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Chip,
+                {
+                  label: name,
+                  color: "primary",
+                  variant: "outlined",
+                  deleteIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(WalletDlg, { initAddress: address, initName: name, type: "modify", children: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    EditIcon,
+                    {
+                      style: { marginRight: 12 },
+                      onClick: (e) => {
+                        e.stopPropagation();
+                        triggerOpen();
+                      }
+                    }
+                  ) }),
+                  onDelete: () => {
+                    console.log("Delete wallet");
+                  }
+                }
+              ),
+              isNoneAccount ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Chip,
+                {
+                  label: accountLoading ? "加载中..." : "空账户",
+                  variant: "outlined",
+                  color: accountLoading ? "primary" : "error",
+                  onDelete: () => {
+                    if (!accountLoading) loadAccount();
+                  },
+                  deleteIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    RefreshIcon,
+                    {
+                      sx: {
+                        animation: accountLoading ? rotate360deg : void 0
+                      }
+                    }
+                  )
+                }
+              ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Chip,
+                {
+                  label: balance,
+                  variant: "outlined",
+                  color: "primary",
+                  avatar: /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { children: "SOL" }),
+                  onDelete: () => {
+                    if (!balanceLoading) loadBalance();
+                  },
+                  deleteIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    RefreshIcon,
+                    {
+                      sx: {
+                        animation: balanceLoading ? rotate360deg : void 0
+                      }
+                    }
+                  )
+                }
+              )
+            ]
           }
         ),
-        onDelete: () => {
+        sx: { cursor: "pointer" },
+        onClick: () => {
+          setShowAddress(!showAddress);
         }
       }
-    ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      AccordionDetails,
-      {
-        sx: { display: "flex", flexDirection: "column", alignItems: "center" },
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Chip,
-            {
-              label: shortSolanaAddress(address),
-              variant: "outlined",
-              color: "success"
-            }
-          ),
-          accountLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-            CircularProgress,
-            {
-              sx: { color: "primary.main", marginTop: 4, marginBottom: 2 }
-            }
-          ) : isNoneAccount ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Typography,
-              {
-                variant: "h6",
-                color: "error",
-                sx: { marginTop: 4, marginBottom: 4 },
-                children: "未找到账户信息"
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { onClick: loadAccount, color: "primary", children: /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshIcon, {}) })
-          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Chip,
-              {
-                label: balance,
-                variant: "outlined",
-                color: "primary",
-                sx: { marginTop: 4, marginBottom: 2 },
-                avatar: /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { children: "SOL" }),
-                onDelete: () => {
-                  if (!balanceLoading) loadBalance();
-                },
-                deleteIcon: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  RefreshIcon,
-                  {
-                    sx: { animation: balanceLoading ? rotate360deg : void 0 }
-                  }
-                )
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              TransferDlg,
-              {
-                fromAddress: address,
-                fromName: name,
-                onResult: handleTransfer,
-                renderOpenBtn: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  Button,
-                  {
-                    variant: "outlined",
-                    onClick: triggerOpen,
-                    id: "transfer-btn",
-                    disabled: isTransferring || balanceLoading,
-                    children: "转账"
-                  }
-                )
-              }
-            )
-          ] })
-        ]
-      }
     ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardActions, { sx: { justifyContent: "end" }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(IconButton, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(DeleteIcon, { onClick: handleDelete }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        TransferDlg,
+        {
+          fromAddress: address,
+          fromName: name,
+          onResult: handleTransfer,
+          renderOpenBtn: ({ triggerOpen }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Button,
+            {
+              variant: "outlined",
+              onClick: triggerOpen,
+              id: "transfer-btn",
+              disabled: isTransferring || balanceLoading || isNoneAccount,
+              children: "转账"
+            }
+          )
+        }
+      )
+    ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Collapse, { in: transferStatus !== 0 /* Init */, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       Alert,
       {
         severity: transferStatus === 4 /* Failed */ ? "error" : transferStatus === 3 /* Success */ ? "success" : "info",
-        sx: { margin: 2, wordBreak: "break-word" },
+        sx: { wordBreak: "break-word" },
         icon: isTransferring ? /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshIcon, { sx: { animation: rotate360deg } }) : transferStatus === 3 /* Success */ ? /* @__PURE__ */ jsxRuntimeExports.jsx(CheckCircleIcon, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorIcon, {}),
         onClose: isTransferring ? void 0 : () => {
           setTransferStatus(0 /* Init */);
@@ -39312,6 +39159,31 @@ function Wallet({ address, name }) {
           setTransferID("");
         },
         children: transferMessage
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Collapse, { in: showAddress, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Alert,
+      {
+        sx: { wordBreak: "break-all" },
+        action: /* @__PURE__ */ jsxRuntimeExports.jsxs(Stack, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { size: "small", onClick: () => setShowAddress(false), children: "隐藏" }),
+          addressCopied ? /* @__PURE__ */ jsxRuntimeExports.jsx(Chip, { label: "copied", color: "success", size: "small" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Button,
+            {
+              size: "small",
+              onClick: () => {
+                navigator.clipboard.writeText(address).then(() => {
+                  setAddressCopied(true);
+                  setTimeout(() => {
+                    setAddressCopied(false);
+                  }, 1e3);
+                });
+              },
+              children: "复制"
+            }
+          )
+        ] }),
+        children: address
       }
     ) })
   ] }, address);
@@ -41183,4 +41055,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { sx: { padding: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) })
 );
-//# sourceMappingURL=index-D3DGg0Q7.js.map
+//# sourceMappingURL=index-CMiYkc34.js.map
