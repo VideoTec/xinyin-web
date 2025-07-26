@@ -21,6 +21,8 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import Avatar from "@mui/material/Avatar";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ErrorIcon from "@mui/icons-material/Error";
 import Typography from "@mui/material/Typography";
 
 enum TransferStatus {
@@ -192,7 +194,6 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   }
 
   //TODO : 地址点击，弹窗，显示完整地址
-  //FIXME : ALERT, icon, 成功，失败两个图标
   return (
     <Accordion key={address}>
       <AccordionSummary aria-controls="panel1-content" id="panel1-header">
@@ -283,9 +284,13 @@ export function Wallet({ address, name }: { address: string; name: string }) {
           }
           sx={{ margin: 2, wordBreak: "break-word" }}
           icon={
-            <RefreshIcon
-              sx={{ animation: isTransferring ? rotate360deg : undefined }}
-            />
+            isTransferring ? (
+              <RefreshIcon sx={{ animation: rotate360deg }} />
+            ) : transferStatus === TransferStatus.Success ? (
+              <CheckCircleIcon />
+            ) : (
+              <ErrorIcon />
+            )
           }
           onClose={
             isTransferring
