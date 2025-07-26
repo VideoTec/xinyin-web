@@ -22,7 +22,7 @@ export default function WalletDlg({
   children: (props: { triggerOpen: () => void }) => ReactElement;
 }) {
   const [open, setOpen] = useState(false);
-  const { dispatch } = useContext(WalletsCtx)!;
+  const { dispatch, wallets } = useContext(WalletsCtx)!;
   const [isPending, startTransition] = useTransition();
   const {
     register,
@@ -68,6 +68,21 @@ export default function WalletDlg({
     });
   };
 
+  function validateAddress(address: string) {
+    const isValid = isValidSolanaAddress(address);
+    if (isValid !== true) return isValid;
+
+    if (type === "add" && wallets && wallets.some((w) => w.address === address))
+      return "钱包地址已存在";
+    return true;
+  }
+
+  function validateName(name: string) {
+    if (wallets && wallets.some((w) => w.name === name))
+      return "钱包名称已存在";
+    return true;
+  }
+
   // FIXME: 确保地址格式正确, 显示错误原因
   // TODO: 地址栏，全选，复制 方案
   return (
@@ -90,7 +105,7 @@ export default function WalletDlg({
               disabled={type === "modify"}
               {...register("address", {
                 required: "必须填写钱包地址",
-                validate: isValidSolanaAddress,
+                validate: validateAddress,
               })}
               error={!!errors.address}
               helperText={errors.address && errors.address.message}
@@ -109,7 +124,10 @@ export default function WalletDlg({
                   setValue("name", shortSolanaAddress(address));
                 }
               }}
-              {...register("name", { required: "必须填写钱包名称" })}
+              {...register("name", {
+                required: "必须填写钱包名称",
+                validate: validateName,
+              })}
               error={!!errors.name}
               helperText={errors.name && errors.name.message}
             />
