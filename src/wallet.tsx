@@ -83,6 +83,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
             setOwner(data.owner);
             const sol = data.lamports / 1e9; // Convert lamports to SOL
             setBalance(sol.toString());
+            setLoadingError("");
           } else {
             setLoadingError("未找到账户信息");
           }

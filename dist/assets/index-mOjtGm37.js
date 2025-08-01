@@ -33668,7 +33668,7 @@ async function callSolanaRpc(method, params) {
     params,
     id: JsonRpcId++
   };
-  const url = currentCluster === "mainnet-beta" ? "https://api.mainnet-beta.solana.com" : currentCluster === "testnet" ? "https://api.testnet.solana.com" : "https://api.devnet.solana.com";
+  const url = currentCluster === "mainnet-beta" ? "https://dry-silence-6b88.wangxiangc.workers.dev/" : currentCluster === "testnet" ? "https://api.testnet.solana.com" : "https://api.devnet.solana.com";
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -38609,6 +38609,7 @@ function Wallet({ address, name }) {
           setOwner(data.owner);
           const sol = data.lamports / 1e9;
           setBalance(sol.toString());
+          setLoadingError("");
         } else {
           setLoadingError("未找到账户信息");
         }
@@ -41784,4 +41785,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Container, { sx: { padding: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConfirmProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) })
 );
-//# sourceMappingURL=index-CqcfPOQH.js.map
+//# sourceMappingURL=index-mOjtGm37.js.map
