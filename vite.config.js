@@ -22,14 +22,14 @@ export default {
     emptyOutDir: true,
     target: "esnext",
     sourcemap: true,
-    minify: false,
+    minify: true,
   },
   plugins: [
     react(),
     VitePWA({
       mode: "production",
       registerType: "prompt",
-      minify: false,
+      minify: true,
       manifest: {
         name: "心印数字钱包",
         short_name: "心印钱包",

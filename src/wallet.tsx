@@ -97,6 +97,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
       });
   }, [address]);
 
+  // TODO: 缓存账户信息，避免每次启动都加载
   useEffect(() => {
     loadAccount();
   }, [address, loadAccount]);
