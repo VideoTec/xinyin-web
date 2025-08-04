@@ -51,16 +51,5 @@ export default {
         navigateFallback: null,
       },
     }),
-    {
-      name: "add-referrerpolicy",
-      transformIndexHtml: {
-        enforce: "post",
-        transform(html) {
-          return html
-            .replace(/<script /g, '<script referrerpolicy="no-referrer" ')
-            .replace(/<link /g, '<link referrerpolicy="no-referrer" ');
-        },
-      },
-    },
   ],
 };
