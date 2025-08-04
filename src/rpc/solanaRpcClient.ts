@@ -57,6 +57,7 @@ export async function callSolanaRpc<T>(
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    referrerPolicy: "no-referrer",
     body: JSON.stringify(jsonrpc),
   });
 
