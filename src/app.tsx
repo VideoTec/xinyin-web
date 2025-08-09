@@ -12,7 +12,7 @@ import Typography from "@mui/material/Typography";
 import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
 import { green } from "@mui/material/colors";
-import { IconButton } from "@mui/material";
+import { Button, IconButton } from "@mui/material";
 import { ImportWords32Icon, GenerateWords32Icon } from "./icons";
 import XinyinDlg from "./xinyinDlg";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
@@ -22,6 +22,7 @@ import {
   getCurrentCluster,
   setSolanaCluster as gSetSolanaCluster,
 } from "./rpc/solanaRpcClient";
+import { register } from "./webauth";
 
 type WorkerStatus = "loading" | "success" | "error";
 
@@ -59,6 +60,18 @@ function App() {
           <Typography variant="h6" sx={{ ml: 1 }} flexGrow={1}>
             数字钱包
           </Typography>
+          <Button
+            variant="outlined"
+            color="inherit"
+            size="small"
+            sx={{ mr: 1 }}
+            onClick={() => {
+              // window.location.href = "https://solana.wangxiang.work/login";
+              register();
+            }}
+          >
+            登录
+          </Button>
           <XinyinDlg type="generate">
             {({ triggerOpen }) => (
               <IconButton sx={{ mr: 1 }} onClick={triggerOpen}>
