@@ -4,36 +4,54 @@ export function isUserAuthenticated(): boolean {
 }
 
 export function register() {
-  const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions =
-    {
-      challenge: new Uint8Array([
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-      ]),
-      rp: {
-        name: "示例网站",
-      },
-      user: {
-        id: new Uint8Array([1, 2, 3, 4]),
-        name: "user@localhost",
-        displayName: "user",
-      },
-      pubKeyCredParams: [
-        { alg: -7, type: "public-key" },
-        { alg: -257, type: "public-key" },
-      ],
-      authenticatorSelection: {
-        authenticatorAttachment: "platform",
-        userVerification: "preferred",
-        residentKey: "preferred",
-      },
-      timeout: 60000,
-    };
-
-  navigator.credentials
-    .create({ publicKey: publicKeyCredentialCreationOptions })
-    .then((credential) => {
-      // 将凭证发送到服务器
-      console.log("凭证:", credential);
+  fetch("http://solana.wangxiang.work/register/challenge", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Use-Name": "Xinyin11",
+      "X-Use-Display-Name": "xinyin11@example.com",
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
     })
-    .catch((error) => console.error("注册失败:", error));
+    .then(async (data) => {
+      console.log("Challenge received:", data);
+      const options = PublicKeyCredential.parseCreationOptionsFromJSON(data);
+      const credential = await navigator.credentials.create({
+        publicKey: options,
+      });
+      if (credential) {
+        registerPK(credential as PublicKeyCredential);
+      }
+    })
+    .catch((error) => {
+      console.error("Registration failed:", error);
+    });
+}
+
+function registerPK(credential: PublicKeyCredential) {
+  fetch("http://solana.wangxiang.work/register/verify", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(credential.toJSON()),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.text();
+    })
+    .then(async (data) => {
+      // const pkJSON = JSON.stringify(data);
+      console.log("Registration successful:", data);
+    })
+    .catch((error) => {
+      console.error("Registration failed:", error);
+    });
 }
