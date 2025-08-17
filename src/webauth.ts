@@ -4,7 +4,7 @@ export function isUserAuthenticated(): boolean {
 }
 
 export function register() {
-  fetch("http://solana.wangxiang.work/register/challenge", {
+  fetch("https://solana.wangxiang.work/register/challenge", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -34,7 +34,7 @@ export function register() {
 }
 
 function registerPK(credential: PublicKeyCredential) {
-  fetch("http://solana.wangxiang.work/register/verify", {
+  fetch("https://solana.wangxiang.work/register/verify", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
