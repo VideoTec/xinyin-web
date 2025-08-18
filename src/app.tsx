@@ -22,7 +22,7 @@ import {
   getCurrentCluster,
   setSolanaCluster as gSetSolanaCluster,
 } from "./rpc/solanaRpcClient";
-import { register } from "./webauth";
+import { register, login } from "./webauth";
 
 type WorkerStatus = "loading" | "success" | "error";
 
@@ -68,6 +68,7 @@ function App() {
             onClick={() => {
               // window.location.href = "https://solana.wangxiang.work/login";
               register();
+              // login();
             }}
           >
             登录

@@ -3,13 +3,16 @@ export function isUserAuthenticated(): boolean {
   return true; // Placeholder return value
 }
 
+const host = "https://solana.wangxiang.work";
+// const host = "http://localhost:8787";
+
 export function register() {
-  fetch("https://solana.wangxiang.work/register/challenge", {
+  fetch(`${host}/register/challenge`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Use-Name": "Xinyin11",
-      "X-Use-Display-Name": "xinyin11@example.com",
+      "X-Use-Name": "Xinyin13",
+      "X-Use-Display-Name": "xinyin13@example.com",
     },
   })
     .then((response) => {
@@ -19,7 +22,7 @@ export function register() {
       return response.json();
     })
     .then(async (data) => {
-      console.log("Challenge received:", data);
+      console.log("register Challenge received:", data);
       const options = PublicKeyCredential.parseCreationOptionsFromJSON(data);
       const credential = await navigator.credentials.create({
         publicKey: options,
@@ -34,7 +37,7 @@ export function register() {
 }
 
 function registerPK(credential: PublicKeyCredential) {
-  fetch("https://solana.wangxiang.work/register/verify", {
+  fetch(`${host}/register/verify`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -53,5 +56,56 @@ function registerPK(credential: PublicKeyCredential) {
     })
     .catch((error) => {
       console.error("Registration failed:", error);
+    });
+}
+
+export function login() {
+  fetch(`${host}/login/challenge`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    })
+    .then(async (data) => {
+      console.log("Challenge received:", data);
+      const options = PublicKeyCredential.parseRequestOptionsFromJSON(data);
+      const credential = await navigator.credentials.get({
+        publicKey: options,
+      });
+      if (credential) {
+        console.log("get Credential:", credential);
+        loginPK(credential as PublicKeyCredential);
+      }
+    })
+    .catch((error) => {
+      console.error("Login failed:", error);
+    });
+}
+
+function loginPK(credential: PublicKeyCredential) {
+  fetch(`${host}/login/verify`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(credential.toJSON()),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.text();
+    })
+    .then(async (data) => {
+      console.log("Login successful:", data);
+    })
+    .catch((error) => {
+      console.error("Login failed:", error.message);
     });
 }
