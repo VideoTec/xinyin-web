@@ -11,7 +11,7 @@
     "strict": true,
     "verbatimModuleSyntax": true,
     "jsx": "react-jsx",
-    "types": ["vite-plugin-pwa/react"]
+    "types": ["vite-plugin-pwa/react", "vite/client"]
   },
   "exclude": ["node_modules", "dist"]
 }

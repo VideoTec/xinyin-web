@@ -68,7 +68,18 @@ function App() {
             onClick={() => {
               // window.location.href = "https://solana.wangxiang.work/login";
               register();
-              // login();
+            }}
+          >
+            注册
+          </Button>
+          <Button
+            variant="outlined"
+            color="inherit"
+            size="small"
+            sx={{ mr: 1 }}
+            onClick={() => {
+              // window.location.href = "https://solana.wangxiang.work/login";
+              login();
             }}
           >
             登录

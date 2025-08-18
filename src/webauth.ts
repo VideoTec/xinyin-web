@@ -3,7 +3,7 @@ export function isUserAuthenticated(): boolean {
   return true; // Placeholder return value
 }
 
-const host = "https://solana.wangxiang.work";
+const host = import.meta.env.VITE_WEBAUTHN_HOST;
 // const host = "http://localhost:8787";
 
 export function register() {
