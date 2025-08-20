@@ -12,7 +12,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Container sx={{ padding: 0 }}>
       <ConfirmProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.VITE_WEBAUTHN_BASE_PATH}>
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/login" element={<Login />} />
