@@ -7,9 +7,11 @@ export async function createPasskey(userName: string, displayName: string) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Use-Name": userName,
-      "X-Use-Display-Name": displayName,
     },
+    body: JSON.stringify({
+      userName,
+      displayName,
+    }),
   });
   if (!response.ok) {
     const errMsg = await getErrorMsg(response);
@@ -45,8 +47,10 @@ export async function getCredForUser(userName?: string) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Use-Name": userName || "",
     },
+    body: JSON.stringify({
+      userName: userName || "",
+    }),
   });
   if (!response.ok) {
     throw new Error(await getErrorMsg(response));
