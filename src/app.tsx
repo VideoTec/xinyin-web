@@ -22,7 +22,7 @@ import {
   getCurrentCluster,
   setSolanaCluster as gSetSolanaCluster,
 } from "./rpc/solanaRpcClient";
-import { register, login } from "./webauth";
+import { NavLink } from "react-router";
 
 type WorkerStatus = "loading" | "success" | "error";
 
@@ -36,6 +36,7 @@ function App() {
 
   useEffect(() => {
     let isMounted = true;
+    // TODO 移到 main 页面，等待 worker 准备好。现在App是一个路由页面
     waitWorkerReady()
       .then(() => {
         if (isMounted) setWorkerStatus("success");
@@ -60,30 +61,26 @@ function App() {
           <Typography variant="h6" sx={{ ml: 1 }} flexGrow={1}>
             数字钱包
           </Typography>
-          <Button
-            variant="outlined"
-            color="inherit"
-            size="small"
-            sx={{ mr: 1 }}
-            onClick={() => {
-              // window.location.href = "https://solana.wangxiang.work/login";
-              register();
-            }}
-          >
-            注册
-          </Button>
-          <Button
-            variant="outlined"
-            color="inherit"
-            size="small"
-            sx={{ mr: 1 }}
-            onClick={() => {
-              // window.location.href = "https://solana.wangxiang.work/login";
-              login();
-            }}
-          >
-            登录
-          </Button>
+          <NavLink to="/login">
+            <Button
+              variant="outlined"
+              color="inherit"
+              size="small"
+              sx={{ mr: 1 }}
+            >
+              登录
+            </Button>
+          </NavLink>
+          <NavLink to="/register">
+            <Button
+              variant="outlined"
+              color="inherit"
+              size="small"
+              sx={{ mr: 1 }}
+            >
+              注册
+            </Button>
+          </NavLink>
           <XinyinDlg type="generate">
             {({ triggerOpen }) => (
               <IconButton sx={{ mr: 1 }} onClick={triggerOpen}>

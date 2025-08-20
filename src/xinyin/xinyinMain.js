@@ -15,49 +15,65 @@ export {
 
 /** @type { number } - xinyin request id */
 let gRequestId = 0;
+
+/**
+ * @typedef { void | string | string[] | Uint8Array<ArrayBuffer> } XinyinWorkerRtType
+ */
+
 /**
  * @type { Record<number, {
- *  resolve: (value: any) => void,
+ *  resolve: (value: XinyinWorkerRtType | Promise<XinyinWorkerRtType>) => void,
  *  reject: (reason?: any) => void,
  *  reqMessageCode: XinYinMessageCode,
  * }> } - pending requests
  */
 let gPendingRequests = {};
 
-/** type { Work } */
+/** @type { Worker } */
 let xinyin_worker;
+
 try {
   xinyin_worker = new Worker(new URL("./xinyinWorker.js", import.meta.url), {
     type: "module",
     name: "xinyin-worker",
   });
+
+  /**
+   * @param {Event | ErrorEvent} errorEvent
+   */
+  xinyin_worker.onerror = (errorEvent) => {
+    let message = `xinyin_worker.onerror: ${errorEvent.timeStamp} - ${errorEvent.type}`;
+    if (errorEvent instanceof ErrorEvent) {
+      message += ` - ${errorEvent.message}`;
+    }
+    // Reject all pending requests with the error
+    for (const requestId in gPendingRequests) {
+      const request = gPendingRequests[requestId];
+      if (request) {
+        request.reject(new Error(message));
+        delete gPendingRequests[requestId];
+      }
+    }
+  };
+
+  xinyin_worker.onmessage = (/** @type {{data: XinYinMessage}} */ event) => {
+    onXinyinMessage(event.data);
+  };
 } catch (error) {
   console.error("new Worker() error:", error);
 }
 
+let IS_WORKER_READY = false;
 /**
- * @param {Event | ErrorEvent} errorEvent
- */
-xinyin_worker.onerror = (errorEvent) => {
-  let message = `xinyin_worker.onerror: ${errorEvent.timeStamp} - ${errorEvent.type}`;
-  if (errorEvent instanceof ErrorEvent) {
-    message += ` - ${errorEvent.message}`;
-  }
-  // Reject all pending requests with the error
-  for (const requestId in gPendingRequests) {
-    const request = gPendingRequests[requestId];
-    if (request) {
-      request.reject(new Error(message));
-      delete gPendingRequests[requestId];
-    }
-  }
-};
-
-/**
- * @returns {Promise<void>} Returns a promise that resolves when the worker is ready.
+ * @returns {Promise<XinyinWorkerRtType>} Returns a promise that resolves when the worker is ready.
  */
 function waitWorkerReady() {
+  if (IS_WORKER_READY) {
+    return Promise.resolve();
+  }
   return new Promise((resolve, reject) => {
+    // -1 是和xinyinWorker约定的请求序号。
+    // xinyinWorker 加载完成 wasm 模块，就会发送带这个序号的消息
     gPendingRequests[-1] = {
       resolve: resolve,
       reject: reject,
@@ -65,10 +81,6 @@ function waitWorkerReady() {
     };
   });
 }
-
-xinyin_worker.onmessage = (/** @type {{data: XinYinMessage}} */ event) => {
-  onXinyinMessage(event.data);
-};
 
 /**
  *
@@ -85,7 +97,7 @@ function generateWords32(txtInHeart, startOf8105, countFrom8105) {
     startOf8105: startOf8105,
     countFrom8105: countFrom8105,
   };
-  return postMessageToXinyinWorker(message);
+  return /** @type {Promise<string>} */ (postMessageToXinyinWorker(message));
 }
 
 /**
@@ -113,7 +125,7 @@ function importWords32(
     countFrom8105: countFrom8105,
     passphrase: passphrase,
   };
-  return postMessageToXinyinWorker(message);
+  return /** @type{Promise<string>} */ (postMessageToXinyinWorker(message));
 }
 
 /**
@@ -121,7 +133,7 @@ function importWords32(
  * @param {string} solanaAddress
  * @param {ArrayBuffer} messageUint8
  * @param {string} passphrase
- * @return {Promise<ArrayBufferLike>} Returns a promise that resolves to the signature of the message.
+ * @return {Promise<Uint8Array<ArrayBuffer>>} Returns a promise that resolves to the signature of the message.
  */
 function signMessage(solanaAddress, messageUint8, passphrase) {
   const message = {
@@ -131,7 +143,9 @@ function signMessage(solanaAddress, messageUint8, passphrase) {
     messageUint8: new Uint8Array(messageUint8),
     passphrase: passphrase,
   };
-  return postMessageToXinyinWorker(message);
+  return /** @type {Promise<Uint8Array<ArrayBuffer>>} */ (
+    postMessageToXinyinWorker(message)
+  );
 }
 
 /**
@@ -143,7 +157,7 @@ function clearSksCache() {
     code: XinYinMessageCode.ClearSksCache,
     requestId: 0,
   };
-  return postMessageToXinyinWorker(message);
+  return /** @type {Promise<void>} */ (postMessageToXinyinWorker(message));
 }
 
 /**
@@ -155,11 +169,12 @@ function listSks() {
     code: XinYinMessageCode.ListSks,
     requestId: 0,
   };
-  return postMessageToXinyinWorker(message);
+  return /** @type {Promise<string[]>} */ (postMessageToXinyinWorker(message));
 }
 
 /**
  * @param { XinYinMessage } message
+ * @returns {Promise<XinyinWorkerRtType>} Returns a promise that resolves with the response from the worker.
  */
 function postMessageToXinyinWorker(message) {
   gRequestId += 1;
@@ -181,7 +196,11 @@ function onXinyinMessage(message) {
   let request = gPendingRequests[message.requestId];
 
   if (!request) {
-    console.error("No pending request found for requestId:", message);
+    if (message.code === XinYinMessageCode.WorkerReady) {
+      IS_WORKER_READY = true;
+    } else {
+      console.error("No pending request found for requestId:", message);
+    }
     return;
   }
 
@@ -242,9 +261,8 @@ function onXinyinMessage(message) {
       break;
     }
     case XinYinMessageCode.WorkerReady: {
-      // setTimeout(() => {
+      IS_WORKER_READY = true;
       request.resolve();
-      // }, 5000);
       break;
     }
     default:

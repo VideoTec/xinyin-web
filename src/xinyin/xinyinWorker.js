@@ -110,10 +110,12 @@ function onXinYinMessage(message) {
         break;
       }
       try {
-        responseMsg.signature = sign_message(
-          message.solanaAddress,
-          message.messageUint8,
-          message.passphrase
+        responseMsg.signature = /** @type {Uint8Array<ArrayBuffer>} */ (
+          sign_message(
+            message.solanaAddress,
+            message.messageUint8,
+            message.passphrase
+          )
         );
       } catch (/** @type {any} */ error) {
         responseMsg.errorMessage = error;

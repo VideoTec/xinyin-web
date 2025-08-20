@@ -35,8 +35,8 @@ export const XinYinMessageCode = {
  * @property { string } [words32] - 心印助记字（32个汉字）.
  * @property { string } [passphrase] - The passphrase for encryption.
  * @property { string } [solanaAddress] - The Solana address.
- * @property { Uint8Array } [messageUint8] - The message to be signed, as a Uint8Array.
- * @property { Uint8Array } [signature] - The signature of the message, as a Uint8Array.
+ * @property { Uint8Array<ArrayBuffer> } [messageUint8] - The message to be signed, as a Uint8Array.
+ * @property { Uint8Array<ArrayBuffer> } [signature] - The signature of the message, as a Uint8Array.
  * @property { Array.<string> } [sks] - The secret key in base58 format.
  * @property { string } [errorMessage] - The error message, if any.
  */

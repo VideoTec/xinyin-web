@@ -6,13 +6,13 @@ export function isUserAuthenticated(): boolean {
 const host = import.meta.env.VITE_WEBAUTHN_HOST;
 // const host = "http://localhost:8787";
 
-export function register() {
+export function register(userName: string, displayName: string) {
   fetch(`${host}/register/challenge`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Use-Name": "Xinyin13",
-      "X-Use-Display-Name": "xinyin13@example.com",
+      "X-Use-Name": userName,
+      "X-Use-Display-Name": displayName,
     },
   })
     .then((response) => {
@@ -59,11 +59,12 @@ function registerPK(credential: PublicKeyCredential) {
     });
 }
 
-export function login() {
+export function login(userName?: string) {
   fetch(`${host}/login/challenge`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "X-Use-Name": userName || "",
     },
   })
     .then((response) => {
@@ -76,6 +77,7 @@ export function login() {
       console.log("Challenge received:", data);
       const options = PublicKeyCredential.parseRequestOptionsFromJSON(data);
       const credential = await navigator.credentials.get({
+        mediation: "required",
         publicKey: options,
       });
       if (credential) {
