@@ -35,61 +35,43 @@ export async function registerWithPasskey(credential: PublicKeyCredential) {
     body: JSON.stringify(credential.toJSON()),
   });
   if (!response.ok) {
-    const errMsg = await getErrorMsg(response);
-    throw new Error(errMsg);
+    throw new Error(await getErrorMsg(response));
   }
   return await getData<{ userName: string }>(response);
 }
 
-export function login(userName?: string) {
-  fetch(`${host}/login/challenge`, {
+export async function getCredForUser(userName?: string) {
+  const response = await fetch(`${host}/login/challenge`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-Use-Name": userName || "",
     },
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
-    })
-    .then(async (data) => {
-      console.log("Challenge received:", data);
-      const options = PublicKeyCredential.parseRequestOptionsFromJSON(data);
-      const credential = await navigator.credentials.get({
-        mediation: "required",
-        publicKey: options,
-      });
-      if (credential) {
-        console.log("get Credential:", credential);
-        loginPK(credential as PublicKeyCredential);
-      }
-    })
-    .catch((error) => {
-      console.error("Login failed:", error);
-    });
+  });
+  if (!response.ok) {
+    throw new Error(await getErrorMsg(response));
+  }
+  const data = await getData<PublicKeyCredentialRequestOptionsJSON>(response);
+  const cred = await navigator.credentials.get({
+    mediation: "required",
+    publicKey: PublicKeyCredential.parseRequestOptionsFromJSON(data),
+  });
+  if (!cred) {
+    throw new Error("没有读取到Passkey");
+  }
+  return cred as PublicKeyCredential;
 }
 
-function loginPK(credential: PublicKeyCredential) {
-  fetch(`${host}/login/verify`, {
+export async function loginWithCredential(credential: PublicKeyCredential) {
+  const response = await fetch(`${host}/login/verify`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(credential.toJSON()),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.text();
-    })
-    .then(async (data) => {
-      console.log("Login successful:", data);
-    })
-    .catch((error) => {
-      console.error("Login failed:", error.message);
-    });
+  });
+  if (!response.ok) {
+    throw new Error(await getErrorMsg(response));
+  }
+  return await getData<{ userName: string }>(response);
 }
