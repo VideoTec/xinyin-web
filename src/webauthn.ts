@@ -1,62 +1,44 @@
-export function isUserAuthenticated(): boolean {
-  // Implement your authentication logic here
-  return true; // Placeholder return value
-}
+import { getData, getErrorMsg } from "./restfullUtils";
 
 const host = import.meta.env.VITE_WEBAUTHN_HOST;
-// const host = "http://localhost:8787";
 
-export function register(userName: string, displayName: string) {
-  fetch(`${host}/register/challenge`, {
+export async function createPasskey(userName: string, displayName: string) {
+  const response = await fetch(`${host}/register/challenge`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-Use-Name": userName,
       "X-Use-Display-Name": displayName,
     },
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
-    })
-    .then(async (data) => {
-      console.log("register Challenge received:", data);
-      const options = PublicKeyCredential.parseCreationOptionsFromJSON(data);
-      const credential = await navigator.credentials.create({
-        publicKey: options,
-      });
-      if (credential) {
-        registerPK(credential as PublicKeyCredential);
-      }
-    })
-    .catch((error) => {
-      console.error("Registration failed:", error);
-    });
+  });
+  if (!response.ok) {
+    const errMsg = await getErrorMsg(response);
+    throw new Error(errMsg);
+  }
+  const data = await getData<PublicKeyCredentialCreationOptionsJSON>(response);
+  const options = PublicKeyCredential.parseCreationOptionsFromJSON(data);
+  const cred = await navigator.credentials.create({
+    publicKey: options,
+  });
+  if (!cred) {
+    throw new Error("Failed to create credential");
+  }
+  return cred as PublicKeyCredential;
 }
 
-function registerPK(credential: PublicKeyCredential) {
-  fetch(`${host}/register/verify`, {
+export async function registerWithPasskey(credential: PublicKeyCredential) {
+  const response = await fetch(`${host}/register/verify`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(credential.toJSON()),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.text();
-    })
-    .then(async (data) => {
-      // const pkJSON = JSON.stringify(data);
-      console.log("Registration successful:", data);
-    })
-    .catch((error) => {
-      console.error("Registration failed:", error);
-    });
+  });
+  if (!response.ok) {
+    const errMsg = await getErrorMsg(response);
+    throw new Error(errMsg);
+  }
+  return await getData<{ userName: string }>(response);
 }
 
 export function login(userName?: string) {

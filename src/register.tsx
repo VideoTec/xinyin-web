@@ -2,7 +2,10 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import { useForm } from "react-hook-form";
-import { register as webauthnRegister } from "./webauthn";
+import { createPasskey, registerWithPasskey } from "./webauthn";
+import Collapse from "@mui/material/Collapse";
+import Alert from "@mui/material/Alert";
+import { useState } from "react";
 
 interface RegisterFormInputs {
   username: string;
@@ -15,9 +18,21 @@ function Register() {
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterFormInputs>();
+  const [err, setErr] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
-  function onSubmit(data: RegisterFormInputs) {
-    webauthnRegister(data.username, data.displayName);
+  async function onSubmit(data: RegisterFormInputs) {
+    setErr(null);
+    setInfo(null);
+    try {
+      setInfo("正在生成 Passkey...");
+      const cred = await createPasskey(data.username, data.displayName);
+      setInfo("Passkey 生成成功, 正在注册...");
+      const result = await registerWithPasskey(cred);
+      setInfo("注册成功: " + result.userName);
+    } catch (error) {
+      setErr(error instanceof Error ? error.message : "Unknown error");
+    }
   }
 
   return (
@@ -52,6 +67,16 @@ function Register() {
       <Button variant="contained" color="primary" type="submit">
         注册
       </Button>
+      <Collapse in={!!err} sx={{ width: "100%", marginTop: 2 }}>
+        <Alert severity="error" onClose={() => setErr(null)}>
+          {err}
+        </Alert>
+      </Collapse>
+      <Collapse in={!!info} sx={{ width: "100%", marginTop: 2 }}>
+        <Alert severity="info" onClose={() => setInfo(null)}>
+          {info}
+        </Alert>
+      </Collapse>
     </Stack>
   );
 }
