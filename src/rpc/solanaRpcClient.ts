@@ -49,7 +49,7 @@ export async function callSolanaRpc<T>(
 
   const url =
     currentCluster === "mainnet-beta"
-      ? "https://solana.wangxiang.work"
+      ? import.meta.env.VITE_SOLANA_PRC_MAINNET_URL
       : currentCluster === "testnet"
       ? "https://api.testnet.solana.com"
       : "https://api.devnet.solana.com";

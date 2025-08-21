@@ -55,6 +55,17 @@ function Login() {
           {info}
         </Alert>
       </Collapse>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => {
+          window.location.href = `${
+            import.meta.env.VITE_WEBAUTHN_HOST
+          }/oauth2-login/google`;
+        }}
+      >
+        使用Google登录
+      </Button>
     </Stack>
   );
 }
