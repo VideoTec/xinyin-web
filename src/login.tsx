@@ -11,6 +11,7 @@ function Login() {
   const { register, handleSubmit } = useForm<{ userName: string }>();
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   async function handleLogin(data: { userName: string }) {
     setErr(null);
@@ -20,6 +21,36 @@ function Login() {
       setInfo("读取到了 Passkey, 正在登录...");
       const r = await loginWithCredential(credential);
       setInfo(`登录成功: ${r.userName}`);
+      setToken(r.accessToken);
+    } catch (error) {
+      setErr(error instanceof Error ? error.message : "未知错误");
+    }
+  }
+
+  async function handleGoogleLogin() {
+    window.location.href = `${
+      import.meta.env.VITE_WEBAUTHN_HOST
+    }/oauth2-login/google`;
+  }
+
+  async function handleGetUserInfo() {
+    if (!token) {
+      setErr("请先登录");
+      return;
+    }
+    try {
+      const u = await fetch(`${import.meta.env.VITE_WEBAUTHN_HOST}/auth/user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!u.ok) {
+        throw new Error(`获取用户信息失败: ${u.statusText}`);
+      }
+      const userInfo = await u.json();
+      setInfo(`用户信息: ${JSON.stringify(userInfo)}`);
     } catch (error) {
       setErr(error instanceof Error ? error.message : "未知错误");
     }
@@ -55,16 +86,16 @@ function Login() {
           {info}
         </Alert>
       </Collapse>
+      <Button variant="contained" color="primary" onClick={handleGoogleLogin}>
+        使用Google登录
+      </Button>
       <Button
         variant="contained"
         color="primary"
-        onClick={() => {
-          window.location.href = `${
-            import.meta.env.VITE_WEBAUTHN_HOST
-          }/oauth2-login/google`;
-        }}
+        onClick={handleGetUserInfo}
+        sx={{ marginTop: 2 }}
       >
-        使用Google登录
+        获取用户信息
       </Button>
     </Stack>
   );

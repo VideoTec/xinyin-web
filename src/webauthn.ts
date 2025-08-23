@@ -77,5 +77,5 @@ export async function loginWithCredential(credential: PublicKeyCredential) {
   if (!response.ok) {
     throw new Error(await getErrorMsg(response));
   }
-  return await getData<{ userName: string }>(response);
+  return await getData<{ userName: string; accessToken: string }>(response);
 }
