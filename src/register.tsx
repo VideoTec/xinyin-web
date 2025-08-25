@@ -6,27 +6,26 @@ import { createPasskey, registerWithPasskey } from "./webauthn";
 import Collapse from "@mui/material/Collapse";
 import Alert from "@mui/material/Alert";
 import { useState } from "react";
-
-interface RegisterFormInputs {
-  username: string;
-  displayName: string;
-}
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema, type RegisterInfo } from "./schemaUtils";
 
 function Register() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormInputs>();
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+  });
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
-  async function onSubmit(data: RegisterFormInputs) {
+  async function onSubmit(data: RegisterInfo) {
     setErr(null);
     setInfo(null);
     try {
       setInfo("正在生成 Passkey...");
-      const cred = await createPasskey(data.username, data.displayName);
+      const cred = await createPasskey(data.userName, data.displayName);
       setInfo("Passkey 生成成功, 正在注册...");
       const result = await registerWithPasskey(cred);
       setInfo("注册成功: " + result.userName);
@@ -50,9 +49,9 @@ function Register() {
         margin="normal"
         fullWidth
         placeholder="请输入用户名"
-        {...register("username")}
-        error={!!errors.username}
-        helperText={errors.username ? errors.username.message : ""}
+        {...register("userName")}
+        error={!!errors.userName}
+        helperText={errors.userName ? errors.userName.message : ""}
       />
       <TextField
         label="昵称"
@@ -68,7 +67,7 @@ function Register() {
         注册
       </Button>
       <Collapse in={!!err} sx={{ width: "100%", marginTop: 2 }}>
-        <Alert severity="error" onClose={() => setErr(null)}>
+        <Alert severity="error" onClose={() => setErr(null)} component="pre">
           {err}
         </Alert>
       </Collapse>

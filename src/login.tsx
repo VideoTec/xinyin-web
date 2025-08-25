@@ -6,14 +6,22 @@ import { useForm } from "react-hook-form";
 import { useState } from "react";
 import Collapse from "@mui/material/Collapse";
 import Alert from "@mui/material/Alert";
+import { type LoginInfo, loginSchema } from "./schemaUtils";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 function Login() {
-  const { register, handleSubmit } = useForm<{ userName: string }>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginInfo>({
+    resolver: zodResolver(loginSchema),
+  });
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  async function handleLogin(data: { userName: string }) {
+  async function handleLogin(data: LoginInfo) {
     setErr(null);
     setInfo("开始读取Passkey...");
     try {
@@ -34,10 +42,10 @@ function Login() {
   }
 
   async function handleGetUserInfo() {
-    if (!token) {
-      setErr("请先登录");
-      return;
-    }
+    // if (!token) {
+    //   setErr("请先登录");
+    //   return;
+    // }
     try {
       const u = await fetch(`${import.meta.env.VITE_WEBAUTHN_HOST}/auth/user`, {
         method: "POST",
@@ -71,13 +79,15 @@ function Login() {
         margin="normal"
         fullWidth
         placeholder="请输入用户名"
-        {...register("userName", { required: "用户名是必填项" })}
+        error={!!errors.userName}
+        helperText={errors.userName ? errors.userName.message : ""}
+        {...register("userName")}
       />
       <Button variant="contained" color="primary" type="submit">
         登录
       </Button>
       <Collapse in={!!err} sx={{ width: "100%", marginTop: 2 }}>
-        <Alert severity="error" onClose={() => setErr(null)}>
+        <Alert severity="error" onClose={() => setErr(null)} component="pre">
           {err}
         </Alert>
       </Collapse>
