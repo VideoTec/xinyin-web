@@ -67,7 +67,11 @@ function Register() {
         注册
       </Button>
       <Collapse in={!!err} sx={{ width: "100%", marginTop: 2 }}>
-        <Alert severity="error" onClose={() => setErr(null)} component="pre">
+        <Alert
+          severity="error"
+          onClose={() => setErr(null)}
+          sx={{ wordBreak: "break-all" }}
+        >
           {err}
         </Alert>
       </Collapse>

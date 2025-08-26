@@ -60,6 +60,29 @@ function Login() {
     }
   }
 
+  async function handleRefreshToken() {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_WEBAUTHN_HOST}/token/refresh`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      const data: ApiResponse<{ msg: string }> = await response.json();
+      if (!response.ok || data.code !== 0) {
+        throw new Error(`刷新Token失败: ${JSON.stringify(data.errMsg)}`);
+      }
+
+      setInfo(`刷新Token成功: ${data.data?.msg}`);
+    } catch (error) {
+      setErr(error instanceof Error ? error.message : "未知错误");
+    }
+  }
+
   return (
     <Stack
       component="form"
@@ -86,7 +109,6 @@ function Login() {
         <Alert
           severity="error"
           onClose={() => setErr(null)}
-          component="pre"
           sx={{ wordBreak: "break-all" }}
         >
           {err}
@@ -107,6 +129,14 @@ function Login() {
         sx={{ marginTop: 2 }}
       >
         获取用户信息
+      </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleRefreshToken}
+        sx={{ marginTop: 2 }}
+      >
+        刷新Token
       </Button>
     </Stack>
   );

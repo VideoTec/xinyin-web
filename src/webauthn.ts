@@ -12,6 +12,7 @@ export async function createPasskey(userName: string, displayName: string) {
       userName,
       displayName,
     }),
+    credentials: "include",
   });
   if (!response.ok) {
     const errMsg = await getErrorMsg(response);
@@ -35,6 +36,7 @@ export async function registerWithPasskey(credential: PublicKeyCredential) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(credential.toJSON()),
+    credentials: "include",
   });
   if (!response.ok) {
     throw new Error(await getErrorMsg(response));
@@ -51,6 +53,7 @@ export async function getCredForUser(userName?: string) {
     body: JSON.stringify({
       userName: userName || "",
     }),
+    credentials: "include",
   });
   if (!response.ok) {
     throw new Error(await getErrorMsg(response));
