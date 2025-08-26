@@ -8,6 +8,7 @@ import Collapse from "@mui/material/Collapse";
 import Alert from "@mui/material/Alert";
 import { type LoginInfo, loginSchema } from "./schemaUtils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { ApiResponse } from "./restfulApi";
 
 function Login() {
   const {
@@ -19,7 +20,6 @@ function Login() {
   });
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null);
 
   async function handleLogin(data: LoginInfo) {
     setErr(null);
@@ -29,7 +29,6 @@ function Login() {
       setInfo("读取到了 Passkey, 正在登录...");
       const r = await loginWithCredential(credential);
       setInfo(`登录成功: ${r.userName}`);
-      setToken(r.accessToken);
     } catch (error) {
       setErr(error instanceof Error ? error.message : "未知错误");
     }
@@ -42,22 +41,19 @@ function Login() {
   }
 
   async function handleGetUserInfo() {
-    // if (!token) {
-    //   setErr("请先登录");
-    //   return;
-    // }
     try {
       const u = await fetch(`${import.meta.env.VITE_WEBAUTHN_HOST}/auth/user`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
       });
-      if (!u.ok) {
-        throw new Error(`获取用户信息失败: ${u.statusText}`);
+      const userInfo: ApiResponse<{ sub: string }> = await u.json();
+      if (!u.ok || userInfo.code !== 0) {
+        throw new Error(`获取用户信息失败: ${JSON.stringify(userInfo.errMsg)}`);
       }
-      const userInfo = await u.json();
+
       setInfo(`用户信息: ${JSON.stringify(userInfo)}`);
     } catch (error) {
       setErr(error instanceof Error ? error.message : "未知错误");
@@ -87,7 +83,12 @@ function Login() {
         登录
       </Button>
       <Collapse in={!!err} sx={{ width: "100%", marginTop: 2 }}>
-        <Alert severity="error" onClose={() => setErr(null)} component="pre">
+        <Alert
+          severity="error"
+          onClose={() => setErr(null)}
+          component="pre"
+          sx={{ wordBreak: "break-all" }}
+        >
           {err}
         </Alert>
       </Collapse>

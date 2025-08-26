@@ -73,6 +73,7 @@ export async function loginWithCredential(credential: PublicKeyCredential) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(credential.toJSON()),
+    credentials: "include",
   });
   if (!response.ok) {
     throw new Error(await getErrorMsg(response));
