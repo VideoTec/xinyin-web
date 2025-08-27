@@ -58,6 +58,7 @@ export async function callSolanaRpc<T>(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(jsonrpc),
+    credentials: "include",
   });
 
   if (!response.ok) {

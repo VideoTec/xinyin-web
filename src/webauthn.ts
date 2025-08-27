@@ -3,7 +3,7 @@ import { getData, getErrorMsg } from "./restfullUtils";
 const host = import.meta.env.VITE_WEBAUTHN_HOST;
 
 export async function createPasskey(userName: string, displayName: string) {
-  const response = await fetch(`${host}/register/challenge`, {
+  const response = await fetch(`${host}/webauthn/cred-creation-options`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -20,9 +20,12 @@ export async function createPasskey(userName: string, displayName: string) {
   }
   const data = await getData<PublicKeyCredentialCreationOptionsJSON>(response);
   const options = PublicKeyCredential.parseCreationOptionsFromJSON(data);
+
+  // 通知认证器，创建新的Passkey
   const cred = await navigator.credentials.create({
     publicKey: options,
   });
+
   if (!cred) {
     throw new Error("Failed to create credential");
   }
@@ -30,7 +33,7 @@ export async function createPasskey(userName: string, displayName: string) {
 }
 
 export async function registerWithPasskey(credential: PublicKeyCredential) {
-  const response = await fetch(`${host}/register/verify`, {
+  const response = await fetch(`${host}/webauthn/register-with-attested-cred`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -45,7 +48,7 @@ export async function registerWithPasskey(credential: PublicKeyCredential) {
 }
 
 export async function getCredForUser(userName?: string) {
-  const response = await fetch(`${host}/login/challenge`, {
+  const response = await fetch(`${host}/webauthn/cred-request-options`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -55,14 +58,19 @@ export async function getCredForUser(userName?: string) {
     }),
     credentials: "include",
   });
+
   if (!response.ok) {
     throw new Error(await getErrorMsg(response));
   }
+
   const data = await getData<PublicKeyCredentialRequestOptionsJSON>(response);
+
+  // 通知认证器，查询Passkey
   const cred = await navigator.credentials.get({
     mediation: "required",
     publicKey: PublicKeyCredential.parseRequestOptionsFromJSON(data),
   });
+
   if (!cred) {
     throw new Error("没有读取到Passkey");
   }
@@ -70,7 +78,7 @@ export async function getCredForUser(userName?: string) {
 }
 
 export async function loginWithCredential(credential: PublicKeyCredential) {
-  const response = await fetch(`${host}/login/verify`, {
+  const response = await fetch(`${host}/webauthn/login-with-assert-cred`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

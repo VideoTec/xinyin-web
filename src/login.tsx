@@ -8,7 +8,7 @@ import Collapse from "@mui/material/Collapse";
 import Alert from "@mui/material/Alert";
 import { type LoginInfo, loginSchema } from "./schemaUtils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ApiResponse } from "./restfulApi";
+import { getData, getErrorMsg } from "./restfullUtils";
 
 function Login() {
   const {
@@ -49,12 +49,12 @@ function Login() {
         },
         credentials: "include",
       });
-      const userInfo: ApiResponse<{ sub: string }> = await u.json();
-      if (!u.ok || userInfo.code !== 0) {
-        throw new Error(`获取用户信息失败: ${JSON.stringify(userInfo.errMsg)}`);
+      if (!u.ok) {
+        throw new Error(`获取用户信息失败: ${await getErrorMsg(u)}`);
       }
 
-      setInfo(`用户信息: ${JSON.stringify(userInfo)}`);
+      const user = await getData<{ userName: string; id: number }>(u);
+      setInfo(`用户信息: ${user.userName}`);
     } catch (error) {
       setErr(error instanceof Error ? error.message : "未知错误");
     }
@@ -72,12 +72,13 @@ function Login() {
           credentials: "include",
         }
       );
-      const data: ApiResponse<{ msg: string }> = await response.json();
-      if (!response.ok || data.code !== 0) {
-        throw new Error(`刷新Token失败: ${JSON.stringify(data.errMsg)}`);
+      if (!response.ok) {
+        throw new Error(`刷新Token失败: ${await getErrorMsg(response)}`);
       }
 
-      setInfo(`刷新Token成功: ${data.data?.msg}`);
+      const r = await getData<{ msg: string }>(response);
+
+      setInfo(`刷新Token成功: ${r.msg}`);
     } catch (error) {
       setErr(error instanceof Error ? error.message : "未知错误");
     }
