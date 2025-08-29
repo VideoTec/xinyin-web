@@ -1,23 +1,28 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./app";
-import Login from "./login";
-import Register from "./register";
-import Container from "@mui/material/Container";
-import { ConfirmProvider } from "material-ui-confirm";
-import { BrowserRouter, Routes, Route } from "react-router";
-import "./xinyin/xinyinMain.js";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './app';
+import Login from './login';
+import Register from './register';
+import Container from '@mui/material/Container';
+import { ConfirmProvider } from 'material-ui-confirm';
+import { BrowserRouter, Routes, Route } from 'react-router';
+import './xinyin/xinyinMain.js';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+const queryClient = new QueryClient();
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Container sx={{ padding: 0 }}>
       <ConfirmProvider>
         <BrowserRouter basename={import.meta.env.VITE_REACT_ROUTE_BASE}>
-          <Routes>
-            <Route path="/" element={<App />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Routes>
+          <QueryClientProvider client={queryClient}>
+            <Routes>
+              <Route path="/" element={<App />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Routes>
+          </QueryClientProvider>
         </BrowserRouter>
       </ConfirmProvider>
     </Container>

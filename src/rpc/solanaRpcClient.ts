@@ -1,3 +1,5 @@
+import { post, ApiError, ApiErrorCode } from '../restful-api';
+
 let JsonRpcId = 0;
 
 interface SolanaRpcResult<T> {
@@ -19,12 +21,12 @@ interface JsonRpcResponse<T> {
   };
 }
 
-import { objectHasKey } from "./utils";
+import { objectHasKey } from './utils';
 
 export enum SolanaClusterType {
-  "mainnetBeta" = "mainnet-beta",
-  "devnet" = "devnet",
-  "testnet" = "testnet",
+  'mainnetBeta' = 'mainnet-beta',
+  'devnet' = 'devnet',
+  'testnet' = 'testnet',
 }
 let currentCluster: SolanaClusterType = SolanaClusterType.devnet;
 
@@ -41,51 +43,61 @@ export async function callSolanaRpc<T>(
   params: unknown[]
 ): Promise<T> {
   const jsonrpc = {
-    jsonrpc: "2.0",
+    jsonrpc: '2.0',
     method,
     params,
     id: JsonRpcId++,
   };
 
-  const url =
-    currentCluster === "mainnet-beta"
-      ? import.meta.env.VITE_SOLANA_PRC_MAINNET_URL
-      : currentCluster === "testnet"
-      ? "https://api.testnet.solana.com"
-      : "https://api.devnet.solana.com";
+  let rpcResponse: JsonRpcResponse<T>;
+  if (currentCluster === 'mainnet-beta') {
+    rpcResponse = await post<JsonRpcResponse<T>>('auth/solana-rpc', {
+      json: jsonrpc,
+    });
+  } else {
+    const url =
+      currentCluster === 'testnet'
+        ? 'https://api.testnet.solana.com'
+        : 'https://api.devnet.solana.com';
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(jsonrpc),
-    credentials: "include",
-  });
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(jsonrpc),
+    });
 
-  if (!response.ok) {
-    throw new Error(`${method} HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      throw new ApiError(
+        `${method} HTTP error! status: ${response.status}`,
+        ApiErrorCode.SolanaRpcError
+      );
+    }
+    rpcResponse = (await response.json()) as JsonRpcResponse<T>;
   }
 
-  const data = (await response.json()) as JsonRpcResponse<T>;
-  if (!data) {
-    throw new Error(`No data in JSON-RPC ${method} response`);
-  }
+  return parseSolanaRpcResult(rpcResponse);
+}
 
+function parseSolanaRpcResult<T>(data: JsonRpcResponse<T>): T {
   if (data.error) {
-    throw new Error(
-      `JSON-RPC ${method} error! code: ${data.error.code}, message: ${data.error.message}`
+    throw new ApiError(
+      `JSON-RPC error! code: ${data.error.code}, message: ${data.error.message}`,
+      ApiErrorCode.SolanaRpcError
     );
   }
 
   if (!data.result) {
-    throw new Error(`No result in JSON-RPC ${method} response`);
+    throw new ApiError(
+      `No result in JSON-RPC response`,
+      ApiErrorCode.SolanaRpcError
+    );
   }
 
   const result = data.result;
 
-  if (objectHasKey(result, "value")) {
+  if (objectHasKey(result, 'value')) {
     return (result as SolanaRpcResult<T>).value;
   }
 
-  //TODO handle non-value result
   return result as T;
 }

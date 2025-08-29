@@ -1,10 +1,10 @@
-import { callSolanaRpc } from "./solanaRpcClient";
+import { callSolanaRpc } from './solanaRpcClient';
 
-export type CommitmentType = "finalized" | "confirmed" | "processed";
+export type CommitmentType = 'finalized' | 'confirmed' | 'processed';
 
 interface Configuration {
   commitment?: CommitmentType;
-  encoding?: "jsonParsed" | "base64" | "base58" | "base64+zstd";
+  encoding?: 'jsonParsed' | 'base64' | 'base58' | 'base64+zstd';
   minContextSlot?: number;
   dataSlice?: { offset: number; length: number };
   skipPreflight?: boolean;
@@ -23,6 +23,7 @@ interface Configuration {
 export interface AccountInfo {
   executable: boolean;
   lamports: number;
+  /** 账号拥有者，如：11111111111111111111111111111111 */
   owner: string;
   rentEpoch: number;
   space: number;
@@ -30,16 +31,16 @@ export interface AccountInfo {
 }
 
 export function getAccountInfo(address: string, config: Configuration = {}) {
-  return callSolanaRpc<AccountInfo | null>("getAccountInfo", [address, config]);
+  return callSolanaRpc<AccountInfo | null>('getAccountInfo', [address, config]);
 }
 
 export function getBalance(address: string, config: Configuration = {}) {
-  return callSolanaRpc<number>("getBalance", [address, config]);
+  return callSolanaRpc<number>('getBalance', [address, config]);
 }
 
 export function getLatestBlockhash(config: Configuration = {}) {
   return callSolanaRpc<{ blockhash: string; lastValidBlockHeight: number }>(
-    "getLatestBlockhash",
+    'getLatestBlockhash',
     [config]
   );
 }
@@ -48,7 +49,7 @@ export function sendTransaction(
   transactionData: string,
   config: Configuration = {}
 ) {
-  return callSolanaRpc<string>("sendTransaction", [transactionData, config]);
+  return callSolanaRpc<string>('sendTransaction', [transactionData, config]);
 }
 
 export interface TransactionObject {
@@ -64,7 +65,7 @@ export function getSignaturesForAddress(
   address: string,
   config: Configuration = {}
 ) {
-  return callSolanaRpc<Array<TransactionObject>>("getSignaturesForAddress", [
+  return callSolanaRpc<Array<TransactionObject>>('getSignaturesForAddress', [
     address,
     config,
   ]);
@@ -88,7 +89,7 @@ export function getSignatureStatuses(
   signatures: string[],
   config: Configuration = {}
 ) {
-  return callSolanaRpc<Array<SignatureStatus>>("getSignatureStatuses", [
+  return callSolanaRpc<Array<SignatureStatus>>('getSignatureStatuses', [
     signatures,
     config,
   ]);

@@ -1,19 +1,19 @@
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
-import reactHooks from "eslint-plugin-react-hooks";
-import react from "eslint-plugin-react";
-import globals from "globals";
-import { globalIgnores } from "eslint/config";
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
+import react from 'eslint-plugin-react';
+import globals from 'globals';
+import { globalIgnores } from 'eslint/config';
 
 export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   react.configs.flat.recommended,
-  react.configs.flat["jsx-runtime"],
+  react.configs.flat['jsx-runtime'],
   {
     settings: {
       react: {
-        version: "detect",
+        version: 'detect',
       },
     },
     languageOptions: {
@@ -25,12 +25,12 @@ export default [
       reactHooks,
     },
     rules: {
-      "reactHooks/rules-of-hooks": "error",
-      "reactHooks/exhaustive-deps": "warn",
+      'reactHooks/rules-of-hooks': 'error',
+      'reactHooks/exhaustive-deps': 'warn',
     },
   },
   globalIgnores(
-    ["dist", "src/xinyin/xinyinWasm.js", "node_modules"],
-    "ignore dist folder and wasm js file"
+    ['dist', 'src/xinyin/xinyinWasm.js', 'node_modules'],
+    'ignore dist folder and wasm js file'
   ),
 ];
