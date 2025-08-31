@@ -3,13 +3,15 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import { getCredForUser, loginWithCredential } from './webauthn';
 import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Collapse from '@mui/material/Collapse';
 import Alert from '@mui/material/Alert';
 import { type LoginInfo, loginSchema } from './schemaUtils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, NavLink } from 'react-router';
 import { getMe } from './store';
+import { useDispatch } from 'react-redux';
+import { reset } from './authSlice';
 
 function Login() {
   const {
@@ -22,6 +24,12 @@ function Login() {
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // console.log('Login component unmounted');
+    dispatch(reset());
+  }, [dispatch]);
 
   async function handleLogin(data: LoginInfo) {
     setErr(null);

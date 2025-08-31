@@ -29,12 +29,16 @@ export const authSlice = createSlice({
       state.user = null;
       state.status = 'loggedOut';
     },
+    reset: (state) => {
+      state.user = null;
+      state.status = 'idle';
+    },
   },
 });
 
-export const { login, logout } = authSlice.actions;
+export const { login, logout, reset } = authSlice.actions;
 
-export const selectUser = (state: RootState) => state.auth.user;
-export const selectAuthStatus = (state: RootState) => state.auth.status;
+export const userSelector = (state: RootState) => state.auth.user;
+export const authStatusSelector = (state: RootState) => state.auth.status;
 
 export default authSlice.reducer;

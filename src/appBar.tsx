@@ -1,10 +1,8 @@
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
 import { green } from '@mui/material/colors';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import { NavLink } from 'react-router';
 import XinyinDlg from './xinyinDlg';
 import IconButton from '@mui/material/IconButton';
 import { GenerateWords32Icon, ImportWords32Icon } from './icons';
@@ -13,37 +11,23 @@ import { useState } from 'react';
 import { getCurrentCluster, SolanaClusterType } from './rpc/solanaRpcClient';
 import ToggleButton from '@mui/material/ToggleButton';
 
-export default function MyAppBar() {
+export default function MyAppBar({
+  onAvatarClick,
+}: {
+  onAvatarClick: () => void;
+}) {
   const [solanaCluster, setSolanaCluster] = useState<SolanaClusterType>(
     getCurrentCluster()
   );
   return (
     <AppBar position="static" sx={{ mb: 2 }}>
       <Toolbar>
-        <Avatar sx={{ bgcolor: green[600] }}>Xy</Avatar>
+        <Avatar sx={{ bgcolor: green[600] }} onClick={onAvatarClick}>
+          Xy
+        </Avatar>
         <Typography variant="h6" sx={{ ml: 1 }} flexGrow={1}>
           数字钱包
         </Typography>
-        <NavLink to="/login">
-          <Button
-            variant="outlined"
-            color="inherit"
-            size="small"
-            sx={{ mr: 1 }}
-          >
-            登录
-          </Button>
-        </NavLink>
-        <NavLink to="/register">
-          <Button
-            variant="outlined"
-            color="inherit"
-            size="small"
-            sx={{ mr: 1 }}
-          >
-            注册
-          </Button>
-        </NavLink>
         <XinyinDlg type="generate">
           {({ triggerOpen }) => (
             <IconButton sx={{ mr: 1 }} onClick={triggerOpen}>

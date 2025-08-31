@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
-import { selectAuthStatus } from './authSlice';
+import { authStatusSelector } from './authSlice';
 
 type WorkerStatus = 'loading' | 'success' | 'error';
 
@@ -15,7 +15,7 @@ export default function GlobalWidget({
 }) {
   const [workerStatus, setWorkerStatus] = useState<WorkerStatus>('loading');
   const [workerError, setWorkerError] = useState<string | null>(null);
-  const authStatus = useSelector(selectAuthStatus);
+  const authStatus = useSelector(authStatusSelector);
   const navigate = useNavigate();
 
   useEffect(() => {

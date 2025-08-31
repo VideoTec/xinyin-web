@@ -9,12 +9,12 @@ import { loadEncryptedSks, clearSksCache } from './xinyinOPFS.js';
 
 xinyin_wasm({ module_or_path: '../xinyin/xinyinWasm.wasm' })
   .then(() => {
-    setTimeout(() => {
-      postMessageToXinyinMain({
-        code: XinYinMessageCode.WorkerReady,
-        requestId: -1,
-      });
-    }, 2000);
+    // setTimeout(() => {
+    postMessageToXinyinMain({
+      code: XinYinMessageCode.WorkerReady,
+      requestId: -1,
+    });
+    // }, 2000);
   })
   .catch((err) => {
     postMessageToXinyinMain({
