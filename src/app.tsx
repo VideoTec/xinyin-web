@@ -1,11 +1,8 @@
 import { useState } from 'react';
-import { waitWorkerReady } from './xinyin/xinyinMain';
-import { useEffect } from 'react';
 import { WalletList } from './wallets';
 import { WalletsCtx } from './walletsCtx';
 import { useImmerReducer } from 'use-immer';
 import { initWallets, walletsReducer } from './walletsData';
-import CircularProgress from '@mui/material/CircularProgress';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -24,35 +21,12 @@ import {
 } from './rpc/solanaRpcClient';
 import { NavLink } from 'react-router';
 
-type WorkerStatus = 'loading' | 'success' | 'error';
-
 function App() {
-  const [workerStatus, setWorkerStatus] = useState<WorkerStatus>('loading');
-  const [workerError, setWorkerError] = useState<string | null>(null);
   const [wallets, dispatch] = useImmerReducer(walletsReducer, initWallets());
   const [solanaCluster, setSolanaCluster] = useState<SolanaClusterType>(
     getCurrentCluster()
   );
 
-  useEffect(() => {
-    let isMounted = true;
-    // TODO 移到 main 页面，等待 worker 准备好。现在App是一个路由页面
-    waitWorkerReady()
-      .then(() => {
-        if (isMounted) setWorkerStatus('success');
-      })
-      .catch((error) => {
-        if (isMounted) {
-          setWorkerStatus('error');
-          setWorkerError(error.message || '未知错误');
-        }
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // TODO : 添加错误处理逻辑，确保在 worker 初始化失败时给出友好的提示
   return (
     <WalletsCtx value={{ wallets, dispatch }}>
       <AppBar position="static" sx={{ mb: 2 }}>
@@ -132,20 +106,7 @@ function App() {
         </Toolbar>
       </AppBar>
       <Stack alignItems="center">
-        {workerStatus === 'error' && (
-          <Typography variant="h6" mt={2}>
-            初始化失败：{workerError}
-          </Typography>
-        )}
-        {workerStatus === 'loading' && (
-          <>
-            <CircularProgress />
-            <Typography variant="h6" mt={2}>
-              正在初始化，请稍候...
-            </Typography>
-          </>
-        )}
-        {workerStatus === 'success' && <WalletList />}
+        <WalletList />
       </Stack>
     </WalletsCtx>
   );

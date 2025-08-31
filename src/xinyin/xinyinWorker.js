@@ -2,17 +2,19 @@ import xinyin_wasm, {
   import_xinyin_words32,
   generate_xinyin_words32,
   sign_message,
-} from "./xinyinWasm.js";
+} from './xinyinWasm.js';
 
-import { XinYinMessageCode } from "./xinyinTypes.js";
-import { loadEncryptedSks, clearSksCache } from "./xinyinOPFS.js";
+import { XinYinMessageCode } from './xinyinTypes.js';
+import { loadEncryptedSks, clearSksCache } from './xinyinOPFS.js';
 
-xinyin_wasm({ module_or_path: "../xinyin/xinyinWasm.wasm" })
+xinyin_wasm({ module_or_path: '../xinyin/xinyinWasm.wasm' })
   .then(() => {
-    postMessageToXinyinMain({
-      code: XinYinMessageCode.WorkerReady,
-      requestId: -1,
-    });
+    setTimeout(() => {
+      postMessageToXinyinMain({
+        code: XinYinMessageCode.WorkerReady,
+        requestId: -1,
+      });
+    }, 2000);
   })
   .catch((err) => {
     postMessageToXinyinMain({
@@ -56,7 +58,7 @@ function onXinYinMessage(message) {
         message.countFrom8105 === undefined
       ) {
         responseMsg.errorMessage =
-          "缺少必要的参数: txtInHeart, startOf8105, countFrom8105";
+          '缺少必要的参数: txtInHeart, startOf8105, countFrom8105';
         break;
       }
       try {
@@ -81,7 +83,7 @@ function onXinYinMessage(message) {
         message.passphrase === undefined
       ) {
         responseMsg.errorMessage =
-          "缺少必要的参数: words32, txtInHeart, startOf8105, countFrom8105, passphrase";
+          '缺少必要的参数: words32, txtInHeart, startOf8105, countFrom8105, passphrase';
         break;
       }
       try {
@@ -106,7 +108,7 @@ function onXinYinMessage(message) {
         message.passphrase === undefined
       ) {
         responseMsg.errorMessage =
-          "缺少必要的参数: solanaAddress, messageUint8, passphrase";
+          '缺少必要的参数: solanaAddress, messageUint8, passphrase';
         break;
       }
       try {

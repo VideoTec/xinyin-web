@@ -29,7 +29,7 @@ export async function createPasskey(userName: string, displayName: string) {
 }
 
 export async function registerWithPasskey(credential: PublicKeyCredential) {
-  const user = await post<{ userName: string }>(
+  const user = await post<{ message: string }>(
     'webauthn/register-with-attested-cred',
     {
       json: credential.toJSON(),
@@ -61,10 +61,7 @@ export async function getCredForUser(userName?: string) {
 }
 
 export async function loginWithCredential(credential: PublicKeyCredential) {
-  return await post<{ userName: string; accessToken: string }>(
-    'webauthn/login-with-assert-cred',
-    {
-      json: credential.toJSON(),
-    }
-  );
+  return await post<{ message: string }>('webauthn/login-with-assert-cred', {
+    json: credential.toJSON(),
+  });
 }

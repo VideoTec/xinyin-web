@@ -8,23 +8,30 @@ import { ConfirmProvider } from 'material-ui-confirm';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import './xinyin/xinyinMain.js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider } from 'react-redux';
+import GlobalWidget from './globalWdget';
+import store from './store';
 
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Container sx={{ padding: 0 }}>
-      <ConfirmProvider>
-        <BrowserRouter basename={import.meta.env.VITE_REACT_ROUTE_BASE}>
-          <QueryClientProvider client={queryClient}>
-            <Routes>
-              <Route path="/" element={<App />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-            </Routes>
-          </QueryClientProvider>
-        </BrowserRouter>
-      </ConfirmProvider>
-    </Container>
+    <Provider store={store}>
+      <Container sx={{ padding: 0 }}>
+        <ConfirmProvider>
+          <BrowserRouter basename={import.meta.env.VITE_REACT_ROUTE_BASE}>
+            <QueryClientProvider client={queryClient}>
+              <GlobalWidget>
+                <Routes>
+                  <Route path="/" element={<App />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                </Routes>
+              </GlobalWidget>
+            </QueryClientProvider>
+          </BrowserRouter>
+        </ConfirmProvider>
+      </Container>
+    </Provider>
   </React.StrictMode>
 );

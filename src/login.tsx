@@ -10,6 +10,8 @@ import { type LoginInfo, loginSchema } from './schemaUtils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as restfulApi from './restful-api';
 import { post } from './restful-api';
+import { useNavigate } from 'react-router';
+import { getMe } from './store';
 
 function Login() {
   const {
@@ -21,6 +23,7 @@ function Login() {
   });
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   async function handleLogin(data: LoginInfo) {
     setErr(null);
@@ -29,7 +32,9 @@ function Login() {
       const credential = await getCredForUser(data.userName);
       setInfo('读取到了 Passkey, 正在登录...');
       const r = await loginWithCredential(credential);
-      setInfo(`登录成功: ${r.userName}`);
+      setInfo(`登录结果: ${r.message}，获取用户信息...`);
+      await getMe();
+      navigate('/');
     } catch (error) {
       setErr(error instanceof Error ? error.message : '未知错误');
       setInfo(null);
@@ -45,9 +50,8 @@ function Login() {
   async function handleGetUserInfo() {
     try {
       const u = await restfulApi.post<{ userName: string; id: number }>(
-        'auth/user'
+        'auth/me'
       );
-      await restfulApi.post<{ userName: string; id: number }>('auth/user');
       setInfo(`用户信息: ${u.userName}`);
       setErr(null);
     } catch (error) {
