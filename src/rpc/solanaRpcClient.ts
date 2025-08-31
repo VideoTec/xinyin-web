@@ -34,7 +34,7 @@ export function getCurrentCluster(): SolanaClusterType {
   return currentCluster;
 }
 
-export function setSolanaCluster(cluster: SolanaClusterType) {
+export function setCurrentCluster(cluster: SolanaClusterType) {
   currentCluster = cluster;
 }
 

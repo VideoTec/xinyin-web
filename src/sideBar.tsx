@@ -3,11 +3,10 @@ import Drawer from '@mui/material/Drawer';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import { NavLink } from 'react-router';
 import { userSelector, logout } from './authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { post } from './restful-api';
-// import { getMe } from './store';
+import { getMe } from './store';
 
 export default function SideBar({
   open,
@@ -67,17 +66,19 @@ export default function SideBar({
             </Button>
           </>
         ) : (
-          <NavLink
-            to="/login"
-            style={{ textDecoration: 'none', width: '100%' }}
+          <Button
+            variant="outlined"
+            color="primary"
+            fullWidth
+            sx={{ mt: 2 }}
+            onClick={() => {
+              getMe();
+            }}
           >
-            <Button variant="outlined" color="primary" fullWidth sx={{ mt: 2 }}>
-              登录
-            </Button>
-          </NavLink>
+            登录
+          </Button>
         )}
       </Box>
-      {/* 这里可以添加更多导航项 */}
     </Drawer>
   );
 }
