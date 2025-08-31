@@ -27,6 +27,8 @@ import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardActions from '@mui/material/CardActions';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
+import { clusterSelector } from './rpc/solanaClusterSlice';
 
 enum TransferStatus {
   /** 初始化 */
@@ -52,6 +54,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   const [showAddress, setShowAddress] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
   const [txId, setTxId] = useState('');
+  const currentCluster = useSelector(clusterSelector);
 
   const isNoneAccount = owner === '';
 
@@ -67,7 +70,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
     data: accountData,
     refetch: refetchAccount,
   } = useQuery({
-    queryKey: ['accountInfo', address],
+    queryKey: ['accountInfo', address, currentCluster],
     queryFn: () => getAccountInfo(address, { encoding: 'base64' }),
     retry: 0,
     retryOnMount: false,
@@ -148,15 +151,21 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   useEffect(() => {
     if (accountData) {
       setOwner(accountData.owner);
-      const sol = accountData.lamports / 1e9; // Convert lamports to SOL
+      const sol = accountData.lamports / 1e9;
       setBalance(sol.toString());
+    } else {
+      setOwner('');
+      setBalance('0');
     }
   }, [accountData]);
 
   useEffect(() => {
     if (balanceData) {
-      const sol = balanceData / 1e9; // Convert lamports to SOL
+      const sol = balanceData / 1e9;
       setBalance(sol.toString());
+    } else {
+      setOwner('');
+      setBalance('0');
     }
   }, [balanceData]);
 

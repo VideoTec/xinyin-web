@@ -1,4 +1,5 @@
 import { post, ApiError, ApiErrorCode } from '../restful-api';
+import { getCurrentCluster } from '../store';
 
 let JsonRpcId = 0;
 
@@ -23,21 +24,6 @@ interface JsonRpcResponse<T> {
 
 import { objectHasKey } from './utils';
 
-export enum SolanaClusterType {
-  'mainnetBeta' = 'mainnet-beta',
-  'devnet' = 'devnet',
-  'testnet' = 'testnet',
-}
-let currentCluster: SolanaClusterType = SolanaClusterType.devnet;
-
-export function getCurrentCluster(): SolanaClusterType {
-  return currentCluster;
-}
-
-export function setCurrentCluster(cluster: SolanaClusterType) {
-  currentCluster = cluster;
-}
-
 export async function callSolanaRpc<T>(
   method: string,
   params: unknown[]
@@ -50,6 +36,7 @@ export async function callSolanaRpc<T>(
   };
 
   let rpcResponse: JsonRpcResponse<T>;
+  const currentCluster = getCurrentCluster();
   if (currentCluster === 'mainnet-beta') {
     rpcResponse = await post<JsonRpcResponse<T>>('auth/solana-rpc', {
       json: jsonrpc,

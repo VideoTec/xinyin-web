@@ -9,25 +9,20 @@ import { GenerateWords32Icon, ImportWords32Icon } from './icons';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import { useEffect, useState } from 'react';
 import {
-  getCurrentCluster,
+  clusterSelector,
+  setCluster,
   SolanaClusterType,
-  setCurrentCluster,
-} from './rpc/solanaRpcClient';
+} from './rpc/solanaClusterSlice';
+import { useDispatch, useSelector } from 'react-redux';
 
 export default function MyAppBar({
   onAvatarClick,
 }: {
   onAvatarClick: () => void;
 }) {
-  const [solanaCluster, setSolanaCluster] = useState<SolanaClusterType>(
-    getCurrentCluster()
-  );
-
-  useEffect(() => {
-    setCurrentCluster(solanaCluster);
-  }, [solanaCluster]);
+  const dispatch = useDispatch();
+  const solanaCluster = useSelector(clusterSelector);
 
   return (
     <AppBar position="static" sx={{ mb: 2 }}>
@@ -56,7 +51,7 @@ export default function MyAppBar({
           <Select
             value={solanaCluster}
             onChange={(event) => {
-              setSolanaCluster(event.target.value as SolanaClusterType);
+              dispatch(setCluster(event.target.value as SolanaClusterType));
             }}
             sx={{
               fontSize: '0.75rem',
