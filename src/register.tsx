@@ -8,8 +8,9 @@ import Alert from '@mui/material/Alert';
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, type RegisterInfo } from './schemaUtils';
-import { useNavigate } from 'react-router';
+import { useNavigate, NavLink } from 'react-router';
 import { getMe } from './store';
+import Typography from '@mui/material/Typography';
 
 function Register() {
   const {
@@ -72,6 +73,11 @@ function Register() {
       <Button variant="contained" color="primary" type="submit">
         注册
       </Button>
+      <NavLink to="/login">
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+          已有账号？登录
+        </Typography>
+      </NavLink>
       <Collapse in={!!err} sx={{ width: '100%', marginTop: 2 }}>
         <Alert
           severity="error"

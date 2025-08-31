@@ -1,4 +1,4 @@
-import { TextField } from '@mui/material';
+import { TextField, Typography } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import { getCredForUser, loginWithCredential } from './webauthn';
@@ -8,9 +8,7 @@ import Collapse from '@mui/material/Collapse';
 import Alert from '@mui/material/Alert';
 import { type LoginInfo, loginSchema } from './schemaUtils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as restfulApi from './restful-api';
-import { post } from './restful-api';
-import { useNavigate } from 'react-router';
+import { useNavigate, NavLink } from 'react-router';
 import { getMe } from './store';
 
 function Login() {
@@ -41,36 +39,6 @@ function Login() {
     }
   }
 
-  async function handleGoogleLogin() {
-    window.location.href = `${
-      import.meta.env.VITE_WEBAUTHN_HOST
-    }/oauth2-login/google`;
-  }
-
-  async function handleGetUserInfo() {
-    try {
-      const u = await restfulApi.post<{ userName: string; id: number }>(
-        'auth/me'
-      );
-      setInfo(`用户信息: ${u.userName}`);
-      setErr(null);
-    } catch (error) {
-      setErr(error instanceof Error ? error.message : '未知错误');
-    }
-  }
-
-  async function handleRefreshToken() {
-    try {
-      const r = await post<{ msg: string }>('token/refresh');
-
-      setInfo(`刷新Token成功: ${r.msg}`);
-      setErr(null);
-    } catch (error) {
-      setErr(error instanceof Error ? error.message : '未知错误');
-      setInfo(null);
-    }
-  }
-
   return (
     <Stack
       component="form"
@@ -93,6 +61,12 @@ function Login() {
       <Button variant="contained" color="primary" type="submit">
         登录
       </Button>
+      <NavLink to="/register">
+        <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+          还没有账号？注册
+        </Typography>
+      </NavLink>
+
       <Collapse in={!!err} sx={{ width: '100%', marginTop: 2 }}>
         <Alert
           severity="error"
@@ -107,25 +81,6 @@ function Login() {
           {info}
         </Alert>
       </Collapse>
-      <Button variant="contained" color="primary" onClick={handleGoogleLogin}>
-        使用Google登录
-      </Button>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleGetUserInfo}
-        sx={{ marginTop: 2 }}
-      >
-        获取用户信息
-      </Button>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleRefreshToken}
-        sx={{ marginTop: 2 }}
-      >
-        刷新Token
-      </Button>
     </Stack>
   );
 }

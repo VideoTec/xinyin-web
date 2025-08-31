@@ -9,7 +9,7 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import './xinyin/xinyinMain.js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
-import GlobalWidget from './globalWdget';
+import GlobalWidget from './globalWidget';
 import store from './store';
 
 const queryClient = new QueryClient();
