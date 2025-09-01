@@ -3,9 +3,6 @@ import Avatar from '@mui/material/Avatar';
 import { green } from '@mui/material/colors';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import XinyinDlg from './xinyinDlg';
-import IconButton from '@mui/material/IconButton';
-import { GenerateWords32Icon, ImportWords32Icon } from './icons';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
@@ -33,20 +30,6 @@ export default function MyAppBar({
         <Typography variant="h6" sx={{ ml: 1 }} flexGrow={1}>
           数字钱包
         </Typography>
-        <XinyinDlg type="generate">
-          {({ triggerOpen }) => (
-            <IconButton sx={{ mr: 1 }} onClick={triggerOpen}>
-              <GenerateWords32Icon />
-            </IconButton>
-          )}
-        </XinyinDlg>
-        <XinyinDlg type="import">
-          {({ triggerOpen }) => (
-            <IconButton sx={{ mr: 1 }} onClick={triggerOpen}>
-              <ImportWords32Icon />
-            </IconButton>
-          )}
-        </XinyinDlg>{' '}
         <FormControl size="small" sx={{ minWidth: 100 }}>
           <Select
             value={solanaCluster}
