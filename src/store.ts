@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer, { login, type UserInfo } from './authSlice';
 import solanaClusterReducer from './rpc/solanaClusterSlice';
+import walletsSlice from './walletsSlice';
 import { post } from './restful-api';
 
 const store = configureStore({
   reducer: {
     auth: authReducer,
     solanaCluster: solanaClusterReducer,
+    wallets: walletsSlice,
   },
 });
 

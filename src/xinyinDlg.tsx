@@ -1,21 +1,23 @@
-import Button from "@mui/material/Button";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
-import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import Dialog from "@mui/material/Dialog";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { WalletsCtx } from "./walletsCtx";
-import { useContext, useState, type ReactElement } from "react";
-import { useForm } from "react-hook-form";
-import { generateWords32, importWords32 } from "./xinyin/xinyinMain";
-import { useTheme } from "@mui/material/styles";
-import { isValidSolanaAddress } from "./rpc/utils";
+import Button from '@mui/material/Button';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Dialog from '@mui/material/Dialog';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { useState, type ReactElement } from 'react';
+import { useForm } from 'react-hook-form';
+import { generateWords32, importWords32 } from './xinyin/xinyinMain';
+import { useTheme } from '@mui/material/styles';
+import { isValidSolanaAddress } from './rpc/utils';
+import { addWallet, walletsSelector } from './walletsSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { clusterSelector } from './rpc/solanaClusterSlice';
 
 const initialWordCount = 600; // 假设初始字数为600
 const initialStartIndex = 8; // 假设初始开始序号为8
@@ -40,17 +42,19 @@ export default function XinyinDlg({
   type,
   children,
 }: {
-  type: "generate" | "import";
+  type: 'generate' | 'import';
   children: (props: { triggerOpen: () => void }) => ReactElement;
 }) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(Step.ChooseCharset);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedWords32, setGeneratedWords32] = useState<string>("");
+  const [generatedWords32, setGeneratedWords32] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const { dispatch, wallets } = useContext(WalletsCtx)!;
+  const solanaCluster = useSelector(clusterSelector);
+  const wallets = useSelector(walletsSelector);
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -63,36 +67,36 @@ export default function XinyinDlg({
     defaultValues: {
       startIndex: initialStartIndex,
       wordCount: initialWordCount,
-      xinyinText: "",
-      words32: "",
-      password: "",
-      repeatPassword: "",
-      walletName: "",
+      xinyinText: '',
+      words32: '',
+      password: '',
+      repeatPassword: '',
+      walletName: '',
     },
   });
 
-  const title = type === "generate" ? "生成心印助记字" : "导入心印助记字";
+  const title = type === 'generate' ? '生成心印助记字' : '导入心印助记字';
 
   function handleOpen() {
     setOpen(true);
     setStep(Step.ChooseCharset);
     setIsGenerating(false);
-    setGeneratedWords32("");
+    setGeneratedWords32('');
     setShowPassword(false);
     setIsImporting(false);
     reset({
       startIndex: initialStartIndex,
       wordCount: initialWordCount,
-      xinyinText: "",
-      words32: "",
-      password: "",
-      repeatPassword: "",
-      walletName: "",
+      xinyinText: '',
+      words32: '',
+      password: '',
+      repeatPassword: '',
+      walletName: '',
     });
   }
 
   function handleFormSubmit(data: XinyinTxt) {
-    if (type == "generate" && step == Step.InputXinyinText) {
+    if (type == 'generate' && step == Step.InputXinyinText) {
       setIsGenerating(true);
       generateWords32(data.xinyinText, data.startIndex, data.wordCount).then(
         (w32) => {
@@ -100,7 +104,7 @@ export default function XinyinDlg({
           setIsGenerating(false);
         }
       );
-    } else if (type == "import" && step == Step.InputWords32) {
+    } else if (type == 'import' && step == Step.InputWords32) {
       setIsImporting(true);
       importWords32(
         data.words32,
@@ -115,42 +119,42 @@ export default function XinyinDlg({
             throw new Error(`已经导入这个该助记字，钱包名称是：'${w.name}'`);
           }
           if (!solanaAddress || !isValidSolanaAddress(solanaAddress)) {
-            throw new Error("导入心印助记字失败，未生成有效的钱包地址");
+            throw new Error('导入心印助记字失败，未生成有效的钱包地址');
           }
-          dispatch({
-            type: "add",
-            wallet: {
+          dispatch(
+            addWallet({
               address: solanaAddress,
               name: data.walletName,
-            },
-          });
+              cluster: solanaCluster,
+            })
+          );
           setOpen(false);
         })
         .catch((error) => {
           setIsImporting(false);
-          alert("导入心印助记字失败: " + (error.message || "未知错误"));
+          alert('导入心印助记字失败: ' + (error.message || '未知错误'));
         });
     } else {
-      console.log("submit wrong time...");
+      console.log('submit wrong time...');
     }
   }
 
   function nextStep() {
     if (step == Step.ChooseCharset) {
-      trigger(["startIndex", "wordCount"]).then((r) => {
+      trigger(['startIndex', 'wordCount']).then((r) => {
         if (r) {
           setStep(Step.InputXinyinText);
-          setGeneratedWords32("");
+          setGeneratedWords32('');
         }
       });
     }
-    if (type == "import") {
+    if (type == 'import') {
       if (step == Step.InputXinyinText) {
-        trigger("xinyinText").then((r) => {
+        trigger('xinyinText').then((r) => {
           if (r) {
             setStep(Step.InputWords32);
-            resetField("password");
-            resetField("repeatPassword");
+            resetField('password');
+            resetField('repeatPassword');
           }
         });
       }
@@ -158,21 +162,21 @@ export default function XinyinDlg({
   }
 
   function validateXinyinText(text: string): boolean | string {
-    if (!text || text.trim() === "") {
-      return "心印文本不能为空";
+    if (!text || text.trim() === '') {
+      return '心印文本不能为空';
     }
     return true;
   }
 
   function validateWords32(words: string): boolean | string {
-    if (!words || words.trim() === "") {
-      return "心印助记字不能为空";
+    if (!words || words.trim() === '') {
+      return '心印助记字不能为空';
     }
     if (words.length !== 32) {
-      return "心印助记字必须是32个汉字";
+      return '心印助记字必须是32个汉字';
     }
     if (!/^[\u4e00-\u9fa5]+$/.test(words)) {
-      return "心印助记字必须是汉字";
+      return '心印助记字必须是汉字';
     }
     // if (new Set(words.split("")).size !== 32) {
     //   return "心印助记字中的汉字必须唯一";
@@ -182,15 +186,15 @@ export default function XinyinDlg({
 
   function validateStartIndex(value: number): boolean | string {
     if (isNaN(value)) {
-      return "输入的开始序号必须是数字";
+      return '输入的开始序号必须是数字';
     }
 
     if (value < 1) {
-      return "开始的序号从1开始";
+      return '开始的序号从1开始';
     }
 
-    if (value + watch("wordCount") > 8105) {
-      return "选择范围不能超过8105";
+    if (value + watch('wordCount') > 8105) {
+      return '选择范围不能超过8105';
     }
 
     return true;
@@ -198,22 +202,22 @@ export default function XinyinDlg({
 
   function validateWordCount(value: number): boolean | string {
     if (isNaN(value)) {
-      return "输入的字数必须是数字";
+      return '输入的字数必须是数字';
     }
 
     if (value <= 500) {
-      return "不能少于500个汉字";
+      return '不能少于500个汉字';
     }
 
-    if (value + watch("startIndex") > 8105) {
-      return "选择范围不能超过8105";
+    if (value + watch('startIndex') > 8105) {
+      return '选择范围不能超过8105';
     }
     return true;
   }
 
   function validateWalletName(name: string): boolean | string {
     if (wallets && wallets.some((w) => w.name === name)) {
-      return "钱包名称已存在";
+      return '钱包名称已存在';
     }
     return true;
   }
@@ -243,25 +247,25 @@ export default function XinyinDlg({
                   label="开始的序号"
                   fullWidth
                   autoComplete="off"
-                  {...register("startIndex", {
+                  {...register('startIndex', {
                     valueAsNumber: true,
                     validate: validateStartIndex,
                   })}
                   error={!!errors.startIndex}
                   helperText={
-                    errors.startIndex ? errors.startIndex.message : ""
+                    errors.startIndex ? errors.startIndex.message : ''
                   }
                 />
                 <TextField
                   label="字数"
                   fullWidth
                   autoComplete="off"
-                  {...register("wordCount", {
+                  {...register('wordCount', {
                     valueAsNumber: true,
                     validate: validateWordCount,
                   })}
                   error={!!errors.wordCount}
-                  helperText={errors.wordCount ? errors.wordCount.message : ""}
+                  helperText={errors.wordCount ? errors.wordCount.message : ''}
                 />
               </>
             )}
@@ -291,10 +295,10 @@ export default function XinyinDlg({
                   label="心印文本"
                   fullWidth
                   autoComplete="off"
-                  {...register("xinyinText", { validate: validateXinyinText })}
+                  {...register('xinyinText', { validate: validateXinyinText })}
                   error={!!errors.xinyinText}
                   helperText={
-                    errors.xinyinText ? errors.xinyinText.message : ""
+                    errors.xinyinText ? errors.xinyinText.message : ''
                   }
                 />
               </>
@@ -305,48 +309,48 @@ export default function XinyinDlg({
                   label="心印助记字"
                   fullWidth
                   autoComplete="off"
-                  {...register("words32", {
+                  {...register('words32', {
                     validate: validateWords32,
                   })}
                   error={!!errors.words32}
                   helperText={
                     errors.words32
                       ? errors.words32.message
-                      : "心印助记字（32个汉字）"
+                      : '心印助记字（32个汉字）'
                   }
                 />
                 <TextField
                   label="钱包名称"
                   fullWidth
                   autoComplete="username"
-                  {...register("walletName", {
-                    required: "必须填写钱包名称",
+                  {...register('walletName', {
+                    required: '必须填写钱包名称',
                     validate: validateWalletName,
                   })}
                   error={!!errors.walletName}
                   helperText={
                     errors.walletName
                       ? errors.walletName.message
-                      : "给导入的钱包起个名字"
+                      : '给导入的钱包起个名字'
                   }
                 />
                 <TextField
                   label="密码"
                   autoComplete="new-password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   fullWidth
-                  {...register("password", {
-                    required: "必须填写密码",
+                  {...register('password', {
+                    required: '必须填写密码',
                     minLength: {
                       value: 8,
-                      message: "密码至少8个字符",
+                      message: '密码至少8个字符',
                     },
                   })}
                   error={!!errors.password}
                   helperText={
                     errors.password
                       ? errors.password.message
-                      : "请输入密码，用于加密导入的钱包"
+                      : '请输入密码，用于加密导入的钱包'
                   }
                   slotProps={{
                     input: {
@@ -364,19 +368,19 @@ export default function XinyinDlg({
                 />
                 <TextField
                   label="重复密码"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   fullWidth
-                  {...register("repeatPassword", {
-                    required: "必须重复输入密码",
+                  {...register('repeatPassword', {
+                    required: '必须重复输入密码',
                     validate: (value) =>
-                      value === watch("password") || "两次输入的密码不一致",
+                      value === watch('password') || '两次输入的密码不一致',
                   })}
                   error={!!errors.repeatPassword}
                   helperText={
                     errors.repeatPassword
                       ? errors.repeatPassword.message
-                      : "请重复输入密码"
+                      : '请重复输入密码'
                   }
                 />
               </>
@@ -390,7 +394,7 @@ export default function XinyinDlg({
                   <Button onClick={() => setStep(Step.ChooseCharset)}>
                     上一步
                   </Button>
-                  {type == "generate" && (
+                  {type == 'generate' && (
                     <Button
                       type="submit"
                       variant="contained"
@@ -399,7 +403,7 @@ export default function XinyinDlg({
                       生成心印助记字
                     </Button>
                   )}
-                  {type == "import" && (
+                  {type == 'import' && (
                     <Button onClick={nextStep}>下一步</Button>
                   )}
                 </>
@@ -419,7 +423,7 @@ export default function XinyinDlg({
                 </>
               )}
             </DialogActions>
-            {type == "generate" && step == Step.InputXinyinText && (
+            {type == 'generate' && step == Step.InputXinyinText && (
               <>
                 <Typography color="text.secondary" variant="body2">
                   生成的心印助记字：

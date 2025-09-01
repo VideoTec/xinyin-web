@@ -1,19 +1,20 @@
-import { useForm, Controller } from "react-hook-form";
-import { useContext, useState, type ReactElement } from "react";
-import { WalletsCtx } from "./walletsCtx";
-import { shortSolanaAddress } from "./rpc/utils";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import Stack from "@mui/material/Stack";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import FormHelperText from "@mui/material/FormHelperText";
-import InputLabel from "@mui/material/InputLabel";
+import { useForm, Controller } from 'react-hook-form';
+import { useState, type ReactElement } from 'react';
+import { shortSolanaAddress } from './rpc/utils';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Stack from '@mui/material/Stack';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import FormHelperText from '@mui/material/FormHelperText';
+import InputLabel from '@mui/material/InputLabel';
+import { useSelector } from 'react-redux';
+import { walletsSelector } from './walletsSlice';
 
 interface TransferData {
   toAddress: string;
@@ -33,7 +34,7 @@ export default function TransferDlg({
   onResult: (toAddress: string, lamports: number, psw: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const { wallets } = useContext(WalletsCtx)!;
+  const wallets = useSelector(walletsSelector);
   const {
     register,
     handleSubmit,
@@ -43,8 +44,8 @@ export default function TransferDlg({
     control,
   } = useForm<TransferData>({
     defaultValues: {
-      toAddress: "",
-      psw: "",
+      toAddress: '',
+      psw: '',
       sol: 0,
     },
   });
@@ -52,8 +53,8 @@ export default function TransferDlg({
   const handleOpen = () => {
     setOpen(true);
     reset({
-      toAddress: "",
-      psw: "",
+      toAddress: '',
+      psw: '',
       sol: 0,
     });
   };
@@ -98,23 +99,23 @@ export default function TransferDlg({
               label="密码"
               type="password"
               autoComplete="current-password"
-              {...register("psw", { required: true })}
+              {...register('psw', { required: true })}
               error={!!errors.psw}
-              helperText={errors.psw ? "密码不能为空" : "请输入密码"}
+              helperText={errors.psw ? '密码不能为空' : '请输入密码'}
             />
             <FormControl fullWidth error={!!errors.toAddress}>
               <InputLabel id="to-address-label">收款账户</InputLabel>
               <Controller
                 name="toAddress"
                 control={control}
-                rules={{ required: "必须选择收款账户" }}
+                rules={{ required: '必须选择收款账户' }}
                 render={({ field }) => (
                   <Select
                     labelId="to-address-label"
                     label="收款账户"
                     {...field}
                   >
-                    {wallets!.map((wallet) => (
+                    {wallets.map((wallet) => (
                       <MenuItem key={wallet.address} value={wallet.address}>
                         {wallet.name}
                       </MenuItem>
@@ -123,20 +124,20 @@ export default function TransferDlg({
                 )}
               />
               <FormHelperText>
-                {watch("toAddress")
-                  ? shortSolanaAddress(watch("toAddress"))
-                  : "请选择收款账户"}
+                {watch('toAddress')
+                  ? shortSolanaAddress(watch('toAddress'))
+                  : '请选择收款账户'}
               </FormHelperText>
             </FormControl>
             <TextField
               label="金额 (以 SOL 为单位)"
-              {...register("sol", {
+              {...register('sol', {
                 required: true,
                 min: 0.0001,
                 valueAsNumber: true,
               })}
               error={!!errors.sol}
-              helperText={errors.sol ? "金额必须大于 0.0001" : "请输入金额"}
+              helperText={errors.sol ? '金额必须大于 0.0001' : '请输入金额'}
             />
             <DialogActions>
               <Button onClick={handleClose}>取消</Button>

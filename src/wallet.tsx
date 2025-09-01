@@ -1,5 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
-import { WalletsCtx } from './walletsCtx';
+import { useEffect, useState } from 'react';
 import { rotate360deg } from './customStyle';
 import { useConfirm } from 'material-ui-confirm';
 import {
@@ -27,8 +26,9 @@ import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardActions from '@mui/material/CardActions';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { clusterSelector } from './rpc/solanaClusterSlice';
+import { removeWallet } from './walletsSlice';
 
 enum TransferStatus {
   /** 初始化 */
@@ -44,7 +44,7 @@ enum TransferStatus {
 }
 
 export function Wallet({ address, name }: { address: string; name: string }) {
-  const { dispatch } = useContext(WalletsCtx)!;
+  const dispatch = useDispatch();
   const confirm = useConfirm();
   const [loadingError, setLoadingError] = useState<string>('');
   const [owner, setOwner] = useState('');
@@ -185,7 +185,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
       cancellationText: '取消',
     });
     if (confirmed) {
-      dispatch({ type: 'delete', address });
+      dispatch(removeWallet(address));
     }
   }
 

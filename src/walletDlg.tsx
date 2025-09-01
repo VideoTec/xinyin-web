@@ -1,31 +1,39 @@
-import { useContext, useState, useTransition, type ReactElement } from "react";
-import { WalletsCtx } from "./walletsCtx";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import type { Wallet } from "./walletsData";
-import { shortSolanaAddress, isValidSolanaAddress } from "./rpc/utils";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
-import CopyIcon from "@mui/icons-material/ContentCopy";
-import CheckIcon from "@mui/icons-material/Check";
-import IconButton from "@mui/material/IconButton";
+import { useState, useTransition, type ReactElement } from 'react';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import {
+  addWallet,
+  updateWallet,
+  walletsSelector,
+  type Wallet,
+} from './walletsSlice';
+import { shortSolanaAddress, isValidSolanaAddress } from './rpc/utils';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import CopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
+import IconButton from '@mui/material/IconButton';
+import { useDispatch, useSelector } from 'react-redux';
+import { clusterSelector } from './rpc/solanaClusterSlice';
 
 export default function WalletDlg({
-  initAddress = "",
-  initName = "",
-  type = "add",
+  initAddress = '',
+  initName = '',
+  type = 'add',
   children,
 }: {
   initAddress?: string;
   initName?: string;
-  type?: "add" | "modify";
+  type?: 'add' | 'modify';
   children: (props: { triggerOpen: () => void }) => ReactElement;
 }) {
   const [open, setOpen] = useState(false);
-  const { dispatch, wallets } = useContext(WalletsCtx)!;
+  const wallets = useSelector(walletsSelector);
+  const solanaCluster = useSelector(clusterSelector);
+  const dispatch = useDispatch();
   const [isPending, startTransition] = useTransition();
   const [addressCopied, setAddressCopied] = useState(false);
   const {
@@ -42,7 +50,7 @@ export default function WalletDlg({
     },
   });
 
-  const title = type === "add" ? "添加钱包" : "修改钱包";
+  const title = type === 'add' ? '添加钱包' : '修改钱包';
 
   function handleOpen() {
     reset({
@@ -58,14 +66,19 @@ export default function WalletDlg({
 
     // 使用 startTransition 将数据更新标记为非紧急
     startTransition(() => {
-      const wallet = {
+      const wallet: Wallet = {
         address: data.address,
         name: data.name,
+        cluster: solanaCluster,
       };
 
       // 使用微任务队列来确保UI更新不被阻塞
       queueMicrotask(() => {
-        dispatch({ type, wallet });
+        if (type === 'modify') {
+          dispatch(updateWallet(wallet));
+        } else if (type === 'add') {
+          dispatch(addWallet(wallet));
+        }
       });
     });
   };
@@ -74,14 +87,14 @@ export default function WalletDlg({
     const isValid = isValidSolanaAddress(address);
     if (isValid !== true) return isValid;
 
-    if (type === "add" && wallets && wallets.some((w) => w.address === address))
-      return "钱包地址已存在";
+    if (type === 'add' && wallets && wallets.some((w) => w.address === address))
+      return '钱包地址已存在';
     return true;
   }
 
   function validateName(name: string) {
     if (wallets && wallets.some((w) => w.name === name))
-      return "钱包名称已存在";
+      return '钱包名称已存在';
     return true;
   }
 
@@ -102,9 +115,9 @@ export default function WalletDlg({
               sx={{ marginBottom: 2 }}
               fullWidth
               label="钱包地址"
-              disabled={type === "modify"}
-              {...register("address", {
-                required: "必须填写钱包地址",
+              disabled={type === 'modify'}
+              {...register('address', {
+                required: '必须填写钱包地址',
                 validate: validateAddress,
               })}
               error={!!errors.address}
@@ -112,7 +125,7 @@ export default function WalletDlg({
               slotProps={{
                 input: {
                   endAdornment:
-                    type === "modify" &&
+                    type === 'modify' &&
                     (addressCopied ? (
                       <CheckIcon color="success" fontSize="small" />
                     ) : (
@@ -140,19 +153,19 @@ export default function WalletDlg({
               label="钱包名称"
               fullWidth
               onFocus={() => {
-                const address = watch("address");
-                const name = watch("name");
+                const address = watch('address');
+                const name = watch('name');
                 if (
                   !name &&
                   address &&
                   isValidSolanaAddress(address) === true
                 ) {
                   // FIXME: 自动生成钱包名称，提交时，错误交易，label 会覆盖内容
-                  setValue("name", shortSolanaAddress(address));
+                  setValue('name', shortSolanaAddress(address));
                 }
               }}
-              {...register("name", {
-                required: "必须填写钱包名称",
+              {...register('name', {
+                required: '必须填写钱包名称',
                 validate: validateName,
               })}
               error={!!errors.name}
@@ -161,7 +174,7 @@ export default function WalletDlg({
             <DialogActions>
               <Button onClick={() => setOpen(false)}>取消</Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "处理中..." : "确认"}
+                {isPending ? '处理中...' : '确认'}
               </Button>
             </DialogActions>
           </form>

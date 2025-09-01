@@ -6,8 +6,21 @@ export enum SolanaClusterType {
   'testnet' = 'testnet',
 }
 
+const CLUSTER_STORAGE_KEY = 'solanaCluster';
+
+const loadClusterFromStorage = () => {
+  const storedCluster = localStorage.getItem(CLUSTER_STORAGE_KEY);
+  return storedCluster
+    ? (JSON.parse(storedCluster) as SolanaClusterType)
+    : SolanaClusterType.devnet;
+};
+
+const saveClusterToStorage = (cluster: SolanaClusterType) => {
+  localStorage.setItem(CLUSTER_STORAGE_KEY, JSON.stringify(cluster));
+};
+
 const initialState = {
-  cluster: SolanaClusterType.devnet,
+  cluster: loadClusterFromStorage(),
 };
 
 export const solanaClusterSlice = createSlice({
@@ -16,6 +29,7 @@ export const solanaClusterSlice = createSlice({
   reducers: {
     setCluster(state, action: PayloadAction<SolanaClusterType>) {
       state.cluster = action.payload;
+      saveClusterToStorage(action.payload);
     },
   },
 });
