@@ -21,20 +21,34 @@ export default function SideBar({
     <Drawer
       open={open}
       onClose={onClose}
-      slotProps={{ paper: { sx: { width: 260 } } }}
+      slotProps={{
+        paper: {
+          sx: {
+            width: 260,
+          },
+        },
+      }}
     >
       <Box
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
           p: 2,
           backgroundColor: 'grey.100',
-          minHeight: '100vh',
+          height: '100%',
+          justifyContent: 'flex-end',
         }}
       >
         {user ? (
-          <>
+          <Box
+            sx={{
+              mt: 'auto',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
             <Avatar
               sx={{
                 width: 64,
@@ -64,19 +78,21 @@ export default function SideBar({
             >
               登出
             </Button>
-          </>
+          </Box>
         ) : (
-          <Button
-            variant="outlined"
-            color="primary"
-            fullWidth
-            sx={{ mt: 2 }}
-            onClick={() => {
-              getMe();
-            }}
-          >
-            登录
-          </Button>
+          <Box sx={{ mt: 'auto', width: '100%' }}>
+            <Button
+              variant="outlined"
+              color="primary"
+              fullWidth
+              sx={{ mt: 2 }}
+              onClick={() => {
+                getMe();
+              }}
+            >
+              登录
+            </Button>
+          </Box>
         )}
       </Box>
     </Drawer>
