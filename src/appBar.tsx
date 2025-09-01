@@ -12,6 +12,8 @@ import {
   SolanaClusterType,
 } from './rpc/solanaClusterSlice';
 import { useDispatch, useSelector } from 'react-redux';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
 
 export default function MyAppBar({
   onAvatarClick,
@@ -24,10 +26,27 @@ export default function MyAppBar({
   return (
     <AppBar position="static" sx={{ mb: 2 }}>
       <Toolbar>
-        <Avatar sx={{ bgcolor: green[600] }} onClick={onAvatarClick}>
-          Xy
-        </Avatar>
-        <Typography variant="h6" sx={{ ml: 1 }} flexGrow={1}>
+        <IconButton
+          size="large"
+          edge="start"
+          color="inherit"
+          aria-label="menu"
+          sx={{ mr: 2 }}
+        >
+          <MenuIcon onClick={onAvatarClick} />
+        </IconButton>
+        <Avatar sx={{ bgcolor: green[600] }}>Xy</Avatar>
+        <Typography
+          variant="h6"
+          noWrap
+          sx={{
+            ml: 1,
+            fontWeight: 700,
+            color: 'inherit',
+            textDecoration: 'none',
+            flexGrow: 1,
+          }}
+        >
           数字钱包
         </Typography>
         <FormControl size="small" sx={{ minWidth: 100 }}>
