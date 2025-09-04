@@ -5,6 +5,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import { authStatusSelector } from './authSlice';
+import './sqlite/sqlite3-main';
 
 type WorkerStatus = 'loading' | 'success' | 'error';
 

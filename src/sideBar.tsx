@@ -99,7 +99,6 @@ export default function SideBar({
                 color="primary"
                 onClick={async () => {
                   await post<{ message: string }>('token/logout');
-                  // await getMe();
                   dispatch(logout());
                 }}
                 sx={{ mt: 2 }}
@@ -113,8 +112,13 @@ export default function SideBar({
               color="primary"
               fullWidth
               sx={{ mt: 2 }}
-              onClick={() => {
+              onClick={async () => {
                 getMe();
+                // FIXME 测试申请持久存储权限
+                let r = await navigator.storage.persisted();
+                console.log('Persisted storage result:', r);
+                r = await navigator.storage.persist();
+                console.log('persist storage result:', r);
               }}
             >
               登录

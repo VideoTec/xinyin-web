@@ -45,6 +45,10 @@ export class ApiError extends Error {
     const message = err.errMsg || 'Restful API error without errMsg';
     return new ApiError(message, ApiErrorCode.RestfulError);
   }
+
+  toString() {
+    return `ApiError: ${this.message} (code: ${this.code})`;
+  }
 }
 
 const api = ky.create({

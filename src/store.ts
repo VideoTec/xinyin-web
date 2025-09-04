@@ -18,8 +18,12 @@ export type AppDispatch = typeof store.dispatch;
 export default store;
 
 export async function getMe() {
-  const user = await post<UserInfo>('auth/me');
-  store.dispatch(login(user));
+  try {
+    const user = await post<UserInfo>('auth/me');
+    store.dispatch(login(user));
+  } catch (error) {
+    console.log('Error fetching user info:', error.toString());
+  }
 }
 
 export function getCurrentCluster() {
