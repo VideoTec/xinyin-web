@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import sqlite3Api from './sqlite/sqlite3-main';
-import { waitWorkerReady } from './xinyin/xinyinMain';
+import xinyinApi from './xinyin/xinyin-main';
 
 export enum WorkerStatus {
   Loading,
@@ -72,7 +72,10 @@ sqlite3Api
     listeners.forEach((listener) => listener(states));
   });
 
-waitWorkerReady()
+console.log('xinyinApi.init', xinyinApi.init);
+
+xinyinApi
+  .init()
   .then(() => {
     states = {
       ...states,

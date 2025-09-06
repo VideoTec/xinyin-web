@@ -86,4 +86,6 @@ const exportedApi = {
   getWalletsOfCluster: getWalletsOfCluster,
 };
 
+export type SQLite3WorkerApi = typeof exportedApi;
+
 Comlink.expose(exportedApi);

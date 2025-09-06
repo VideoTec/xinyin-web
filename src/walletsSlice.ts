@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { SolanaClusterType } from './rpc/solanaClusterSlice';
-import sqlite3Api from './sqlite/sqlite3-main';
+// import sqlite3Api from './sqlite/sqlite3-main';
 
 export interface Wallet {
   address: string;
@@ -19,21 +19,21 @@ export const walletsSlice = createSlice({
   reducers: {
     loadWallets() {
       console.log('Loading wallets from DB...');
-      sqlite3Api.getWalletsOfCluster('devnet');
+      // sqlite3Api.getWalletsOfCluster('devnet');
       return [];
     },
     addWallet(state, action: PayloadAction<Wallet>) {
-      sqlite3Api
-        .upsertWalletAddress(
-          action.payload.address,
-          action.payload.balance,
-          action.payload.cluster,
-          action.payload.hasKey,
-          action.payload.isMine
-        )
-        .catch((error) => {
-          console.error('Failed to insert wallet address:', error);
-        });
+      // sqlite3Api
+      //   .upsertWalletAddress(
+      //     action.payload.address,
+      //     action.payload.balance,
+      //     action.payload.cluster,
+      //     action.payload.hasKey,
+      //     action.payload.isMine
+      //   )
+      //   .catch((error) => {
+      //     console.error('Failed to insert wallet address:', error);
+      //   });
       state.push(action.payload);
     },
     removeWallet(state, action: PayloadAction<string>) {
@@ -51,17 +51,17 @@ export const walletsSlice = createSlice({
       if (index !== -1) {
         state[index] = action.payload;
 
-        sqlite3Api
-          .upsertWalletAddress(
-            action.payload.address,
-            action.payload.balance,
-            action.payload.cluster,
-            action.payload.hasKey,
-            action.payload.isMine
-          )
-          .catch((error) => {
-            console.error('Failed to update wallet address:', error);
-          });
+        // sqlite3Api
+        //   .upsertWalletAddress(
+        //     action.payload.address,
+        //     action.payload.balance,
+        //     action.payload.cluster,
+        //     action.payload.hasKey,
+        //     action.payload.isMine
+        //   )
+        //   .catch((error) => {
+        //     console.error('Failed to update wallet address:', error);
+        //   });
       }
     },
   },

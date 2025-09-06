@@ -12,7 +12,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useState, type ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
-import { generateWords32, importWords32 } from './xinyin/xinyinMain';
+import xinyinApi from './xinyin/xinyin-main';
 import { useTheme } from '@mui/material/styles';
 import { isValidSolanaAddress } from './rpc/utils';
 import { addWallet, walletsSelector } from './walletsSlice';
@@ -98,21 +98,22 @@ export default function XinyinDlg({
   function handleFormSubmit(data: XinyinTxt) {
     if (type == 'generate' && step == Step.InputXinyinText) {
       setIsGenerating(true);
-      generateWords32(data.xinyinText, data.startIndex, data.wordCount).then(
-        (w32) => {
+      xinyinApi
+        .generateWords32(data.xinyinText, data.startIndex, data.wordCount)
+        .then((w32) => {
           setGeneratedWords32(w32);
           setIsGenerating(false);
-        }
-      );
+        });
     } else if (type == 'import' && step == Step.InputWords32) {
       setIsImporting(true);
-      importWords32(
-        data.words32,
-        data.xinyinText,
-        data.startIndex,
-        data.wordCount,
-        data.password
-      )
+      xinyinApi
+        .importWords32(
+          data.words32,
+          data.xinyinText,
+          data.startIndex,
+          data.wordCount,
+          data.password
+        )
         .then((solanaAddress) => {
           const w = wallets && wallets.find((w) => w.address === solanaAddress);
           if (w) {
@@ -126,6 +127,9 @@ export default function XinyinDlg({
               address: solanaAddress,
               name: data.walletName,
               cluster: solanaCluster,
+              balance: 0,
+              hasKey: true,
+              isMine: true,
             })
           );
           setOpen(false);

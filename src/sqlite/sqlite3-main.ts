@@ -1,4 +1,5 @@
 import * as Comlink from 'comlink';
+import type { SQLite3WorkerApi } from './sqlite3-worker';
 
 const sqlite3Worker = new Worker(
   new URL('./sqlite3-worker.ts', import.meta.url),
@@ -8,18 +9,6 @@ const sqlite3Worker = new Worker(
 sqlite3Worker.onerror = (err) => {
   console.error('sqlite3 Worker error:', err);
 };
-
-interface SQLite3WorkerApi {
-  openDB: () => Promise<void>;
-  upsertWalletAddress: (
-    address: string,
-    balance: number,
-    cluster: string,
-    hasKey?: boolean,
-    isMine?: boolean
-  ) => Promise<void>;
-  getWalletsOfCluster: (cluster: string) => Promise<void>;
-}
 
 const api = Comlink.wrap<SQLite3WorkerApi>(sqlite3Worker);
 
