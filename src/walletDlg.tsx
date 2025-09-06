@@ -70,6 +70,9 @@ export default function WalletDlg({
         address: data.address,
         name: data.name,
         cluster: solanaCluster,
+        balance: 0,
+        hasKey: false,
+        isMine: false,
       };
 
       // 使用微任务队列来确保UI更新不被阻塞

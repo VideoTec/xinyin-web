@@ -11,11 +11,12 @@ import WalletDlg from './walletDlg';
 import AddIcon from '@mui/icons-material/Add';
 import Fab from '@mui/material/Fab';
 import Divider from '@mui/material/Divider';
-import { useSelector } from 'react-redux';
-import { walletsSelector } from './walletsSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { walletsSelector, loadWallets } from './walletsSlice';
 
 export function WalletList() {
   const wallets = useSelector(walletsSelector);
+  const dispatch = useDispatch();
   const {
     needRefresh: [needRefresh],
     offlineReady: [offlineReady, setOfflineReady],
@@ -27,6 +28,8 @@ export function WalletList() {
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    console.log('Dispatching loadWallets...');
+    dispatch(loadWallets());
     const gridElement = gridRef.current;
     if (!gridElement) return;
 
@@ -44,7 +47,7 @@ export function WalletList() {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [dispatch]);
 
   return (
     <>

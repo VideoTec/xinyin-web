@@ -5,19 +5,20 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import { authStatusSelector } from './authSlice';
-import './sqlite/sqlite3-main';
+import { useWorkersState, WorkerStatus } from './worker-store';
 
-type WorkerStatus = 'loading' | 'success' | 'error';
+type WorkerStatusOld = 'loading' | 'success' | 'error';
 
 export default function GlobalWidget({
   children,
 }: {
   children?: React.ReactNode;
 }) {
-  const [workerStatus, setWorkerStatus] = useState<WorkerStatus>('loading');
+  const [workerStatus, setWorkerStatus] = useState<WorkerStatusOld>('loading');
   const [workerError, setWorkerError] = useState<string | null>(null);
   const authStatus = useSelector(authStatusSelector);
   const navigate = useNavigate();
+  const workersState = useWorkersState();
 
   useEffect(() => {
     if (authStatus === 'loggedOut') {
@@ -57,7 +58,27 @@ export default function GlobalWidget({
           </Typography>
         </>
       )}
-      {workerStatus === 'success' && children}
+      {workersState.sqlite.status === WorkerStatus.Idle && (
+        <Typography variant="h6" mt={2}>
+          Worker 准备初始化...
+        </Typography>
+      )}
+      {workersState.sqlite.status === WorkerStatus.Loading && (
+        <>
+          <CircularProgress />
+          <Typography variant="h6" mt={2}>
+            正在初始化，请稍候...
+          </Typography>
+        </>
+      )}
+      {workersState.sqlite.status === WorkerStatus.Error && (
+        <Typography variant="h6" mt={2}>
+          Worker 错误：{workersState.sqlite.error}
+        </Typography>
+      )}
+      {workerStatus === 'success' &&
+        workersState.sqlite.status === WorkerStatus.Ready &&
+        children}
     </>
   );
 }

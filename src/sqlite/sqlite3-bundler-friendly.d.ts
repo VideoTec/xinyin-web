@@ -1,4 +1,4 @@
-interface SQLite3Config {
+export interface SQLite3Config {
   print?: (text: string) => void;
   printErr?: (text: string) => void;
 }
@@ -10,7 +10,7 @@ export interface SQLite3Version {
   sourceId: string;
 }
 
-export class Stmt {
+export declare class Stmt {
   /**
    * 绑定参数到预编译语句
    * @example
@@ -65,6 +65,8 @@ export declare class DB {
   static readonly version: string;
 
   static open(filename: string): DB;
+  /** 当前打开的 Stmt 句柄数量 */
+  openStatementCount(): number;
 }
 
 export interface SQLite3OO1 {
@@ -122,7 +124,7 @@ export declare class OpfsSAHPoolUtil {
   removeVfs(): Promise<boolean>;
 }
 
-interface SQLite3API {
+export interface SQLite3API {
   version: SQLite3Version;
   oo1: SQLite3OO1;
   installOpfsSAHPoolVfs: (
