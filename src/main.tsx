@@ -6,7 +6,6 @@ import Register from './register';
 import Container from '@mui/material/Container';
 import { ConfirmProvider } from 'material-ui-confirm';
 import { BrowserRouter, Routes, Route } from 'react-router';
-import './xinyin/xinyinMain.js';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
 import GlobalWidget from './globalWidget';

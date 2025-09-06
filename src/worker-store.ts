@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from 'react';
 import sqlite3Api from './sqlite/sqlite3-main';
+import { waitWorkerReady } from './xinyin/xinyinMain';
 
 export enum WorkerStatus {
-  Idle,
   Loading,
   Ready,
   Error,
@@ -15,11 +15,16 @@ export interface WorkerState {
 
 export interface WorkersState {
   sqlite: WorkerState;
+  xinyin: WorkerState;
 }
 
 let states: WorkersState = {
   sqlite: {
-    status: WorkerStatus.Idle,
+    status: WorkerStatus.Loading,
+    error: null,
+  },
+  xinyin: {
+    status: WorkerStatus.Loading,
     error: null,
   },
 };
@@ -60,6 +65,28 @@ sqlite3Api
     states = {
       ...states,
       sqlite: {
+        status: WorkerStatus.Error,
+        error: error.message || 'Unknown error',
+      },
+    };
+    listeners.forEach((listener) => listener(states));
+  });
+
+waitWorkerReady()
+  .then(() => {
+    states = {
+      ...states,
+      xinyin: {
+        status: WorkerStatus.Ready,
+        error: null,
+      },
+    };
+    listeners.forEach((listener) => listener(states));
+  })
+  .catch((error) => {
+    states = {
+      ...states,
+      xinyin: {
         status: WorkerStatus.Error,
         error: error.message || 'Unknown error',
       },

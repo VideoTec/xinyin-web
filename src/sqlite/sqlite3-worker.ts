@@ -37,6 +37,9 @@ async function init() {
 async function openDB() {
   if (sqlite3) return;
   await init();
+  // await new Promise((resolve) => {
+  //   setTimeout(resolve, 3000);
+  // });
   opfsSAHPoolDb.exec(
     `
         CREATE TABLE IF NOT EXISTS wallets (

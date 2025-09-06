@@ -1,24 +1,19 @@
-import { useEffect, useState } from 'react';
-import { waitWorkerReady } from './xinyin/xinyinMain';
+import { useEffect } from 'react';
 import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 import { authStatusSelector } from './authSlice';
 import { useWorkersState, WorkerStatus } from './worker-store';
-
-type WorkerStatusOld = 'loading' | 'success' | 'error';
+import Stack from '@mui/material/Stack';
 
 export default function GlobalWidget({
   children,
 }: {
   children?: React.ReactNode;
 }) {
-  const [workerStatus, setWorkerStatus] = useState<WorkerStatusOld>('loading');
-  const [workerError, setWorkerError] = useState<string | null>(null);
   const authStatus = useSelector(authStatusSelector);
-  const navigate = useNavigate();
   const workersState = useWorkersState();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (authStatus === 'loggedOut') {
@@ -26,59 +21,31 @@ export default function GlobalWidget({
     }
   }, [authStatus, navigate]);
 
-  useEffect(() => {
-    let isMounted = true;
-    waitWorkerReady()
-      .then(() => {
-        if (isMounted) setWorkerStatus('success');
-      })
-      .catch((error) => {
-        if (isMounted) {
-          setWorkerStatus('error');
-          setWorkerError(error.message || '未知错误');
-        }
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   return (
-    <>
-      {workerStatus === 'error' && (
+    <Stack alignItems="center">
+      {workersState.xinyin.status === WorkerStatus.Loading && (
         <Typography variant="h6" mt={2}>
-          初始化失败：{workerError}
+          心印模块，正在初始化...
         </Typography>
       )}
-      {workerStatus === 'loading' && (
-        <>
-          <CircularProgress />
-          <Typography variant="h6" mt={2}>
-            正在初始化，请稍候...
-          </Typography>
-        </>
-      )}
-      {workersState.sqlite.status === WorkerStatus.Idle && (
+      {workersState.xinyin.status === WorkerStatus.Error && (
         <Typography variant="h6" mt={2}>
-          Worker 准备初始化...
+          心印模块，加载失败：{workersState.xinyin.error}
         </Typography>
       )}
       {workersState.sqlite.status === WorkerStatus.Loading && (
-        <>
-          <CircularProgress />
-          <Typography variant="h6" mt={2}>
-            正在初始化，请稍候...
-          </Typography>
-        </>
+        <Typography variant="h6" mt={2}>
+          数据库模块，正在初始化...
+        </Typography>
       )}
       {workersState.sqlite.status === WorkerStatus.Error && (
         <Typography variant="h6" mt={2}>
-          Worker 错误：{workersState.sqlite.error}
+          数据库模块，加载失败：{workersState.sqlite.error}
         </Typography>
       )}
-      {workerStatus === 'success' &&
+      {workersState.xinyin.status === WorkerStatus.Ready &&
         workersState.sqlite.status === WorkerStatus.Ready &&
         children}
-    </>
+    </Stack>
   );
 }

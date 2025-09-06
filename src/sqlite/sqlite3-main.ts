@@ -9,7 +9,7 @@ sqlite3Worker.onerror = (err) => {
   console.error('sqlite3 Worker error:', err);
 };
 
-export interface SQLite3WorkerApi {
+interface SQLite3WorkerApi {
   openDB: () => Promise<void>;
   upsertWalletAddress: (
     address: string,
