@@ -54,7 +54,7 @@ async function getWalletsOfCluster(cluster: string) {
     wallets.push(stmtWalletsOfCluster.get({}) as Wallet);
   }
   stmtWalletsOfCluster.reset();
-  await sleep(2 * 1000);
+  // await sleep(2 * 1000);
   return wallets;
 }
 

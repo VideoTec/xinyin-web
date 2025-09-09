@@ -16,7 +16,7 @@ import CopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import IconButton from '@mui/material/IconButton';
 import { useDispatch, useSelector } from 'react-redux';
-import { clusterSelector } from '../store/slice-solana-cluster';
+import { useClusterState } from '../store/cluster-store';
 import type { Wallet } from '../types/wallet';
 
 export default function WalletDlg({
@@ -32,7 +32,7 @@ export default function WalletDlg({
 }) {
   const [open, setOpen] = useState(false);
   const wallets = useSelector(walletsSelector);
-  const solanaCluster = useSelector(clusterSelector);
+  const solanaCluster = useClusterState();
   const dispatch = useDispatch();
   const [isPending, startTransition] = useTransition();
   const [addressCopied, setAddressCopied] = useState(false);

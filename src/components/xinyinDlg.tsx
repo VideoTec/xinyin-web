@@ -17,7 +17,7 @@ import { useTheme } from '@mui/material/styles';
 import { isValidSolanaAddress } from '../rpc/utils';
 import { addWallet, walletsSelector } from '../store/slice-wallets';
 import { useDispatch, useSelector } from 'react-redux';
-import { clusterSelector } from '../store/slice-solana-cluster';
+import { useClusterState } from '../store/cluster-store';
 
 const initialWordCount = 600; // 假设初始字数为600
 const initialStartIndex = 8; // 假设初始开始序号为8
@@ -52,7 +52,7 @@ export default function XinyinDlg({
   const [generatedWords32, setGeneratedWords32] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const solanaCluster = useSelector(clusterSelector);
+  const solanaCluster = useClusterState();
   const wallets = useSelector(walletsSelector);
   const dispatch = useDispatch();
   const {

@@ -1,6 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slice-auth';
-import solanaClusterReducer from './slice-solana-cluster';
 import walletsSlice from './slice-wallets';
 import {
   useDispatch,
@@ -11,7 +10,6 @@ import {
 const store = configureStore({
   reducer: {
     auth: authReducer,
-    solanaCluster: solanaClusterReducer,
     wallets: walletsSlice,
   },
 });

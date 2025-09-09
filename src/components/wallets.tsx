@@ -1,8 +1,6 @@
-import { Wallet } from './wallet';
 import { useEffect, useRef, useState } from 'react';
 import Typography from '@mui/material/Typography';
 import Gride from '@mui/material/Grid';
-import WalletDlg from './walletDlg';
 import AddIcon from '@mui/icons-material/Add';
 import Fab from '@mui/material/Fab';
 import Divider from '@mui/material/Divider';
@@ -14,14 +12,16 @@ import {
   walletsLoadingSelector,
   resetWallets,
 } from '../store/slice-wallets';
-import { clusterSelector } from '../store/slice-solana-cluster';
+import { useClusterState } from '../store/cluster-store';
+import WalletDlg from './walletDlg';
+import Wallet from './wallet';
 
 export function WalletList() {
   const dispatch = useAppDispatch();
   const wallets = useAppSelector(walletsSelector);
   const loading = useAppSelector(walletsLoadingSelector);
   const error = useAppSelector(walletsErrorSelector);
-  const cluster = useAppSelector(clusterSelector);
+  const cluster = useClusterState();
   const [showDivider, setShowDivider] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
 

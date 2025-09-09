@@ -29,7 +29,7 @@ let states: WorkersState = {
   },
 };
 
-function getWorkersStateSnapshot(): WorkersState {
+function getWorkersStateSnapshot() {
   return states;
 }
 

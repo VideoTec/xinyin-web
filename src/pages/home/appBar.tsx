@@ -6,8 +6,7 @@ import Typography from '@mui/material/Typography';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import { clusterSelector, setCluster } from '../../store/slice-solana-cluster';
-import { useDispatch, useSelector } from 'react-redux';
+import { useClusterState, setCluster } from '../../store/cluster-store';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import { SolanaClusterType } from '../../types/common';
@@ -17,8 +16,7 @@ export default function MyAppBar({
 }: {
   onAvatarClick: () => void;
 }) {
-  const dispatch = useDispatch();
-  const solanaCluster = useSelector(clusterSelector);
+  const solanaCluster = useClusterState();
 
   return (
     <AppBar position="static" sx={{ mb: 2 }}>
@@ -50,7 +48,7 @@ export default function MyAppBar({
           <Select
             value={solanaCluster}
             onChange={(event) => {
-              dispatch(setCluster(event.target.value as SolanaClusterType));
+              setCluster(event.target.value as SolanaClusterType);
             }}
             sx={{
               fontSize: '0.75rem',

@@ -26,8 +26,8 @@ import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardActions from '@mui/material/CardActions';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useDispatch, useSelector } from 'react-redux';
-import { clusterSelector } from '../store/slice-solana-cluster';
+import { useDispatch } from 'react-redux';
+import { useClusterState } from '../store/cluster-store';
 import { removeWallet } from '../store/slice-wallets';
 
 enum TransferStatus {
@@ -43,7 +43,13 @@ enum TransferStatus {
   Failed,
 }
 
-export function Wallet({ address, name }: { address: string; name: string }) {
+export default function Wallet({
+  address,
+  name,
+}: {
+  address: string;
+  name: string;
+}) {
   const dispatch = useDispatch();
   const confirm = useConfirm();
   const [loadingError, setLoadingError] = useState<string>('');
@@ -54,7 +60,7 @@ export function Wallet({ address, name }: { address: string; name: string }) {
   const [showAddress, setShowAddress] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
   const [txId, setTxId] = useState('');
-  const currentCluster = useSelector(clusterSelector);
+  const currentCluster = useClusterState();
 
   const isNoneAccount = owner === '';
 
