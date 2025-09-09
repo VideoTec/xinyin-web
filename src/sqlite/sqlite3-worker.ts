@@ -4,7 +4,14 @@ import sqlite3InitModule, {
   type SQLite3API,
   type Stmt,
 } from './sqlite3-bundler-friendly';
+import {
+  create_table_wallets,
+  select_wallets_of_cluster,
+  upsert_wallet,
+} from './sqlite3-stmt';
 import * as Comlink from 'comlink';
+import type { Wallet } from '../types/wallet';
+import { sleep } from '../utils';
 
 let sqlite3: SQLite3API;
 let poolUtil: OpfsSAHPoolUtil;
@@ -13,77 +20,48 @@ let opfsSAHPoolDb: OpfsSAHPoolDb;
 let stmtUpsert: Stmt;
 let stmtWalletsOfCluster: Stmt;
 
-async function init() {
+async function openDB() {
+  if (sqlite3) return;
+
   sqlite3 = await sqlite3InitModule();
   poolUtil = await sqlite3.installOpfsSAHPoolVfs();
   opfsSAHPoolDb = new poolUtil.OpfsSAHPoolDb('local-db.db');
-  stmtUpsert = opfsSAHPoolDb.prepare(
-    `
-    INSERT INTO wallets (address, balance, cluster, has_key, is_mine)
-    VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(address) DO UPDATE SET
-      balance = excluded.balance,
-      cluster = excluded.cluster,
-      has_key = excluded.has_key,
-      is_mine = excluded.is_mine,
-      update_time = CURRENT_TIMESTAMP
-  `
-  );
-  stmtWalletsOfCluster = opfsSAHPoolDb.prepare(
-    'SELECT * FROM wallets WHERE cluster = ? ORDER BY create_time DESC'
-  );
+  // await sleep(2 * 1000);
+  opfsSAHPoolDb.exec(create_table_wallets);
+  stmtUpsert = opfsSAHPoolDb.prepare(upsert_wallet);
+  stmtWalletsOfCluster = opfsSAHPoolDb.prepare(select_wallets_of_cluster);
 }
 
-async function openDB() {
-  if (sqlite3) return;
-  await init();
-  // await new Promise((resolve) => {
-  //   setTimeout(resolve, 3000);
-  // });
-  opfsSAHPoolDb.exec(
-    `
-        CREATE TABLE IF NOT EXISTS wallets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            address TEXT NOT NULL UNIQUE,
-            create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-            update_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-            balance REAL,
-            cluster TEXT,
-            has_key INTEGER DEFAULT 0,
-            is_mine INTEGER DEFAULT 0
-        );
-    `
-  );
-}
-
-function upsertWalletAddress(
-  address: string,
-  balance: number,
-  cluster: string,
-  hasKey: boolean = false,
-  isMine: boolean = false
-) {
-  stmtUpsert.bind([address, balance, cluster, hasKey ? 1 : 0, isMine ? 1 : 0]);
+function upsertWalletAddress(wallet: Wallet) {
+  console.log('Upserting wallet:', wallet);
+  stmtUpsert.bind([
+    wallet.address,
+    wallet.name,
+    wallet.balance,
+    wallet.cluster,
+    wallet.hasKey ? 1 : 0,
+    wallet.isMine ? 1 : 0,
+  ]);
   stmtUpsert.step();
   stmtUpsert.reset();
 }
 
-function getWalletsOfCluster(cluster: string) {
-  // const wallets = [];
+async function getWalletsOfCluster(cluster: string) {
+  // throw new Error('Simulated error for testing'); // --- IGNORE ---
+  const wallets: Wallet[] = [];
   stmtWalletsOfCluster.bind([cluster]);
   while (stmtWalletsOfCluster.step()) {
-    // let stmt = stmtWalletsOfCluster.bind(cluster);
-    // wallets.push(stmtWalletsOfCluster.get([]));
-    console.log('Wallet:', stmtWalletsOfCluster.get([]));
-    // stmtWalletsOfCluster.reset();
+    wallets.push(stmtWalletsOfCluster.get({}) as Wallet);
   }
   stmtWalletsOfCluster.reset();
+  await sleep(2 * 1000);
+  return wallets;
 }
 
 const exportedApi = {
-  openDB: openDB,
-  upsertWalletAddress: upsertWalletAddress,
-  getWalletsOfCluster: getWalletsOfCluster,
+  openDB,
+  upsertWalletAddress,
+  getWalletsOfCluster,
 };
 
 export type SQLite3WorkerApi = typeof exportedApi;

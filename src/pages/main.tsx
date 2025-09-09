@@ -1,15 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './app';
-import Login from './login';
-import Register from './register';
+import App from './home/app';
+import Login from './login/login';
+import Register from './login/register';
 import Container from '@mui/material/Container';
 import { ConfirmProvider } from 'material-ui-confirm';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
-import GlobalWidget from './globalWidget';
-import store from './store';
+import GlobalWidget from '../components/globalWidget';
+import store from '../store/store';
 
 const queryClient = new QueryClient();
 

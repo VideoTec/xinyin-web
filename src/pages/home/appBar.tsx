@@ -6,14 +6,11 @@ import Typography from '@mui/material/Typography';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import {
-  clusterSelector,
-  setCluster,
-  SolanaClusterType,
-} from './rpc/solanaClusterSlice';
+import { clusterSelector, setCluster } from '../../store/slice-solana-cluster';
 import { useDispatch, useSelector } from 'react-redux';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+import { SolanaClusterType } from '../../types/common';
 
 export default function MyAppBar({
   onAvatarClick,

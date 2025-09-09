@@ -2,15 +2,15 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { useForm } from 'react-hook-form';
-import { createPasskey, registerWithPasskey } from './webauthn';
 import Collapse from '@mui/material/Collapse';
 import Alert from '@mui/material/Alert';
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { registerSchema, type RegisterInfo } from './schemaUtils';
 import { useNavigate, NavLink } from 'react-router';
-import { getMe } from './store';
 import Typography from '@mui/material/Typography';
+import { createPasskey, registerWithPasskey } from '../../restful/webauthn';
+import { registerSchema, type RegisterInfo } from '../../utils/schema-utils';
+import { getMe } from '../../restful/user';
 
 function Register() {
   const {
@@ -47,7 +47,7 @@ function Register() {
       onSubmit={handleSubmit(onSubmit)}
       alignItems="center"
       justifyContent="center"
-      sx={{ height: '100vh' }}
+      sx={{ height: '100vh', width: '100%' }}
     >
       <h1>注册</h1>
       <TextField

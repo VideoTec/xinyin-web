@@ -1,4 +1,4 @@
-import { WalletList } from './wallets';
+import { WalletList } from '../../components/wallets';
 import Stack from '@mui/material/Stack';
 import MyAppBar from './appBar';
 import SideBar from './sideBar';
@@ -11,7 +11,7 @@ function App() {
     <>
       <MyAppBar onAvatarClick={() => setOpenDraw(true)} />
       <SideBar open={openDraw} onClose={() => setOpenDraw(false)} />
-      <Stack alignItems="center">
+      <Stack alignItems="center" sx={{ width: '100%' }}>
         <WalletList />
       </Stack>
     </>

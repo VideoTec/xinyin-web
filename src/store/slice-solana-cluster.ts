@@ -1,22 +1,18 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-
-export enum SolanaClusterType {
-  'mainnetBeta' = 'mainnet-beta',
-  'devnet' = 'devnet',
-  'testnet' = 'testnet',
-}
+import type { RootState } from './store';
+import { SolanaClusterType } from '../types/common';
 
 const CLUSTER_STORAGE_KEY = 'solanaCluster';
 
 const loadClusterFromStorage = () => {
   const storedCluster = localStorage.getItem(CLUSTER_STORAGE_KEY);
   return storedCluster
-    ? (JSON.parse(storedCluster) as SolanaClusterType)
+    ? (storedCluster as SolanaClusterType)
     : SolanaClusterType.devnet;
 };
 
 const saveClusterToStorage = (cluster: SolanaClusterType) => {
-  localStorage.setItem(CLUSTER_STORAGE_KEY, JSON.stringify(cluster));
+  localStorage.setItem(CLUSTER_STORAGE_KEY, cluster);
 };
 
 const initialState = {
@@ -36,8 +32,7 @@ export const solanaClusterSlice = createSlice({
 
 export const { setCluster } = solanaClusterSlice.actions;
 
-export const clusterSelector = (state: {
-  solanaCluster: { cluster: SolanaClusterType };
-}) => state.solanaCluster.cluster;
+export const clusterSelector = (state: RootState) =>
+  state.solanaCluster.cluster;
 
 export default solanaClusterSlice.reducer;

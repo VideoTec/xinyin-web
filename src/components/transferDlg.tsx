@@ -1,6 +1,6 @@
 import { useForm, Controller } from 'react-hook-form';
 import { useState, type ReactElement } from 'react';
-import { shortSolanaAddress } from './rpc/utils';
+import { shortSolanaAddress } from '../rpc/utils';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -14,7 +14,7 @@ import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
 import { useSelector } from 'react-redux';
-import { walletsSelector } from './walletsSlice';
+import { walletsSelector } from '../store/slice-wallets';
 
 interface TransferData {
   toAddress: string;

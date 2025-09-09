@@ -1,7 +1,7 @@
 import bs58 from 'bs58';
 import xinyinApi from '../xinyin/xinyin-main';
 import { txMessageData, byteArrayToBase64 } from './utils';
-import { getLatestBlockhash, sendTransaction } from './solanaRpc';
+import { getLatestBlockhash, sendTransaction } from './solana-rpc';
 
 export async function transfer(
   from: string,

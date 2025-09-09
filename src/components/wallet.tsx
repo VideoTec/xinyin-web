@@ -5,9 +5,9 @@ import {
   getAccountInfo,
   getBalance,
   getSignatureStatuses,
-} from './rpc/solanaRpc';
-import { transfer } from './rpc/transfer';
-import { getErrorMsg, shortTransferID } from './rpc/utils';
+} from '../rpc/solana-rpc';
+import { transfer } from '../rpc/transfer';
+import { getErrorMsg, shortTransferID } from '../rpc/utils';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
@@ -27,8 +27,8 @@ import CardHeader from '@mui/material/CardHeader';
 import CardActions from '@mui/material/CardActions';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useDispatch, useSelector } from 'react-redux';
-import { clusterSelector } from './rpc/solanaClusterSlice';
-import { removeWallet } from './walletsSlice';
+import { clusterSelector } from '../store/slice-solana-cluster';
+import { removeWallet } from '../store/slice-wallets';
 
 enum TransferStatus {
   /** 初始化 */

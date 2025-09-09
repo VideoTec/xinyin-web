@@ -3,11 +3,11 @@ import Drawer from '@mui/material/Drawer';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import { userSelector, logout } from './authSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import { post } from './restful-api';
-import { getMe } from './store';
-import XinyinDlg from './xinyinDlg';
+import { userSelector, logout as logoutAction } from '../../store/slice-auth';
+import { post } from '../../restful/restful-api';
+import { getMe } from '../../restful/user';
+import XinyinDlg from '../../components/xinyinDlg';
 
 export default function SideBar({
   open,
@@ -99,7 +99,7 @@ export default function SideBar({
                 color="primary"
                 onClick={async () => {
                   await post<{ message: string }>('token/logout');
-                  dispatch(logout());
+                  dispatch(logoutAction());
                 }}
                 sx={{ mt: 2 }}
               >

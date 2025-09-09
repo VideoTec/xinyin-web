@@ -1,6 +1,6 @@
 import ky, { type Options, HTTPError, TimeoutError } from 'ky';
-import store from './store';
-import { logout } from './authSlice';
+import store from '../store/store';
+import { logout as logoutAction } from '../store/slice-auth';
 
 interface RestfulError {
   /** error message */
@@ -85,7 +85,7 @@ const refreshToken = (() => {
             const restfulError = await error.response.json<RestfulError>();
             if (restfulError.statusCode === 401) {
               // refresh token also expired
-              store.dispatch(logout());
+              store.dispatch(logoutAction());
             }
             throw new ApiError(
               restfulError.errMsg,

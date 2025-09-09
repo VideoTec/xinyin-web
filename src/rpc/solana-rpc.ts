@@ -1,4 +1,4 @@
-import { callSolanaRpc } from './solanaRpcClient';
+import { callSolanaRpc } from './solana-rpc-client';
 
 export type CommitmentType = 'finalized' | 'confirmed' | 'processed';
 

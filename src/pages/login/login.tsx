@@ -1,17 +1,17 @@
 import { TextField, Typography } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import { getCredForUser, loginWithCredential } from './webauthn';
+import { getCredForUser, loginWithCredential } from '../../restful/webauthn';
 import { useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import Collapse from '@mui/material/Collapse';
 import Alert from '@mui/material/Alert';
-import { type LoginInfo, loginSchema } from './schemaUtils';
+import { type LoginInfo, loginSchema } from '../../utils/schema-utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, NavLink } from 'react-router';
-import { getMe } from './store';
+import { getMe } from '../../restful/user';
 import { useDispatch } from 'react-redux';
-import { reset } from './authSlice';
+import { reset } from '../../store/slice-auth';
 
 function Login() {
   const {
@@ -52,7 +52,7 @@ function Login() {
       component="form"
       alignItems="center"
       justifyContent="center"
-      sx={{ height: '100vh' }}
+      sx={{ height: '100vh', width: '100%' }}
       onSubmit={handleSubmit(handleLogin)}
     >
       <h1>登录</h1>

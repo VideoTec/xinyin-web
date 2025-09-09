@@ -1,35 +1,37 @@
 import { Wallet } from './wallet';
 import { useEffect, useRef, useState } from 'react';
-import { useRegisterSW } from 'virtual:pwa-register/react';
 import Typography from '@mui/material/Typography';
 import Gride from '@mui/material/Grid';
-import Collapse from '@mui/material/Collapse';
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
-import Snackbar from '@mui/material/Snackbar';
 import WalletDlg from './walletDlg';
 import AddIcon from '@mui/icons-material/Add';
 import Fab from '@mui/material/Fab';
 import Divider from '@mui/material/Divider';
-import { useDispatch, useSelector } from 'react-redux';
-import { walletsSelector, loadWallets } from './walletsSlice';
+import { useAppDispatch, useAppSelector } from '../store/store';
+import {
+  walletsSelector,
+  loadWalletsByCluster,
+  walletsErrorSelector,
+  walletsLoadingSelector,
+  resetWallets,
+} from '../store/slice-wallets';
+import { clusterSelector } from '../store/slice-solana-cluster';
 
 export function WalletList() {
-  const wallets = useSelector(walletsSelector);
-  const dispatch = useDispatch();
-  const {
-    needRefresh: [needRefresh],
-    offlineReady: [offlineReady, setOfflineReady],
-    updateServiceWorker,
-  } = useRegisterSW({
-    immediate: false,
-  });
+  const dispatch = useAppDispatch();
+  const wallets = useAppSelector(walletsSelector);
+  const loading = useAppSelector(walletsLoadingSelector);
+  const error = useAppSelector(walletsErrorSelector);
+  const cluster = useAppSelector(clusterSelector);
   const [showDivider, setShowDivider] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log('Dispatching loadWallets...');
-    dispatch(loadWallets());
+    dispatch(resetWallets());
+    dispatch(loadWalletsByCluster(cluster));
+    return () => {};
+  }, [cluster, dispatch]);
+
+  useEffect(() => {
     const gridElement = gridRef.current;
     if (!gridElement) return;
 
@@ -51,21 +53,16 @@ export function WalletList() {
 
   return (
     <>
-      <Collapse in={needRefresh}>
-        <Alert
-          action={<Button onClick={() => updateServiceWorker()}>刷新</Button>}
-          sx={{ mb: 2 }}
-        >
-          有新版本可用
-        </Alert>
-      </Collapse>
-      <Snackbar
-        open={offlineReady}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        autoHideDuration={6000}
-        onClose={() => setOfflineReady(false)}
-        message="应用安装完成！现在可以离线使用了"
-      />
+      {loading && (
+        <Typography variant="h6" sx={{ textAlign: 'center' }}>
+          钱包列表加载中...
+        </Typography>
+      )}
+      {error && (
+        <Typography variant="h6" color="error" sx={{ textAlign: 'center' }}>
+          加载钱包列表出错: {error}
+        </Typography>
+      )}
       <Fab sx={{ position: 'fixed', right: 16, bottom: 16 }}>
         <WalletDlg type="add">
           {({ triggerOpen }) => (
@@ -73,11 +70,6 @@ export function WalletList() {
           )}
         </WalletDlg>
       </Fab>
-      {(!wallets || wallets.length === 0) && (
-        <Typography variant="h6" sx={{ textAlign: 'center' }}>
-          没有可用的钱包
-        </Typography>
-      )}
       {wallets && wallets.length > 0 && (
         <Gride container spacing={1} width={'100%'} ref={gridRef}>
           {wallets.map((wallet) => (

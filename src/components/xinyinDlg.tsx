@@ -12,12 +12,12 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useState, type ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
-import xinyinApi from './xinyin/xinyin-main';
+import xinyinApi from '../xinyin/xinyin-main';
 import { useTheme } from '@mui/material/styles';
-import { isValidSolanaAddress } from './rpc/utils';
-import { addWallet, walletsSelector } from './walletsSlice';
+import { isValidSolanaAddress } from '../rpc/utils';
+import { addWallet, walletsSelector } from '../store/slice-wallets';
 import { useDispatch, useSelector } from 'react-redux';
-import { clusterSelector } from './rpc/solanaClusterSlice';
+import { clusterSelector } from '../store/slice-solana-cluster';
 
 const initialWordCount = 600; // 假设初始字数为600
 const initialStartIndex = 8; // 假设初始开始序号为8

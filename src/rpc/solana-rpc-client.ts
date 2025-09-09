@@ -1,5 +1,5 @@
-import { post, ApiError, ApiErrorCode } from '../restful-api';
-import { getCurrentCluster } from '../store';
+import { post, ApiError, ApiErrorCode } from '../restful/restful-api';
+import store from '../store/store';
 
 let JsonRpcId = 0;
 
@@ -36,7 +36,7 @@ export async function callSolanaRpc<T>(
   };
 
   let rpcResponse: JsonRpcResponse<T>;
-  const currentCluster = getCurrentCluster();
+  const currentCluster = store.getState().solanaCluster.cluster;
   if (currentCluster === 'mainnet-beta') {
     rpcResponse = await post<JsonRpcResponse<T>>('auth/solana-rpc', {
       json: jsonrpc,
