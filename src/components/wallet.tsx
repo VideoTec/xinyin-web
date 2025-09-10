@@ -24,7 +24,6 @@ import CardHeader from '@mui/material/CardHeader';
 import CardActions from '@mui/material/CardActions';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAppDispatch } from '../store/store';
-import { useClusterState } from '../store/cluster-store';
 import { removeWallet, updateWallet } from '../store/slice-wallets';
 
 enum TransferStatus {
@@ -48,7 +47,6 @@ export default function Wallet({ wallet }: { wallet: Wallet }) {
   const [showAddress, setShowAddress] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
   const [txId, setTxId] = useState('');
-  const currentCluster = useClusterState();
 
   const walletAddress = wallet.$address;
 
@@ -58,9 +56,9 @@ export default function Wallet({ wallet }: { wallet: Wallet }) {
     data: balanceData,
     refetch: refetchBalance,
   } = useQuery({
-    queryKey: ['balance', wallet.$address, currentCluster],
+    queryKey: ['balance', wallet.$address],
     queryFn: () => getBalance(wallet.$address, { encoding: 'base64' }),
-    enabled: false,
+    enabled: !wallet.$balance,
     retry: 0,
     retryOnMount: false,
     refetchOnMount: false,
@@ -75,7 +73,7 @@ export default function Wallet({ wallet }: { wallet: Wallet }) {
     }
   }, [balanceData, dispatch, walletAddress]);
 
-  const balance = wallet.$balance ? wallet.$balance / 1e9 + '' : '';
+  const balance = wallet.$balance ? wallet.$balance / 1e9 + '' : '0';
 
   const isNoneAccount = balance === '0';
 

@@ -21,7 +21,7 @@ export const loadWalletsByCluster = createAsyncThunk<
 >('wallets/fetchByCluster', async (cluster, { rejectWithValue }) => {
   try {
     const wallets = await sqlite3Api.getWalletsOfCluster(cluster);
-    console.log('Fetched wallets from DB:', wallets);
+    // console.log('Fetched wallets from DB:', wallets);
     return wallets;
   } catch (error) {
     return rejectWithValue(

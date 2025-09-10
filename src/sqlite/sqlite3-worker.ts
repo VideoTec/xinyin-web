@@ -49,7 +49,7 @@ async function getWalletsOfCluster(cluster: string) {
   }
 
   stmtWalletsOfCluster.reset();
-  console.log(`Loaded ${wallets.length} wallets for cluster ${cluster}`);
+  // console.log(`Loaded ${wallets.length} wallets for cluster ${cluster}`);
   // await sleep(2 * 1000);
   return wallets;
 }
