@@ -5,7 +5,7 @@ import {
   updateWallet,
   walletsSelector,
 } from '../store/slice-wallets';
-import { shortSolanaAddress, isValidSolanaAddress } from '../rpc/utils';
+import { shortSolanaAddress, isValidSolanaAddress } from '../utils';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -15,7 +15,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import CopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import IconButton from '@mui/material/IconButton';
-import { useDispatch, useSelector } from 'react-redux';
+import { useAppDispatch, useAppSelector } from '../store/store';
 import { useClusterState } from '../store/cluster-store';
 import type { Wallet } from '../types/wallet';
 
@@ -31,10 +31,10 @@ export default function WalletDlg({
   children: (props: { triggerOpen: () => void }) => ReactElement;
 }) {
   const [open, setOpen] = useState(false);
-  const wallets = useSelector(walletsSelector);
+  const wallets = useAppSelector(walletsSelector);
+  const dispatch = useAppDispatch();
   const solanaCluster = useClusterState();
-  const dispatch = useDispatch();
-  const [isPending, startTransition] = useTransition();
+  const [isPending] = useTransition();
   const [addressCopied, setAddressCopied] = useState(false);
   const {
     register,
@@ -45,8 +45,12 @@ export default function WalletDlg({
     setValue,
   } = useForm<Wallet>({
     defaultValues: {
-      address: initAddress,
-      name: initName,
+      $address: initAddress,
+      $name: initName,
+      $cluster: solanaCluster,
+      $balance: 0,
+      $hasKey: false,
+      $isMine: false,
     },
   });
 
@@ -54,8 +58,12 @@ export default function WalletDlg({
 
   function handleOpen() {
     reset({
-      address: initAddress,
-      name: initName,
+      $address: initAddress,
+      $name: initName,
+      $cluster: solanaCluster,
+      $balance: 0,
+      $hasKey: false,
+      $isMine: false,
     });
     setOpen(true);
   }
@@ -64,40 +72,30 @@ export default function WalletDlg({
     // 立即关闭对话框
     setOpen(false);
 
-    // 使用 startTransition 将数据更新标记为非紧急
-    startTransition(() => {
-      const wallet: Wallet = {
-        address: data.address,
-        name: data.name,
-        cluster: solanaCluster,
-        balance: 0,
-        hasKey: false,
-        isMine: false,
-      };
-
-      // 使用微任务队列来确保UI更新不被阻塞
-      queueMicrotask(() => {
-        if (type === 'modify') {
-          dispatch(updateWallet(wallet));
-        } else if (type === 'add') {
-          dispatch(addWallet(wallet));
-        }
-      });
-    });
+    if (type === 'modify') {
+      dispatch(updateWallet(data));
+    } else if (type === 'add') {
+      dispatch(addWallet(data));
+    }
   };
 
   function validateAddress(address: string) {
     const isValid = isValidSolanaAddress(address);
     if (isValid !== true) return isValid;
 
-    if (type === 'add' && wallets && wallets.some((w) => w.address === address))
+    if (
+      type === 'add' &&
+      wallets &&
+      wallets.some((w) => w.$address === address)
+    )
       return '钱包地址已存在';
     return true;
   }
 
   function validateName(name: string) {
-    if (wallets && wallets.some((w) => w.name === name))
+    if (wallets && wallets.some((w) => w.$name === name)) {
       return '钱包名称已存在';
+    }
     return true;
   }
 
@@ -119,12 +117,12 @@ export default function WalletDlg({
               fullWidth
               label="钱包地址"
               disabled={type === 'modify'}
-              {...register('address', {
+              {...register('$address', {
                 required: '必须填写钱包地址',
                 validate: validateAddress,
               })}
-              error={!!errors.address}
-              helperText={errors.address && errors.address.message}
+              error={!!errors.$address}
+              helperText={errors.$address && errors.$address.message}
               slotProps={{
                 input: {
                   endAdornment:
@@ -156,23 +154,23 @@ export default function WalletDlg({
               label="钱包名称"
               fullWidth
               onFocus={() => {
-                const address = watch('address');
-                const name = watch('name');
+                const address = watch('$address');
+                const name = watch('$name');
                 if (
                   !name &&
                   address &&
                   isValidSolanaAddress(address) === true
                 ) {
                   // FIXME: 自动生成钱包名称，提交时，错误交易，label 会覆盖内容
-                  setValue('name', shortSolanaAddress(address));
+                  setValue('$name', shortSolanaAddress(address));
                 }
               }}
-              {...register('name', {
+              {...register('$name', {
                 required: '必须填写钱包名称',
                 validate: validateName,
               })}
-              error={!!errors.name}
-              helperText={errors.name && errors.name.message}
+              error={!!errors.$name}
+              helperText={errors.$name && errors.$name.message}
             />
             <DialogActions>
               <Button onClick={() => setOpen(false)}>取消</Button>

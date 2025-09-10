@@ -21,6 +21,7 @@ export const loadWalletsByCluster = createAsyncThunk<
 >('wallets/fetchByCluster', async (cluster, { rejectWithValue }) => {
   try {
     const wallets = await sqlite3Api.getWalletsOfCluster(cluster);
+    // console.log('Fetched wallets from DB:', wallets);
     return wallets;
   } catch (error) {
     return rejectWithValue(
@@ -49,21 +50,30 @@ export const walletsSlice = createSlice({
     },
     removeWallet(state, action: PayloadAction<string>) {
       const index = state.wallets.findIndex(
-        (wallet) => wallet.address === action.payload
+        (wallet) => wallet.$address === action.payload
       );
       if (index !== -1) {
         state.wallets.splice(index, 1);
+        sqlite3Api.deleteWalletByAddress(action.payload).catch((error) => {
+          console.error(
+            `Failed to delete wallet address: ${action.payload}\n`,
+            error
+          );
+        });
       }
     },
     updateWallet(state, action: PayloadAction<Wallet>) {
       const index = state.wallets.findIndex(
-        (wallet) => wallet.address === action.payload.address
+        (wallet) => wallet.$address === action.payload.$address
       );
       if (index !== -1) {
         state.wallets[index] = action.payload;
 
         sqlite3Api.upsertWalletAddress(action.payload).catch((error) => {
-          console.error('Failed to update wallet address:', error);
+          console.error(
+            `Failed to update wallet address: ${action.payload.$address}\n`,
+            error
+          );
         });
       }
     },

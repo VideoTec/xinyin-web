@@ -22,7 +22,7 @@ interface JsonRpcResponse<T> {
   };
 }
 
-import { objectHasKey } from './utils';
+import { objectHasKey } from '../utils';
 
 export async function callSolanaRpc<T>(
   method: string,

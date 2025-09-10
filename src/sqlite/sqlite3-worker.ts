@@ -8,6 +8,7 @@ import {
   create_table_wallets,
   select_wallets_of_cluster,
   upsert_wallet,
+  delete_wallet_by_address,
 } from './sqlite3-stmt';
 import * as Comlink from 'comlink';
 import type { Wallet } from '../types/wallet';
@@ -33,35 +34,37 @@ async function openDB() {
 }
 
 function upsertWalletAddress(wallet: Wallet) {
-  console.log('Upserting wallet:', wallet);
-  stmtUpsert.bind([
-    wallet.address,
-    wallet.name,
-    wallet.balance,
-    wallet.cluster,
-    wallet.hasKey ? 1 : 0,
-    wallet.isMine ? 1 : 0,
-  ]);
+  // console.log('Upserting wallet:', wallet);
+  stmtUpsert.bind(wallet);
   stmtUpsert.step();
   stmtUpsert.reset();
 }
 
 async function getWalletsOfCluster(cluster: string) {
-  // throw new Error('Simulated error for testing'); // --- IGNORE ---
   const wallets: Wallet[] = [];
   stmtWalletsOfCluster.bind([cluster]);
+
   while (stmtWalletsOfCluster.step()) {
     wallets.push(stmtWalletsOfCluster.get({}) as Wallet);
   }
+
   stmtWalletsOfCluster.reset();
   // await sleep(2 * 1000);
   return wallets;
+}
+
+function deleteWalletByAddress(address: string) {
+  const stmt = opfsSAHPoolDb.prepare(delete_wallet_by_address);
+  stmt.bind([address]);
+  stmt.step();
+  stmt.reset();
 }
 
 const exportedApi = {
   openDB,
   upsertWalletAddress,
   getWalletsOfCluster,
+  deleteWalletByAddress,
 };
 
 export type SQLite3WorkerApi = typeof exportedApi;

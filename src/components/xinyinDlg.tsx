@@ -14,7 +14,7 @@ import { useState, type ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
 import xinyinApi from '../xinyin/xinyin-main';
 import { useTheme } from '@mui/material/styles';
-import { isValidSolanaAddress } from '../rpc/utils';
+import { isValidSolanaAddress } from '../utils';
 import { addWallet, walletsSelector } from '../store/slice-wallets';
 import { useDispatch, useSelector } from 'react-redux';
 import { useClusterState } from '../store/cluster-store';
@@ -115,21 +115,22 @@ export default function XinyinDlg({
           data.password
         )
         .then((solanaAddress) => {
-          const w = wallets && wallets.find((w) => w.address === solanaAddress);
+          const w =
+            wallets && wallets.find((w) => w.$address === solanaAddress);
           if (w) {
-            throw new Error(`已经导入这个该助记字，钱包名称是：'${w.name}'`);
+            throw new Error(`导入过的助记字，钱包名称是：'${w.$name}'`);
           }
           if (!solanaAddress || !isValidSolanaAddress(solanaAddress)) {
             throw new Error('导入心印助记字失败，未生成有效的钱包地址');
           }
           dispatch(
             addWallet({
-              address: solanaAddress,
-              name: data.walletName,
-              cluster: solanaCluster,
-              balance: 0,
-              hasKey: true,
-              isMine: true,
+              $address: solanaAddress,
+              $name: data.walletName,
+              $cluster: solanaCluster,
+              $balance: 0,
+              $hasKey: true,
+              $isMine: true,
             })
           );
           setOpen(false);
@@ -220,7 +221,7 @@ export default function XinyinDlg({
   }
 
   function validateWalletName(name: string): boolean | string {
-    if (wallets && wallets.some((w) => w.name === name)) {
+    if (wallets && wallets.some((w) => w.$name === name)) {
       return '钱包名称已存在';
     }
     return true;

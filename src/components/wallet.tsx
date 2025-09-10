@@ -7,7 +7,7 @@ import {
   getSignatureStatuses,
 } from '../rpc/solana-rpc';
 import { transfer } from '../rpc/transfer';
-import { getErrorMsg, shortTransferID } from '../rpc/utils';
+import { getErrorMsg, shortTransferID } from '../utils';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';

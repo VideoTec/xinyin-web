@@ -16,8 +16,9 @@ export const alert_table_wallets_add_column = `
     `;
 export const upsert_wallet = `
     INSERT INTO wallets (address, name, balance, cluster, has_key, is_mine)
-    VALUES (?, ?, ?, ?, ?, ?)
+    VALUES ($address, $name, $balance, $cluster, $hasKey, $isMine)
     ON CONFLICT(address) DO UPDATE SET
+      name = excluded.name,
       balance = excluded.balance,
       cluster = excluded.cluster,
       has_key = excluded.has_key,
@@ -25,6 +26,9 @@ export const upsert_wallet = `
       update_time = CURRENT_TIMESTAMP
   `;
 export const select_wallets_of_cluster = `
-    SELECT address, name, balance, cluster, has_key hasKey, is_mine isMine 
+    SELECT address as "$address", name as "$name", balance as "$balance", cluster as "$cluster", has_key as "$hasKey", is_mine as "$isMine"
     FROM wallets WHERE cluster = ? ORDER BY create_time DESC
+  `;
+export const delete_wallet_by_address = `
+    DELETE FROM wallets WHERE address = ?
   `;

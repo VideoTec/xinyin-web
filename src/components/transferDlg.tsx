@@ -1,6 +1,6 @@
 import { useForm, Controller } from 'react-hook-form';
 import { useState, type ReactElement } from 'react';
-import { shortSolanaAddress } from '../rpc/utils';
+import { shortSolanaAddress } from '../utils';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -116,8 +116,8 @@ export default function TransferDlg({
                     {...field}
                   >
                     {wallets.map((wallet) => (
-                      <MenuItem key={wallet.address} value={wallet.address}>
-                        {wallet.name}
+                      <MenuItem key={wallet.$address} value={wallet.$address}>
+                        {wallet.$name}
                       </MenuItem>
                     ))}
                   </Select>
