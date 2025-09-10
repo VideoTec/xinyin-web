@@ -121,7 +121,7 @@ export default function XinyinDlg({
             throw new Error(`导入过的助记字，钱包名称是：'${w.$name}'`);
           }
           if (!solanaAddress || !isValidSolanaAddress(solanaAddress)) {
-            throw new Error('导入心印助记字失败，未生成有效的钱包地址');
+            throw new Error('导入助记字失败，未生成有效的钱包地址');
           }
           dispatch(
             addWallet({

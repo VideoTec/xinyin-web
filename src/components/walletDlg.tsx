@@ -16,24 +16,22 @@ import CopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import IconButton from '@mui/material/IconButton';
 import { useAppDispatch, useAppSelector } from '../store/store';
-import { useClusterState } from '../store/cluster-store';
 import type { Wallet } from '../types/wallet';
+import { useClusterState } from '../store/cluster-store';
 
 export default function WalletDlg({
-  initAddress = '',
-  initName = '',
+  srcWallet,
   type = 'add',
   children,
 }: {
-  initAddress?: string;
-  initName?: string;
+  srcWallet?: Wallet;
   type?: 'add' | 'modify';
   children: (props: { triggerOpen: () => void }) => ReactElement;
 }) {
   const [open, setOpen] = useState(false);
   const wallets = useAppSelector(walletsSelector);
   const dispatch = useAppDispatch();
-  const solanaCluster = useClusterState();
+  const currentCluster = useClusterState();
   const [isPending] = useTransition();
   const [addressCopied, setAddressCopied] = useState(false);
   const {
@@ -44,37 +42,26 @@ export default function WalletDlg({
     watch,
     setValue,
   } = useForm<Wallet>({
-    defaultValues: {
-      $address: initAddress,
-      $name: initName,
-      $cluster: solanaCluster,
-      $balance: 0,
-      $hasKey: false,
-      $isMine: false,
-    },
+    defaultValues: srcWallet,
   });
 
   const title = type === 'add' ? '添加钱包' : '修改钱包';
 
   function handleOpen() {
-    reset({
-      $address: initAddress,
-      $name: initName,
-      $cluster: solanaCluster,
-      $balance: 0,
-      $hasKey: false,
-      $isMine: false,
-    });
+    reset(srcWallet);
     setOpen(true);
   }
 
   const onSubmit: SubmitHandler<Wallet> = (data) => {
-    // 立即关闭对话框
     setOpen(false);
+
+    console.log('Submitting wallet data:', data);
+    console.log('Source wallet:', srcWallet);
 
     if (type === 'modify') {
       dispatch(updateWallet(data));
     } else if (type === 'add') {
+      data.$cluster = currentCluster;
       dispatch(addWallet(data));
     }
   };
@@ -92,8 +79,13 @@ export default function WalletDlg({
     return true;
   }
 
-  function validateName(name: string) {
-    if (wallets && wallets.some((w) => w.$name === name)) {
+  function validateName(name?: string) {
+    if (
+      wallets &&
+      wallets.some(
+        (w) => w.$name === name && srcWallet?.$address !== w.$address
+      )
+    ) {
       return '钱包名称已存在';
     }
     return true;
@@ -135,7 +127,7 @@ export default function WalletDlg({
                         color="primary"
                         onClick={() => {
                           navigator.clipboard
-                            .writeText(initAddress)
+                            .writeText(srcWallet?.$address || '')
                             .then(() => {
                               setAddressCopied(true);
                               setTimeout(() => {

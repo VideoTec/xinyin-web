@@ -21,7 +21,7 @@ export const loadWalletsByCluster = createAsyncThunk<
 >('wallets/fetchByCluster', async (cluster, { rejectWithValue }) => {
   try {
     const wallets = await sqlite3Api.getWalletsOfCluster(cluster);
-    // console.log('Fetched wallets from DB:', wallets);
+    console.log('Fetched wallets from DB:', wallets);
     return wallets;
   } catch (error) {
     return rejectWithValue(
@@ -67,11 +67,13 @@ export const walletsSlice = createSlice({
         (wallet) => wallet.$address === action.payload.$address
       );
       if (index !== -1) {
-        state.wallets[index] = action.payload;
+        const srcWallet = state.wallets[index];
+        const newWallet = { ...srcWallet, ...action.payload };
+        state.wallets[index] = newWallet;
 
-        sqlite3Api.upsertWalletAddress(action.payload).catch((error) => {
+        sqlite3Api.upsertWalletAddress(newWallet).catch((error) => {
           console.error(
-            `Failed to update wallet address: ${action.payload.$address}\n`,
+            `Failed to update wallet address: ${newWallet.$address}\n`,
             error
           );
         });

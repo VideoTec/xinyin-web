@@ -74,11 +74,7 @@ export function WalletList() {
         <Gride container spacing={1} width={'100%'} ref={gridRef}>
           {wallets.map((wallet) => (
             <Gride key={wallet.$address} size={{ xs: 12, sm: 6, md: 4 }}>
-              <Wallet
-                address={wallet.$address}
-                name={wallet.$name}
-                key={wallet.$address}
-              />
+              <Wallet wallet={wallet} key={wallet.$address} />
             </Gride>
           ))}
           {showDivider && (

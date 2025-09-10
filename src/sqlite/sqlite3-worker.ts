@@ -34,7 +34,7 @@ async function openDB() {
 }
 
 function upsertWalletAddress(wallet: Wallet) {
-  // console.log('Upserting wallet:', wallet);
+  console.log('Upserting wallet:', wallet);
   stmtUpsert.bind(wallet);
   stmtUpsert.step();
   stmtUpsert.reset();
@@ -49,6 +49,7 @@ async function getWalletsOfCluster(cluster: string) {
   }
 
   stmtWalletsOfCluster.reset();
+  console.log(`Loaded ${wallets.length} wallets for cluster ${cluster}`);
   // await sleep(2 * 1000);
   return wallets;
 }

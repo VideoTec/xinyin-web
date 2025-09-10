@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
 import { rotate360deg } from './customStyle';
 import { useConfirm } from 'material-ui-confirm';
-import {
-  getAccountInfo,
-  getBalance,
-  getSignatureStatuses,
-} from '../rpc/solana-rpc';
+import type { Wallet } from '../types/wallet';
+import { getBalance, getSignatureStatuses } from '../rpc/solana-rpc';
 import { transfer } from '../rpc/transfer';
 import { getErrorMsg, shortTransferID } from '../utils';
 import Button from '@mui/material/Button';
@@ -26,9 +23,9 @@ import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardActions from '@mui/material/CardActions';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../store/store';
 import { useClusterState } from '../store/cluster-store';
-import { removeWallet } from '../store/slice-wallets';
+import { removeWallet, updateWallet } from '../store/slice-wallets';
 
 enum TransferStatus {
   /** 初始化 */
@@ -43,18 +40,9 @@ enum TransferStatus {
   Failed,
 }
 
-export default function Wallet({
-  address,
-  name,
-}: {
-  address: string;
-  name: string;
-}) {
-  const dispatch = useDispatch();
+export default function Wallet({ wallet }: { wallet: Wallet }) {
+  const dispatch = useAppDispatch();
   const confirm = useConfirm();
-  const [loadingError, setLoadingError] = useState<string>('');
-  const [owner, setOwner] = useState('');
-  const [balance, setBalance] = useState('');
   const [transferStatus, setTransferStatus] = useState(TransferStatus.Init);
   const [transferMessage, setTransferMessage] = useState('');
   const [showAddress, setShowAddress] = useState(false);
@@ -62,27 +50,7 @@ export default function Wallet({
   const [txId, setTxId] = useState('');
   const currentCluster = useClusterState();
 
-  const isNoneAccount = owner === '';
-
-  const isTransferring =
-    transferStatus === TransferStatus.InRPC ||
-    transferStatus === TransferStatus.LoopStatus;
-
-  const shortTxId = shortTransferID(txId);
-
-  const {
-    isFetching: isAccountLoading,
-    error: accountError,
-    data: accountData,
-    refetch: refetchAccount,
-  } = useQuery({
-    queryKey: ['accountInfo', address, currentCluster],
-    queryFn: () => getAccountInfo(address, { encoding: 'base64' }),
-    retry: 0,
-    retryOnMount: false,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
+  const walletAddress = wallet.$address;
 
   const {
     isFetching: isBalanceLoading,
@@ -90,13 +58,34 @@ export default function Wallet({
     data: balanceData,
     refetch: refetchBalance,
   } = useQuery({
-    queryKey: ['balance', address],
-    queryFn: () => getBalance(address, { encoding: 'base64' }),
+    queryKey: ['balance', wallet.$address, currentCluster],
+    queryFn: () => getBalance(wallet.$address, { encoding: 'base64' }),
+    enabled: false,
     retry: 0,
     retryOnMount: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (balanceData !== undefined) {
+      dispatch(
+        updateWallet({ $address: walletAddress, $balance: balanceData })
+      );
+    }
+  }, [balanceData, dispatch, walletAddress]);
+
+  const balance = wallet.$balance ? wallet.$balance / 1e9 + '' : '';
+
+  const isNoneAccount = balance === '0';
+
+  const isTransferring =
+    transferStatus === TransferStatus.InRPC ||
+    transferStatus === TransferStatus.LoopStatus;
+
+  const shortTxId = shortTransferID(txId);
+
+  const loadingError = balanceError ? getErrorMsg(balanceError) : '';
 
   const { data: transferStatusData } = useQuery({
     queryKey: ['transferStatus', txId],
@@ -115,7 +104,7 @@ export default function Wallet({
 
   const transferMutation = useMutation({
     mutationFn: (data: { toAddress: string; lamports: number; pwd: string }) =>
-      transfer(address, data.toAddress, data.lamports, data.pwd),
+      transfer(wallet.$address, data.toAddress, data.lamports, data.pwd),
     onSuccess: (data) => {
       setTxId(data);
       setTransferStatus(TransferStatus.LoopStatus);
@@ -128,78 +117,55 @@ export default function Wallet({
   });
 
   useEffect(() => {
-    if (transferStatusData) {
-      const status = transferStatusData[0];
-      if (status) {
-        if (status.confirmationStatus === 'finalized') {
-          setTransferStatus(TransferStatus.Success);
-          setTransferMessage(`转账成功，签名 ID: ${shortTxId}`);
-          refetchBalance();
-        } else if (status.err) {
-          setTransferStatus(TransferStatus.Failed);
-          setTransferMessage(
-            `转账失败，签名 ID: ${shortTxId}，错误信息: ${JSON.stringify(
-              status.err
-            )}`
-          );
-        } else {
-          setTransferStatus(TransferStatus.LoopStatus);
-          setTransferMessage(
-            `转账状态: ${status.confirmationStatus}, 确认数: ${
-              status.confirmations ?? 'max'
-            }，签名 ID: ${shortTxId}`
-          );
-        }
-      }
+    if (!transferStatusData) return;
+
+    const status = transferStatusData[0];
+    if (!status) return;
+
+    if (status.confirmationStatus === 'finalized') {
+      setTransferStatus(TransferStatus.Success);
+      setTransferMessage(`转账成功，签名 ID: ${shortTxId}`);
+      refetchBalance();
+    } else if (status.err) {
+      setTransferStatus(TransferStatus.Failed);
+      setTransferMessage(
+        `转账失败，签名 ID: ${shortTxId}，错误信息: ${JSON.stringify(
+          status.err
+        )}`
+      );
+    } else {
+      setTransferStatus(TransferStatus.LoopStatus);
+      setTransferMessage(
+        `转账状态: ${status.confirmationStatus}, 确认数: ${
+          status.confirmations ?? 'max'
+        }，签名 ID: ${shortTxId}`
+      );
     }
   }, [transferStatusData, refetchBalance, shortTxId]);
 
-  useEffect(() => {
-    if (accountData) {
-      setOwner(accountData.owner);
-      const sol = accountData.lamports / 1e9;
-      setBalance(sol.toString());
-    } else {
-      setOwner('');
-      setBalance('0');
-    }
-  }, [accountData]);
+  const handleDelete = async () => {
+    try {
+      const { confirmed } = await confirm({
+        title: '删除钱包',
+        description: `确定要删除钱包 ${wallet.$name} 吗？`,
+        confirmationText: '删除',
+        cancellationText: '取消',
+      });
 
-  useEffect(() => {
-    if (balanceData) {
-      const sol = balanceData / 1e9;
-      setBalance(sol.toString());
-    } else {
-      setOwner('');
-      setBalance('0');
+      if (confirmed) {
+        dispatch(removeWallet(wallet.$address));
+      }
+    } catch {
+      // 用户取消操作，不需要处理
+      console.log('用户取消删除操作');
     }
-  }, [balanceData]);
+  };
 
-  useEffect(() => {
-    if (accountError) {
-      setLoadingError(getErrorMsg(accountError));
-    } else if (balanceError) {
-      setLoadingError(getErrorMsg(balanceError));
-    }
-  }, [accountError, balanceError]);
-
-  async function handleDelete() {
-    const { confirmed } = await confirm({
-      title: '删除钱包',
-      description: `确定要删除钱包 ${name} 吗？`,
-      confirmationText: '删除',
-      cancellationText: '取消',
-    });
-    if (confirmed) {
-      dispatch(removeWallet(address));
-    }
-  }
-
-  async function handleTransfer(
+  const handleTransfer = async (
     toAddress: string,
     lamports: number,
     pwd: string
-  ) {
+  ) => {
     setTransferStatus(TransferStatus.InRPC);
     setTransferMessage('正在发起转账，请稍候...');
 
@@ -208,11 +174,21 @@ export default function Wallet({
       lamports,
       pwd,
     });
-  }
+  };
+
+  const handleCopyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(wallet.$address);
+      setAddressCopied(true);
+      setTimeout(() => setAddressCopied(false), 1000);
+    } catch (error) {
+      console.error('复制地址失败:', error);
+    }
+  };
 
   //TODO: transferMessage 点击，跳转 solscan.io
   return (
-    <Card key={address}>
+    <Card key={wallet.$address}>
       <CardHeader
         title={
           <Stack
@@ -221,11 +197,11 @@ export default function Wallet({
             justifyContent={'space-between'}
           >
             <Chip
-              label={name}
+              label={wallet.$name}
               color="primary"
               variant="outlined"
               deleteIcon={
-                <WalletDlg initAddress={address} initName={name} type="modify">
+                <WalletDlg srcWallet={wallet} type="modify">
                   {({ triggerOpen }) => (
                     <EditIcon
                       style={{ marginRight: 12 }}
@@ -241,40 +217,22 @@ export default function Wallet({
                 console.log('Delete wallet');
               }}
             />
-            {isNoneAccount ? (
-              <Chip
-                label={isAccountLoading ? '加载中...' : '空账户'}
-                variant="outlined"
-                color={isAccountLoading ? 'primary' : 'error'}
-                onDelete={() => {
-                  if (!isAccountLoading) refetchAccount();
-                }}
-                deleteIcon={
-                  <RefreshIcon
-                    sx={{
-                      animation: isAccountLoading ? rotate360deg : undefined,
-                    }}
-                  />
-                }
-              />
-            ) : (
-              <Chip
-                label={balance}
-                variant="outlined"
-                color="primary"
-                avatar={<Avatar>SOL</Avatar>}
-                onDelete={() => {
-                  if (!isBalanceLoading) refetchBalance();
-                }}
-                deleteIcon={
-                  <RefreshIcon
-                    sx={{
-                      animation: isBalanceLoading ? rotate360deg : undefined,
-                    }}
-                  />
-                }
-              />
-            )}
+            <Chip
+              label={balance}
+              variant="outlined"
+              color="primary"
+              avatar={<Avatar>SOL</Avatar>}
+              onDelete={() => {
+                if (!isBalanceLoading) refetchBalance();
+              }}
+              deleteIcon={
+                <RefreshIcon
+                  sx={{
+                    animation: isBalanceLoading ? rotate360deg : undefined,
+                  }}
+                />
+              }
+            />
           </Stack>
         }
         sx={{ cursor: 'pointer' }}
@@ -288,8 +246,8 @@ export default function Wallet({
             <DeleteIcon onClick={handleDelete} />
           </IconButton>
           <TransferDlg
-            fromAddress={address}
-            fromName={name}
+            fromAddress={wallet.$address}
+            fromName={wallet.$name!}
             onResult={handleTransfer}
             renderOpenBtn={({ triggerOpen }) => (
               <Button
@@ -336,11 +294,7 @@ export default function Wallet({
         </Alert>
       </Collapse>
       <Collapse in={loadingError !== ''}>
-        <Alert
-          severity="error"
-          sx={{ wordBreak: 'break-word' }}
-          onClose={() => setLoadingError('')}
-        >
+        <Alert severity="error" sx={{ wordBreak: 'break-word' }}>
           {loadingError}
         </Alert>
       </Collapse>
@@ -355,24 +309,14 @@ export default function Wallet({
               {addressCopied ? (
                 <Chip label="copied" color="success" size="small" />
               ) : (
-                <Button
-                  size="small"
-                  onClick={() => {
-                    navigator.clipboard.writeText(address).then(() => {
-                      setAddressCopied(true);
-                      setTimeout(() => {
-                        setAddressCopied(false);
-                      }, 1000);
-                    });
-                  }}
-                >
+                <Button size="small" onClick={handleCopyAddress}>
                   复制
                 </Button>
               )}
             </Stack>
           }
         >
-          {address}
+          {wallet.$address}
         </Alert>
       </Collapse>
     </Card>
