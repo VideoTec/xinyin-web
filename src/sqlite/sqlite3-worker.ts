@@ -34,7 +34,7 @@ async function openDB() {
 }
 
 function upsertWalletAddress(wallet: Wallet) {
-  console.log('Upserting wallet:', wallet);
+  // console.log('Upserting wallet:', wallet);
   stmtUpsert.bind(wallet);
   stmtUpsert.step();
   stmtUpsert.reset();
@@ -45,7 +45,10 @@ async function getWalletsOfCluster(cluster: string) {
   stmtWalletsOfCluster.bind([cluster]);
 
   while (stmtWalletsOfCluster.step()) {
-    wallets.push(stmtWalletsOfCluster.get({}) as Wallet);
+    const wallet = stmtWalletsOfCluster.get({}) as Wallet;
+    wallet.$hasKey = !!wallet.$hasKey;
+    wallet.$isMine = !!wallet.$isMine;
+    wallets.push(wallet);
   }
 
   stmtWalletsOfCluster.reset();

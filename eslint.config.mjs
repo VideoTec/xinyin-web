@@ -27,6 +27,7 @@ export default [
     rules: {
       'reactHooks/rules-of-hooks': 'error',
       'reactHooks/exhaustive-deps': 'warn',
+      'reactHooks/react-compiler': 'error',
     },
   },
   globalIgnores(

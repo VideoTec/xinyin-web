@@ -240,24 +240,27 @@ export default function Wallet({ wallet }: { wallet: Wallet }) {
       />
       <CardActions sx={{ justifyContent: 'end' }}>
         <>
+          {wallet.$isMine && <Chip label="我" color="success" />}
           <IconButton>
             <DeleteIcon onClick={handleDelete} />
           </IconButton>
-          <TransferDlg
-            fromAddress={wallet.$address}
-            fromName={wallet.$name!}
-            onResult={handleTransfer}
-            renderOpenBtn={({ triggerOpen }) => (
-              <Button
-                variant="outlined"
-                onClick={triggerOpen}
-                id="transfer-btn"
-                disabled={isTransferring || isBalanceLoading || isNoneAccount}
-              >
-                转账
-              </Button>
-            )}
-          />
+          {wallet.$hasKey && (
+            <TransferDlg
+              fromAddress={wallet.$address}
+              fromName={wallet.$name!}
+              onResult={handleTransfer}
+              renderOpenBtn={({ triggerOpen }) => (
+                <Button
+                  variant="outlined"
+                  onClick={triggerOpen}
+                  id="transfer-btn"
+                  disabled={isTransferring || isBalanceLoading || isNoneAccount}
+                >
+                  转账
+                </Button>
+              )}
+            />
+          )}
         </>
       </CardActions>
       <Collapse in={transferStatus !== TransferStatus.Init}>

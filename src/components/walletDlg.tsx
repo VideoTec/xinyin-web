@@ -1,5 +1,5 @@
 import { useState, useTransition, type ReactElement } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import {
   addWallet,
   updateWallet,
@@ -14,10 +14,14 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import CopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
+import CheckBox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import { useAppDispatch, useAppSelector } from '../store/store';
 import type { Wallet } from '../types/wallet';
 import { useClusterState } from '../store/cluster-store';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 export default function WalletDlg({
   srcWallet,
@@ -41,6 +45,7 @@ export default function WalletDlg({
     reset,
     watch,
     setValue,
+    control,
   } = useForm<Wallet>({
     defaultValues: srcWallet,
   });
@@ -52,44 +57,39 @@ export default function WalletDlg({
     setOpen(true);
   }
 
-  const onSubmit: SubmitHandler<Wallet> = (data) => {
+  const onSubmit: SubmitHandler<Wallet> = async (data) => {
     setOpen(false);
-
-    console.log('Submitting wallet data:', data);
-    console.log('Source wallet:', srcWallet);
 
     if (type === 'modify') {
       dispatch(updateWallet(data));
     } else if (type === 'add') {
       data.$cluster = currentCluster;
+      data.$hasKey = false;
+      data.$isMine = false;
       dispatch(addWallet(data));
     }
   };
 
-  function validateAddress(address: string) {
+  const validateAddress = (address: string) => {
     const isValid = isValidSolanaAddress(address);
     if (isValid !== true) return isValid;
 
-    if (
-      type === 'add' &&
-      wallets &&
-      wallets.some((w) => w.$address === address)
-    )
+    if (type === 'add' && wallets?.some((w) => w.$address === address)) {
       return '钱包地址已存在';
+    }
     return true;
-  }
+  };
 
-  function validateName(name?: string) {
+  const validateName = (name?: string) => {
     if (
-      wallets &&
-      wallets.some(
+      wallets?.some(
         (w) => w.$name === name && srcWallet?.$address !== w.$address
       )
     ) {
       return '钱包名称已存在';
     }
     return true;
-  }
+  };
 
   return (
     <>
@@ -99,7 +99,7 @@ export default function WalletDlg({
         onClose={() => setOpen(false)}
         disableAutoFocus={false}
         disableRestoreFocus={true}
-        onClick={(e) => e.stopPropagation()} // 阻止事件冒泡
+        onClick={(e) => e.stopPropagation()}
       >
         <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
         <DialogContent sx={{ paddingBottom: 0 }}>
@@ -163,6 +163,36 @@ export default function WalletDlg({
               })}
               error={!!errors.$name}
               helperText={errors.$name && errors.$name.message}
+            />
+            <Controller
+              name="$isMine"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <CheckBox
+                      checked={field.value}
+                      onChange={(_, checked) => field.onChange(checked)}
+                    />
+                  }
+                  label="我拥有这个钱包"
+                />
+              )}
+            />
+            <Controller
+              name="$hasKey"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <CheckBox
+                      checked={field.value}
+                      onChange={(_, checked) => field.onChange(checked)}
+                    />
+                  }
+                  label="我有这个钱包的私钥"
+                />
+              )}
             />
             <DialogActions>
               <Button onClick={() => setOpen(false)}>取消</Button>

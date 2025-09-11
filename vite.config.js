@@ -25,7 +25,11 @@ export default {
     minify: true,
   },
   plugins: [
-    react(),
+    react({
+      babel: {
+        plugins: ['babel-plugin-react-compiler'],
+      },
+    }),
     VitePWA({
       mode: 'production',
       registerType: 'prompt',

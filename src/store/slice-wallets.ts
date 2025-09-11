@@ -43,10 +43,14 @@ export const walletsSlice = createSlice({
       state.wallets = [];
     },
     addWallet(state, action: PayloadAction<Wallet>) {
+      // 立即更新 UI 状态
+      state.wallets.push(action.payload);
+
+      // 异步处理数据库操作，不阻塞 UI
       sqlite3Api.upsertWalletAddress(action.payload).catch((error) => {
         console.error('Failed to insert wallet address:', error);
+        // TODO: 可以考虑添加错误处理，比如回滚状态或显示错误提示
       });
-      state.wallets.push(action.payload);
     },
     removeWallet(state, action: PayloadAction<string>) {
       const index = state.wallets.findIndex(
@@ -69,13 +73,17 @@ export const walletsSlice = createSlice({
       if (index !== -1) {
         const srcWallet = state.wallets[index];
         const newWallet = { ...srcWallet, ...action.payload };
+
+        // 立即更新 UI 状态
         state.wallets[index] = newWallet;
 
+        // 异步处理数据库操作，不阻塞 UI
         sqlite3Api.upsertWalletAddress(newWallet).catch((error) => {
           console.error(
             `Failed to update wallet address: ${newWallet.$address}\n`,
             error
           );
+          // TODO: 可以考虑添加错误处理，比如回滚状态或显示错误提示
         });
       }
     },
