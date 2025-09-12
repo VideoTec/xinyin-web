@@ -54,6 +54,7 @@ async function getWalletsOfCluster(cluster: string) {
     const wallet = stmtWalletsOfCluster.get({}) as Wallet;
     wallet.$hasKey = !!wallet.$hasKey;
     wallet.$isMine = !!wallet.$isMine;
+    wallet.$isTransferTarget = !!wallet.$isTransferTarget;
     wallets.push(wallet);
   }
 
