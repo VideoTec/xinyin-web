@@ -56,6 +56,12 @@ export declare class DB {
   pointer: number;
 
   exec(sql: string): DB;
+  exec(
+    sql: string,
+    options: {
+      bind?: any[];
+    }
+  ): DB;
   prepare(sql: string): Stmt;
   close(): void;
   selectValue(sql: string, bind?: any[]): any;

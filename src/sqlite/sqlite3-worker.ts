@@ -6,13 +6,16 @@ import sqlite3InitModule, {
 } from './sqlite3-bundler-friendly';
 import {
   create_table_wallets,
+  create_migration_table,
   select_wallets_of_cluster,
   upsert_wallet,
   delete_wallet_by_address,
+  drop_all_tables,
 } from './sqlite3-stmt';
 import * as Comlink from 'comlink';
 import type { Wallet } from '../types/wallet';
 import { sleep } from '../utils';
+import { runMigrations } from './migration';
 
 let sqlite3: SQLite3API;
 let poolUtil: OpfsSAHPoolUtil;
@@ -27,8 +30,11 @@ async function openDB() {
   sqlite3 = await sqlite3InitModule();
   poolUtil = await sqlite3.installOpfsSAHPoolVfs();
   opfsSAHPoolDb = new poolUtil.OpfsSAHPoolDb('local-db.db');
+  // opfsSAHPoolDb.exec(drop_all_tables);
   // await sleep(2 * 1000);
   opfsSAHPoolDb.exec(create_table_wallets);
+  opfsSAHPoolDb.exec(create_migration_table);
+  runMigrations(opfsSAHPoolDb);
   stmtUpsert = opfsSAHPoolDb.prepare(upsert_wallet);
   stmtWalletsOfCluster = opfsSAHPoolDb.prepare(select_wallets_of_cluster);
 }

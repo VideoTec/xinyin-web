@@ -118,10 +118,10 @@ export default function XinyinDlg({
           const w =
             wallets && wallets.find((w) => w.$address === solanaAddress);
           if (w) {
-            throw new Error(`导入过的助记字，钱包名称是：'${w.$name}'`);
+            throw new Error(`地址已经存在，钱包名称是：'${w.$name}'`);
           }
           if (!solanaAddress || !isValidSolanaAddress(solanaAddress)) {
-            throw new Error('导入助记字失败，未生成有效的钱包地址');
+            throw new Error('未生成有效的钱包地址');
           }
           dispatch(
             addWallet({
@@ -131,6 +131,7 @@ export default function XinyinDlg({
               $balance: 0,
               $hasKey: true,
               $isMine: true,
+              $isTransferTarget: false,
             })
           );
           setOpen(false);

@@ -62,7 +62,7 @@ sqlite3Api
     listeners.forEach((listener) => listener(states));
   })
   .catch((error) => {
-    console.log('Error initializing sqlite3 worker:', error);
+    console.log('打开数据库失败:', error);
     states = {
       ...states,
       sqlite: {

@@ -67,7 +67,7 @@ export default function GlobalWidget({
       )}
       {workersState.sqlite.status === WorkerStatus.Error && (
         <Typography variant="h6" mt={2}>
-          数据库模块，加载失败2：{workersState.sqlite.error}
+          数据库模块，加载失败：{workersState.sqlite.error}
         </Typography>
       )}
       {workersState.xinyin.status === WorkerStatus.Ready &&

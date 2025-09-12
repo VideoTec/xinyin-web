@@ -19,8 +19,6 @@ import IconButton from '@mui/material/IconButton';
 import { useAppDispatch, useAppSelector } from '../store/store';
 import type { Wallet } from '../types/wallet';
 import { useClusterState } from '../store/cluster-store';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
 import FormControlLabel from '@mui/material/FormControlLabel';
 
 export default function WalletDlg({
@@ -38,6 +36,15 @@ export default function WalletDlg({
   const currentCluster = useClusterState();
   const [isPending] = useTransition();
   const [addressCopied, setAddressCopied] = useState(false);
+  const defaultWallet: Wallet = srcWallet
+    ? srcWallet
+    : {
+        $address: '',
+        $name: '',
+        $isMine: false,
+        $hasKey: false,
+        $isTransferTarget: false,
+      };
   const {
     register,
     handleSubmit,
@@ -47,13 +54,13 @@ export default function WalletDlg({
     setValue,
     control,
   } = useForm<Wallet>({
-    defaultValues: srcWallet,
+    defaultValues: defaultWallet,
   });
 
   const title = type === 'add' ? '添加钱包' : '修改钱包';
 
   function handleOpen() {
-    reset(srcWallet);
+    reset(defaultWallet);
     setOpen(true);
   }
 
@@ -66,6 +73,7 @@ export default function WalletDlg({
       data.$cluster = currentCluster;
       data.$hasKey = false;
       data.$isMine = false;
+      data.$isTransferTarget = false;
       dispatch(addWallet(data));
     }
   };
@@ -153,8 +161,13 @@ export default function WalletDlg({
                   address &&
                   isValidSolanaAddress(address) === true
                 ) {
-                  // FIXME: 自动生成钱包名称，提交时，错误交易，label 会覆盖内容
-                  setValue('$name', shortSolanaAddress(address));
+                  requestAnimationFrame(() => {
+                    setValue('$name', shortSolanaAddress(address), {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    });
+                  });
                 }
               }}
               {...register('$name', {
@@ -191,6 +204,21 @@ export default function WalletDlg({
                     />
                   }
                   label="我有这个钱包的私钥"
+                />
+              )}
+            />
+            <Controller
+              name="$isTransferTarget"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <CheckBox
+                      checked={field.value}
+                      onChange={(_, checked) => field.onChange(checked)}
+                    />
+                  }
+                  label="可以向这个钱包转账"
                 />
               )}
             />

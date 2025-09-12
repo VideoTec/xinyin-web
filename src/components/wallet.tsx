@@ -240,7 +240,8 @@ export default function Wallet({ wallet }: { wallet: Wallet }) {
       />
       <CardActions sx={{ justifyContent: 'end' }}>
         <>
-          {wallet.$isMine && <Chip label="我" color="success" />}
+          {wallet.$isTransferTarget && <Chip label="收" color="info" />}
+          {wallet.$isMine && <Chip label="自" color="success" />}
           <IconButton>
             <DeleteIcon onClick={handleDelete} />
           </IconButton>

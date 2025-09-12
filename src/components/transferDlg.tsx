@@ -50,6 +50,10 @@ export default function TransferDlg({
     },
   });
 
+  const transferableWallets = wallets.filter(
+    (w) => w.$isTransferTarget && w.$address !== fromAddress
+  );
+
   const handleOpen = () => {
     setOpen(true);
     reset({
@@ -115,7 +119,7 @@ export default function TransferDlg({
                     label="收款账户"
                     {...field}
                   >
-                    {wallets.map((wallet) => (
+                    {transferableWallets.map((wallet) => (
                       <MenuItem key={wallet.$address} value={wallet.$address}>
                         {wallet.$name}
                       </MenuItem>

@@ -7,7 +7,7 @@ const sqlite3Worker = new Worker(
 );
 
 sqlite3Worker.onerror = (err) => {
-  console.error('sqlite3 Worker error:', err);
+  console.error('sqlite3Worker onerror:', err);
 };
 
 const api = Comlink.wrap<SQLite3WorkerApi>(sqlite3Worker);

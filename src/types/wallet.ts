@@ -7,4 +7,5 @@ export interface Wallet {
   $balance?: number;
   $hasKey?: boolean;
   $isMine?: boolean;
+  $isTransferTarget?: boolean;
 }
