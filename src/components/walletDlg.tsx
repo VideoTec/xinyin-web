@@ -71,9 +71,6 @@ export default function WalletDlg({
       dispatch(updateWallet(data));
     } else if (type === 'add') {
       data.$cluster = currentCluster;
-      data.$hasKey = false;
-      data.$isMine = false;
-      data.$isTransferTarget = false;
       dispatch(addWallet(data));
     }
   };
@@ -98,6 +95,7 @@ export default function WalletDlg({
     }
     return true;
   };
+  const address = watch('$address');
 
   return (
     <>
@@ -150,32 +148,29 @@ export default function WalletDlg({
                 },
               }}
             />
-            <TextField
-              label="钱包名称"
-              fullWidth
-              onFocus={() => {
-                const address = watch('$address');
-                const name = watch('$name');
-                if (
-                  !name &&
-                  address &&
-                  isValidSolanaAddress(address) === true
-                ) {
-                  requestAnimationFrame(() => {
-                    setValue('$name', shortSolanaAddress(address), {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                      shouldTouch: true,
-                    });
-                  });
-                }
-              }}
-              {...register('$name', {
-                required: '必须填写钱包名称',
-                validate: validateName,
-              })}
-              error={!!errors.$name}
-              helperText={errors.$name && errors.$name.message}
+            <Controller
+              name="$name"
+              control={control}
+              rules={{ required: '必须填写钱包名称', validate: validateName }}
+              defaultValue=""
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  label="钱包名称"
+                  fullWidth
+                  onFocus={() => {
+                    if (
+                      !field.value &&
+                      address &&
+                      isValidSolanaAddress(address)
+                    ) {
+                      field.onChange(shortSolanaAddress(address));
+                    }
+                  }}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                />
+              )}
             />
             <Controller
               name="$isMine"

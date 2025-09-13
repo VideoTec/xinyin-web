@@ -10,7 +10,9 @@ import * as comlink from 'comlink';
 
 async function init() {
   await initOpfs();
-  await xinyin_module_init({ module_or_path: '../xinyin-wasm.wasm' });
+  await xinyin_module_init({
+    module_or_path: import.meta.env.VITE_REACT_ROUTE_BASE + 'xinyin-wasm.wasm',
+  });
   return true;
 }
 
