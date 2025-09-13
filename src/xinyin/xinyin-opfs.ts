@@ -1,16 +1,14 @@
 /**
- * @constant
- * @type { string }
- * @description 心印密钥存储文件名称
+ * 心印密钥存储文件名称
  */
 const SKS_STORE_NAME = 'sks';
 
 /**
- * @type { FileSystemSyncAccessHandle | null }
- * @description 用于同步访问OPFS文件系统中的心印密钥存储文件
+ * 用于同步访问OPFS文件系统中的心印密钥存储文件
  */
-let gSksSyncHandle = null;
+let gSksSyncHandle: FileSystemSyncAccessHandle | null = null;
 
+/**  */
 export async function initOpfs() {
   let opfsRoot = await navigator.storage.getDirectory();
   let sksFileHandle = await opfsRoot.getFileHandle(SKS_STORE_NAME, {
@@ -24,9 +22,9 @@ export function clearSksCache() {
 }
 
 /**
- * @param {string} sk - (salt || nonce || encrypted sk) in base64 format
+ * @param sk - (salt || nonce || encrypted sk) in base64 format
  */
-export function saveEncryptedSkBase64(sk) {
+export function saveEncryptedSkBase64(sk: string) {
   let size = gSksSyncHandle?.getSize();
   let buf = new TextEncoder().encode(sk + '\n'); // 添加换行符以分隔每个密钥
   gSksSyncHandle?.write(buf, { at: size });
@@ -35,11 +33,11 @@ export function saveEncryptedSkBase64(sk) {
 
 /**
  * 从OPFS文件系统中加载解密后的心印密钥列表
- * @returns {string[]} - 返回解密后的心印密钥列表
+ * @returns 返回解密后的心印密钥列表
  */
 export function loadEncryptedSks() {
   /** @type {string[]} */
-  let sks = [];
+  let sks: string[] = [];
   if (!gSksSyncHandle) {
     return sks;
   }

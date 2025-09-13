@@ -1,4 +1,5 @@
 import * as Comlink from 'comlink';
+import type { XinyinWorkerApi } from './xinyin-worker';
 
 const xinyin_worker = new Worker(
   new URL('./xinyin-worker.js', import.meta.url),
@@ -7,5 +8,4 @@ const xinyin_worker = new Worker(
   }
 );
 
-/** @type {import('./xinyin-worker.js').XinyinApi} */
-export default Comlink.wrap(xinyin_worker);
+export default Comlink.wrap<XinyinWorkerApi>(xinyin_worker);
