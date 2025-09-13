@@ -4,13 +4,13 @@ import xinyin_module_init, {
   sign_message,
 } from './xinyin-wasm';
 
-import { loadEncryptedSks, clearSksCache, initOpfs } from './xinyin-opfs.js';
+import { loadEncryptedSks, clearSksCache, initOpfs } from './xinyin-opfs';
 
 import * as comlink from 'comlink';
 
 async function init() {
   await initOpfs();
-  await xinyin_module_init({ module_or_path: '../xinyin/xinyin-wasm.wasm' });
+  await xinyin_module_init({ module_or_path: '../xinyin-wasm.wasm' });
   return true;
 }
 

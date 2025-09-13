@@ -2,7 +2,7 @@ import * as Comlink from 'comlink';
 import type { XinyinWorkerApi } from './xinyin-worker';
 
 const xinyin_worker = new Worker(
-  new URL('./xinyin-worker.js', import.meta.url),
+  new URL('./xinyin-worker.ts', import.meta.url),
   {
     type: 'module',
   }

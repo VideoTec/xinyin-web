@@ -18,7 +18,7 @@ export default {
     },
   },
   build: {
-    outDir: './dist',
+    outDir: './xinyin-web',
     emptyOutDir: true,
     target: 'esnext',
     sourcemap: true,
